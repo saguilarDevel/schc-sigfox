@@ -1,0 +1,6 @@
+rfc3339
+google-cloud-pubsub
+google-cloud-datastore
+google-cloud-storage
+# google-cloud-auth
+#Flask==1.1.2

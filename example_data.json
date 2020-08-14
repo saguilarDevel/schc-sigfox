@@ -1,0 +1,15 @@
+{
+  "deviceType": "01B29CC4",
+  "device": "device1",
+  "time": "1596537673",
+  "data": "0612345678",
+  "seqNumber": "2",
+  "ack": "false"
+},
+{"deviceType": "01B29CC4",
+"device": "1B29CC4",
+"time": "1596713121",
+"data": "303130303030",
+"seqNumber": "39",
+"ack": "false"
+}
