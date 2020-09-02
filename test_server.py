@@ -15,10 +15,10 @@ from Messages.Fragment import Fragment
 
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = '/PATH/credentials/your_credentials.json'
+CLIENT_SECRETS_FILE = './credentials/wyschc-d4543f4ee89e.json'
 
 # File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = '/PATH/credentials/your_credentials.json'
+CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
 
 
@@ -32,38 +32,13 @@ def post_message():
 
     if request.method == 'POST':
         print("POST RECEIVED")
-        BUCKET_NAME = 'sigfoxschc'
+        BUCKET_NAME = 'wyschc'
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
 
-
-        # print("Loading classes...")
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
-        if exists_blob(BUCKET_NAME, "SSN"):
-            last_sequence_number = read_blob(BUCKET_NAME, "SSN")
 
-        # CHECK TIME VALIDATION (INACTIVITY TIMER)
-        time_received = request_dict["time"]
-        BLOB_NAME = "timestamp"
-        BLOB_STR = time_received
-        upload_blob(BUCKET_NAME, BLOB_STR, BLOB_NAME)
-        # print("Hasta aqui llegamos.")
-
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
-        profile_downlink = Sigfox("DOWNLINK", "NO ACK")
-        buffer_size = profile_uplink.MTU
-        n = profile_uplink.N
-        m = profile_uplink.M
-
-        if len(fragment) * 8 > buffer_size:
-            print("Fragment size is greater than buffer size D:")
-            exit(0)
-
-        # print("Loading functions...")
-
-        fragment = request_dict["data"]
-        sigfox_sequence_number = request_dict["seqNumber"]
         if exists_blob(BUCKET_NAME, "SSN"):
             last_sequence_number = read_blob(BUCKET_NAME, "SSN")
 
@@ -79,24 +54,23 @@ def post_message():
         n = profile_uplink.N
         m = profile_uplink.M
 
-        if len(fragment) * 8 > buffer_size:
-            print("Fragment size is greater than buffer size D:")
-            # exit(0)
+        if len(fragment) / 2 * 8 > buffer_size: # Fragment is hex, 1 hex = 1/2 byte
             return json.dumps({"message": "Fragment size is greater than buffer size D:"}), 200
 
         if not exists_blob(BUCKET_NAME, "all_windows/"):
+            print("INITIALIZING... (be patient)")
             create_folder(BUCKET_NAME, "all_windows/")
             for i in range(2 ** m):
                 create_folder(BUCKET_NAME, "all_windows/window_%d/" % i)
                 for j in range(2 ** n - 1):
                     upload_blob(BUCKET_NAME, "", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
                 # create bitmap for each window
-                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(
-                        "all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
+                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
                     bitmap = ""
                     for b in range(profile_uplink.BITMAP_SIZE):
                         bitmap += "0"
                     upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+                    print(bitmap)
 
         print("BLOB Created")
         window = []
@@ -107,10 +81,13 @@ def post_message():
         for j in range(2 ** n - 1):
             fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], 3)] = j
 
+        # Parsing fragment
+        header = bytes.fromhex(fragment[:2])
+        payload = bytearray.fromhex(fragment[2:])
         # A fragment has the format "fragment = [header, payload]".
-        print("fragment {},{}".format(fragment[0], fragment[1:]))
+        print("fragment {},{}".format(header, payload))
 
-        data = [bytes(fragment[0], 'utf-8'), bytearray(fragment[1:], 'utf-8')]
+        data = [header, payload]
         print("data {}".format(data))
         # Convert to a Fragment class for easier manipulation.
         fragment_message = Fragment(profile_uplink, data)
@@ -145,7 +122,8 @@ def post_message():
         #
         if fragment_message.is_all_0() or fragment_message.is_all_1():
             for i in range(current_window + 1):
-                bitmap_ack = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap%d" % (i, i))
+                bitmap_ack = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i))
+                print(bitmap_ack)
                 window_ack = i
                 if '0' in bitmap_ack:
                     break
