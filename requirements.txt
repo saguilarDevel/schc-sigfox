@@ -2,5 +2,6 @@ rfc3339
 google-cloud-pubsub
 google-cloud-datastore
 google-cloud-storage
+requests
 # google-cloud-auth
 #Flask==1.1.2

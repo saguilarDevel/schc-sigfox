@@ -19,6 +19,7 @@ CLIENT_SECRETS_FILE = '/PATH/credentials/your_credentials.json'
 
 # File where we will store authentication credentials after acquiring them.
 CREDENTIALS_FILE = '/PATH/credentials/your_credentials.json'
+CLIENT_SECRETS_FILE = '/Users/sergioaguilar/PycharmProjects/SCHCfox/credentials/schc-sigfox-upc-f573cd86ed0a.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
 
 
@@ -53,6 +54,7 @@ def post_message():
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
         profile_downlink = Sigfox("DOWNLINK", "NO ACK")
         buffer_size = profile_uplink.MTU
+        print('buffer_size -> {}'.format(buffer_size))
         n = profile_uplink.N
         m = profile_uplink.M
 
@@ -108,7 +110,7 @@ def post_message():
             fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], 3)] = j
 
         # A fragment has the format "fragment = [header, payload]".
-        print("fragment {},{}".format(fragment[0], fragment[1:]))
+        # print("fragment {},{}".format(fragment[0], fragment[1:]))
 
         data = [bytes(fragment[0], 'utf-8'), bytearray(fragment[1:], 'utf-8')]
         print("data {}".format(data))

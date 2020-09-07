@@ -12,6 +12,7 @@ from Entities.Reassembler import Reassembler
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 
+
 def upload_blob(bucket_name, blob_text, destination_blob_name):
     """Uploads a file to the bucket."""
     storage_client = storage.Client()
@@ -20,37 +21,49 @@ def upload_blob(bucket_name, blob_text, destination_blob_name):
     blob.upload_from_string(blob_text)
     print('File uploaded to {}.'.format(destination_blob_name))
 
+
 def read_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
     return blob.download_as_string()
+
+
 def delete_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
     blob.delete()
+
+
 def exists_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(blob_name)
     return blob.exists()
+
+
 def create_folder(bucket_name, folder_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
     print('Folder uploaded to {}.'.format(folder_name))
+
+
 def size_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(blob_name)
     return blob.size
+
+
 def send_ack(request, ack):
     device = request["device"]
     response_dict = {device: {'downlinkData': ack.to_bytes()}}
     response_json = json.dumps(response_dict)
     return response_json
+
 
 def hello_get(request):
     """HTTP Cloud Function.
@@ -79,11 +92,12 @@ def hello_get(request):
         BLOB_NAME = "timestamp"
         BLOB_STR = time_received
         upload_blob(BUCKET_NAME, BLOB_STR, BLOB_NAME)
-        print("Hasta aqui llegamos.")
-
+        print("Blob uploaded to {}, {}, {}".format(BUCKET_NAME, BLOB_STR, BLOB_NAME))
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
         profile_downlink = Sigfox("DOWNLINK", "NO ACK")
+        print("Sigfox profiles created")
         buffer_size = profile_uplink.MTU
+        print('buffer_size -> {}, fragment length -> {}'.format(buffer_size, len(fragment) * 8))
         n = profile_uplink.N
         m = profile_uplink.M
 
@@ -132,8 +146,6 @@ def hello_get(request):
             print("Fragment size is greater than buffer size D:")
             # exit(0)
             return json.dumps({"message": "Fragment size is greater than buffer size D:"}), 200
-
-
 
         if not exists_blob(BUCKET_NAME, "all_windows/"):
             create_folder(BUCKET_NAME, "all_windows/")
@@ -277,4 +289,3 @@ def hello_get(request):
     #     print("GET RECEIVED")
 
     return 'Hello World!'
-
