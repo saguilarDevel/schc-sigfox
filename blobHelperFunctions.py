@@ -51,6 +51,7 @@ def size_blob(bucket_name, blob_name):
 
 def send_ack(request, ack):
     device = request["device"]
-    response_dict = {device: {'downlinkData': ack.to_string()}}
+    print("ack string -> {}".format(ack.to_string()))
+    response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
     response_json = json.dumps(response_dict)
     return response_json

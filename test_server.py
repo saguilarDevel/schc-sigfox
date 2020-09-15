@@ -15,10 +15,10 @@ from Messages.Fragment import Fragment
 
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = './credentials/wyschc-d4543f4ee89e.json'
+CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
 # File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
+# CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
 
 
@@ -32,7 +32,7 @@ def post_message():
 
     if request.method == 'POST':
         print("POST RECEIVED")
-        BUCKET_NAME = 'wyschc'
+        BUCKET_NAME = 'sigfoxschc'
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
 
@@ -132,12 +132,14 @@ def post_message():
                 print("[ALLX] Sending ACK for lost fragments...")
                 ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                 response_json = send_ack(request_dict, ack)
+                print("Response content -> {}".format(response_json))
                 return response_json, 200
 
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
                 print("[ALLX] Sending ACK after window...")
                 ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
                 response_json = send_ack(request_dict, ack)
+                print("Response content -> {}, {}".format(response_json, ack.length()))
                 return response_json, 200
 
             if fragment_message.is_all_1():
@@ -193,9 +195,9 @@ def post_message():
                     response_json = send_ack(request_dict, last_ack)
                     return response_json, 200
 
-        response_json = request_dict
-        return response_json, 200
-        # return '', 204
+        # response_json = request_dict
+        # return response_json, 200
+        return '', 204
 
     else:
         print('Invalid HTTP Method to invoke Cloud Function. Only POST supported')
