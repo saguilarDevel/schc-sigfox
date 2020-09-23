@@ -64,13 +64,13 @@ Once the test in local provide good results, the server can be deploy to Google 
 
 ### Test case 5 - Testing LoPy, Sigfox Cloud and Google Cloud Function
 
-With the Google Cloud Function properly working, is possible to test the communication between the LoPy4 and the Google Cloud Function, using the Sigfox Cloud as the LPWAN GW.
+With the Google Cloud Function (GCF) properly working, is possible to test the communication between the LoPy4 and the GCF, using the Sigfox Cloud as the LPWAN Radio GW.
 
 ![example request](images/schc_sigfox_diagrams_1.png)
 
 The SCHC fragments are send from the LoPy to the Sigfox Cloud using the Sigfox radio network. Then, the Sigfox Cloud routes the messages to the end point previously configured (the Google Cloud Function URL). The messages arrive to the GCF that responds accordingly. If an ACK needs to be sent (in case of uplink communication), then the GCF will respond with a JSON file that contains the information required by the Sigfox Cloud to route the answer back to the device.
 
-The response provided from the GCF has the format shown below. This format is provided by SC in the [sigfox docs](https://support.sigfox.com/docs/acknowledge). 
+The response provided from the GCF has the format shown below. This format is provided by Sigfox in the [documentation](https://support.sigfox.com/docs/acknowledge). 
 ```json
 {    "device_id":{
         "downlinkData":"deadbeefcafebabe"
@@ -85,15 +85,15 @@ A real response of an ACK-on-Error communication is shown below.
 }
 ```
 Note that the downlink data is the ACK in HEX format. 
-The 'f' at the end are the padding required by the Sigfox network. 
+The 'f' at the end are the padding bits required by the Sigfox network. 
 Therefore, the ACK is padded until the 64 bits of the downlink L2 frame are completed.
 
 
 
 #### Example messages
 
-Message between Sigfox Cloud and GCF. 
-The SC sends the data with the Sigfox message sequence number and indicating if an ACK is requiered or not. The "ack" flags indicates whether or not the device (LoPy) has enable the reception window.
+Example of a message between Sigfox Cloud and GCF. 
+The Sigfox Cloud sends the data with the Sigfox message sequence number (seqNumber) and indicating if an ACK is requiered or not. The "ack" flags indicates whether or not the device (LoPy) has enable the reception window.
 
 ```json
 {
@@ -118,9 +118,18 @@ The Message below is between Sigfox Cloud and GCF asking for an ACK. This means 
     "seqNumber": "182",
     "ack": "true"
 }
-  
-
 ```
 
+Other information that can be sent from the Sigfox Cloud to the GCF as part as the JSON message are: 
 
+* Device ID
+* Message Sequence Number
+* Message Payload
+* Message Timestamp
+* Device Geolocation (optional)
+* RSSI (optional)
+* Device Temperature (optional)
+* Device Battery Voltage (optional)
+
+The Message Timestamp, Device Geolocation, RSSI, Device Temperature and Device Battery Voltage are metadata parameters provided by the Network. [[draft-ietf-lpwan-schc-over-sigfox-03]](https://www.ietf.org/id/draft-ietf-lpwan-schc-over-sigfox-03.txt)
 
