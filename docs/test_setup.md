@@ -62,7 +62,65 @@ Once the test in local provide good results, the server can be deploy to Google 
 
 ![example request](images/schc_sigfox_diagrams_2.png)
 
+### Test case 5 - Testing LoPy, Sigfox Cloud and Google Cloud Function
 
+With the Google Cloud Function properly working, is possible to test the communication between the LoPy4 and the Google Cloud Function, using the Sigfox Cloud as the LPWAN GW.
+
+![example request](images/schc_sigfox_diagrams_1.png)
+
+The SCHC fragments are send from the LoPy to the Sigfox Cloud using the Sigfox radio network. Then, the Sigfox Cloud routes the messages to the end point previously configured (the Google Cloud Function URL). The messages arrive to the GCF that responds accordingly. If an ACK needs to be sent (in case of uplink communication), then the GCF will respond with a JSON file that contains the information required by the Sigfox Cloud to route the answer back to the device.
+
+The response provided from the GCF has the format shown below. This format is provided by SC in the [sigfox docs](https://support.sigfox.com/docs/acknowledge). 
+```json
+{    "device_id":{
+        "downlinkData":"deadbeefcafebabe"
+     }
+}
+```
+A real response of an ACK-on-Error communication is shown below.
+```json
+{    "1B29CC4": {
+        "downlinkData": "07f7ffffffffffff"
+     }
+}
+```
+Note that the downlink data is the ACK in HEX format. 
+The 'f' at the end are the padding required by the Sigfox network. 
+Therefore, the ACK is padded until the 64 bits of the downlink L2 frame are completed.
+
+
+
+#### Example messages
+
+Message between Sigfox Cloud and GCF. 
+The SC sends the data with the Sigfox message sequence number and indicating if an ACK is requiered or not. The "ack" flags indicates whether or not the device (LoPy) has enable the reception window.
+
+```json
+{
+    "deviceType": "01B29CC4", 
+    "device": "1B29CC4", 
+    "time": "1599745073", 
+    "data": "013333333433353336333733", 
+    "seqNumber": "181", 
+    "ack": "false"
+}
+```
+
+
+The Message below is between Sigfox Cloud and GCF asking for an ACK. This means that the LoPy has enable the reception window to allow the SC to send a response back. 
+
+```json
+{
+    "deviceType": "01B29CC4", 
+    "device": "1B29CC4", 
+    "time": "1599745083",
+    "data": "003833393430343134323433",
+    "seqNumber": "182",
+    "ack": "true"
+}
+  
+
+```
 
 
 
