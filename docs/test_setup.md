@@ -120,7 +120,7 @@ The Message below is between Sigfox Cloud and GCF asking for an ACK. This means 
 }
 ```
 
-Other information that can be sent from the Sigfox Cloud to the GCF as part as of the JSON message are: 
+Other information that can be sent from the Sigfox Cloud to the GCF as part of the JSON message are: 
 
 * Device ID
 * Message Sequence Number
