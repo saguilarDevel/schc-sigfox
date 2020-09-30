@@ -1,5 +1,7 @@
 import os
 import json
+import time
+
 from flask import abort
 from google.cloud import storage
 from math import ceil, floor
@@ -36,12 +38,6 @@ def hello_get(request):
 
         if exists_blob(BUCKET_NAME, "SSN"):
             last_sequence_number = read_blob(BUCKET_NAME, "SSN")
-
-        # CHECK TIME VALIDATION (INACTIVITY TIMER)
-        time_received = request_dict["time"]
-        BLOB_NAME = "timestamp"
-        BLOB_STR = time_received
-        upload_blob(BUCKET_NAME, BLOB_STR, BLOB_NAME)
 
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
         profile_downlink = Sigfox("DOWNLINK", "NO ACK")
@@ -94,6 +90,15 @@ def hello_get(request):
 
         try:
             fragment_number = fcn_dict[fragment_message.header.FCN]
+
+            # CHECK TIME VALIDATION (INACTIVITY TIMER)
+            last_time_received = read_blob(BUCKET_NAME, "timestamp")
+            time_received = int(request_dict["time"])
+
+            if str(fragment_number) != "0" and str(current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
+                return json.dumps({"message": "Inactivity timer reached. Message ignored."}), 200
+
+            upload_blob(BUCKET_NAME, time_received, "timestamp")
 
             print("[RECV] This corresponds to the " + str(fragment_number) + "th fragment of the " + str(
                 current_window) + "th window.")
@@ -184,7 +189,7 @@ def hello_get(request):
                     print("[ALL1] Last fragment. Reassembling...")
                     reassembler = Reassembler(profile_uplink, fragments)
                     payload = bytearray(reassembler.reassemble())
-                    upload_blob(BLOB_NAME, payload.decode("utf-8"), "PAYLOAD")
+                    upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
 
                     print("[ALL1] Reassembled: Sending last ACK")
                     bitmap = ''
