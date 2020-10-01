@@ -14,7 +14,7 @@ Please follow these steps to install [the Pymakr VSCode Extension](https://marke
 
 3. Ensure that you have the latest VSCode installed and open.
 
-4.Navigate to the Extensions page, using the 5th button in the left navigation.
+4. Navigate to the Extensions page, using the 5th button in the left navigation.
 
 5. Search for Pymakr and click the install button next to it.
 
