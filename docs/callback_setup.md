@@ -2,6 +2,12 @@
 
 The objective of this tutorial is to show how to configure the callbacks in the Sigfox Cloud.
 
+## Create an account at Sigfox Backend
+
+To register the LoPy4 in the Sigfox Cloud, first you must [Activate](https://buy.sigfox.com/activate) an account.
+
+To Activate the Sigfox account, the ID and PAC of the LoPy are required. 
+
 ## Creating the Callback
 
 The following are the steps required to create the callback in the Sigfox Cloud:
@@ -43,8 +49,32 @@ The result of the configuration should look as follows:
 The callback can be enable and disable with the Enable checkbox. Check that the callback is enable with a SubType BIDIR.
 
 
-## Create an account at Sigfox Backend
 
-To register the LoPy4 in the Sigfox Cloud, first you must [Activate](https://buy.sigfox.com/activate) an account.
 
-To Activate the Sigfox account, the ID and PAC of the LoPy are required. 
+
+![vscode-setup-lopy](images/LoPy-testing-beacon-1.png)
+
+8. Open the file located in /Testing called beacon.py.
+
+9. The beacon.py script sends n = 10 messages to the Sigfox network. This test is build to test the connectivity between the LoPy4, the Sigfox Cloud and the end point. (only one message is required to test the Sigfox connectivity and the correct end point configuration).
+
+``` 
+Sending...
+Sent.
+Done.
+```
+
+20. The number of sent messages depends on the "n" configuration.
+
+
+## Review Sigfox callback configuration.
+
+Go to the Sigfox Backend page and navigate to Device -> Your-device-ID -> Messages. Check the column "Callbacks". The test is OK if all messages arrived and have a green arrow and a red arrow downwards.
+
+![callback-example](images/sigfox-callback-configuration-example.png)
+
+The green arrow upward indicates the status of the message send from device to the Sigfox Cloud, and the downward arrow indicates, that the device has open the reception windows, if red no message was send to the device.
+
+The response content of the end point previously configured in the callback in the Sigfox Cloud is send back to device if the device requested a response (note that the LoPy4 should enable the reception window when a message is expected).
+
+

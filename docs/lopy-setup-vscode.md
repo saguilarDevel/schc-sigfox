@@ -20,21 +20,15 @@ Please follow these steps to install [the Pymakr VSCode Extension](https://marke
 
 6. Within a few minutes, a reload button should appear. Press it to reload VSCode.
 
-7. Open project from [this](https://github.com/saguilarDevel/schc-sigfox) repository.
+7. Clone and open the project from [this](https://github.com/saguilarDevel/schc-sigfox) repository.
 
-![vscode-setup-lopy](images/LoPy-testing-beacon-1.png)
+8. Prepare the LoPy for connection to the computer.
 
-8. Open the file located in /Testing called beacon.py.
-
-9. The beacon.py script sends n = 10 messages to the Sigfox network. This test is build to test the connectivity between the LoPy4, the Sigfox Cloud and the end point. (only one message is required to test the Sigfox connectivity and the correct end point configuration).
-
-
-
-10. Note that the LoPy4 is connected to the expansion board previously as follows: 
+9. Note that the LoPy4 is connected to the expansion board previously as follows: 
 
 ![lopy-connection-diagram](images/LoPy4-connection-expantion-board.png)
 
-11. Connect the antenna to the corresponding port of the LoPy4. 
+10. Connect the antenna to the corresponding port of the LoPy4. 
 
 ![lopy-connection-antenna](images/lopy4-connection-antenna-1.png)
 
@@ -42,7 +36,6 @@ Please follow these steps to install [the Pymakr VSCode Extension](https://marke
 12. Connect the LoPy4 device to your computer using the USB Port.
 
 13. Ensure that the Pymakr Plugin has correctly installed.
-
 
 ![pymark-configuration-ok](images/pymar-configuration-ok.png)
 
@@ -54,33 +47,24 @@ Please follow these steps to install [the Pymakr VSCode Extension](https://marke
 
 ![pymark-menu-open](images/pymark-configuration-menu-2.png)
 
-16. This will list the available serial ports. If Pymakr is able to auto-detect which to use, this will be copied to your clipboard. If not please manually copy the correct serial port.
+16. This will list the available serial ports. If Pymakr is able to auto-detect which to use, this will be copied to your clipboard. If not please manually copy the correct serial port in Project Settings. Example of serials ports shown below.
 
 ![pymark-device-port](images/pymark-configuration-device-1.png)
 
-17. Download the beacon.py file to the LoPy4 by clicking in the menu below and click Run current file.
+17. Open check_sigfox.py from /Testing folder.
+
+
+![vscode-setup-lopy](images/check-sigfox-Lopy-id-1.png)
+
+
+17. Run the check_sigfox.py file in the LoPy4 by clicking in the menu below and click Run current file.
+
+
+![vscode-setup-lopy](images/check-sigfox-Lopy-id-2.png)
+
 
 18. The file will be executed.
+![vscode-setup-lopy](images/check-sigfox-Lopy-id-3.png)
 
-19. It should print
-
-``` 
-Sending...
-Sent.
-Done.
-```
-
-20. The number of sent messages depends on the "n" configuration.
-
-
-## Review Sigfox callback configuration.
-
-Go to the Sigfox Backend page and navigate to Device -> Your-device-ID -> Messages. Check the column "Callbacks". The test is OK if all messages arrived and have a green arrow and a red arrow downwards.
-
-![callback-example](images/sigfox-callback-configuration-example.png)
-
-The green arrow upward indicates the status of the message send from device to the Sigfox Cloud, and the downward arrow indicates, that the device has open the reception windows, if red no message was send to the device.
-
-The response content of the end point previously configured in the callback in the Sigfox Cloud is send back to device if the device requested a response (note that the LoPy4 should enable the reception window when a message is expected).
-
+19. It should print the Sigfox Device ID and the Sigfox PAC number. This information is latter required to create the Sigfox Backend account.
 

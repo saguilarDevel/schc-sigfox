@@ -6,7 +6,7 @@ import binascii
 sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
 
 # print Sigfox Device ID
-print(binascii.hexlify(sigfox.id()))
+print('Sigfox Device ID: {}'.format(binascii.hexlify(sigfox.id())))
 
 # print Sigfox PAC number
-print(binascii.hexlify(sigfox.pac()))
+print('Sigfox PAC number: {}'.format(binascii.hexlify(sigfox.pac())))
