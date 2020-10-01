@@ -23,7 +23,7 @@ To leverage each LPWAN technology, each technology defines a Profile that adapt 
 
 ## Setup steps for end to end communication testing
 
-1. Create a Google Cloud Function. [Tutorial](/cloud-fuctions-setup.md)
-2. Configure the IDE (vscode or atom) with the extension to support Pycom devices (pymark). [Tutorial](/callback_setup.md)
-3. Configure the Google Cloud Function as an end-point in Sigfox Cloud. [Tutorial](/callback_setup.md)
-4. Run end-to-end test (LoPy4<->Sigfox<->GCF) [Tutorial](/callback_setup.md)
+1. Create a Google Cloud Function. [Tutorial](/docs/cloud-fuctions-setup.md)
+2. Configure the IDE (vscode or atom) with the extension to support Pycom devices (pymark). [Tutorial](/docs/callback_setup.md)
+3. Configure the Google Cloud Function as an end-point in Sigfox Cloud. [Tutorial](/docs/callback_setup.md)
+4. Run end-to-end test (LoPy4<->Sigfox<->GCF) [Tutorial](/docs/callback_setup.md)
