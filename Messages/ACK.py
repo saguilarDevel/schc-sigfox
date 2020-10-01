@@ -19,8 +19,8 @@ class ACK:
 
         self.header = self.rule_id + self.dtag + self.w + self.bitmap + self.c
         # print("profile.MTU / len(self.header + self.padding) -> {}".format(round(len(self.header + self.padding) / 8)))
-        while len(self.header + self.padding) < round(len(self.header + self.padding) / 8) * 8:
-        # while len(self.header + self.padding) < profile.MTU:
+        # while len(self.header + self.padding) < round(len(self.header + self.padding) / 8) * 8:
+        while len(self.header + self.padding) < profile.MTU:
             self.padding += '1'
 
     def to_string(self):
