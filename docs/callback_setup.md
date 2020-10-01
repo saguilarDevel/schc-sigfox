@@ -41,3 +41,10 @@ The result of the configuration should look as follows:
 ![callback_setup2](images/callback-setup-sigfox-2.png)
 
 The callback can be enable and disable with the Enable checkbox. Check that the callback is enable with a SubType BIDIR.
+
+
+## Create an account at Sigfox Backend
+
+To register the LoPy4 in the Sigfox Cloud, first you must [Activate](https://buy.sigfox.com/activate) an account.
+
+To Activate the Sigfox account, the ID and PAC of the LoPy are required. 
