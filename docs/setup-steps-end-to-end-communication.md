@@ -16,14 +16,14 @@ To leverage each LPWAN technology, each technology defines a Profile that adapt 
  ![lpwan-architecture](images/lpwan-network-architecture-1.png)
  
  In the test scenario, the LoPy4 (Device) is connected to the Sigfox Base Station (Radio Gateway). 
- The Sigfox Base Stations communicates with the Sigfox Cloud (Network Gateway) which send the messages to the Google Cloud Function (SCHC F/R). 
+ The Sigfox Base Stations communicates with the Sigfox Cloud (Network Gateway) which sends the messages to the Google Cloud Function (SCHC F/R). 
  This architecture is shown below.
  
  ![example request](images/schc_sigfox_diagrams_1.png)
 
 ## Setup steps for end to end communication testing
 
-1. Create a Google Cloud Function. [Tutorial](/docs/cloud-fuctions-setup.md)
+1. Create a Google Cloud Function. [Tutorial](/docs/cloud-fuction-setup.md)
 2. Configure the IDE (vscode or atom) with the extension to support Pycom devices (pymark). [Tutorial](/docs/callback_setup.md)
 3. Configure the Google Cloud Function as an end-point in Sigfox Cloud. [Tutorial](/docs/callback_setup.md)
 4. Run end-to-end test (LoPy4<->Sigfox<->GCF) [Tutorial](/docs/callback_setup.md)

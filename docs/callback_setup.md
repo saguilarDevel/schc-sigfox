@@ -54,17 +54,25 @@ The callback can be enable and disable with the Enable checkbox. Check that the 
 
 ![vscode-setup-lopy](images/LoPy-testing-beacon-1.png)
 
-8. Open the file located in /Testing called beacon.py.
+9. Open the file located in /Testing called beacon.py.
 
-9. The beacon.py script sends n = 10 messages to the Sigfox network. This test is build to test the connectivity between the LoPy4, the Sigfox Cloud and the end point. (only one message is required to test the Sigfox connectivity and the correct end point configuration).
+10. The beacon.py script sends n = 10 messages to the Sigfox network. This test is build to test the connectivity between the LoPy4, the Sigfox Cloud and the end point. (only one message is required to test the Sigfox connectivity and the correct end point configuration).
 
 ``` 
+>>> Running beacon.py
+
+>>> 
+>>> 
 Sending...
 Sent.
-Done.
+b'010000'
+Sending...
+Sent.
+b'010001'
+Done
 ```
 
-20. The number of sent messages depends on the "n" configuration.
+11. The number of sent messages depends on the "n" configuration. In the previous example n = 2.
 
 
 ## Review Sigfox callback configuration.
