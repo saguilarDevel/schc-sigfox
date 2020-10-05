@@ -50,39 +50,3 @@ The callback can be enable and disable with the Enable checkbox. Check that the 
 
 
 
-
-
-![vscode-setup-lopy](images/LoPy-testing-beacon-1.png)
-
-9. Open the file located in /Testing called beacon.py.
-
-10. The beacon.py script sends n = 10 messages to the Sigfox network. This test is build to test the connectivity between the LoPy4, the Sigfox Cloud and the end point. (only one message is required to test the Sigfox connectivity and the correct end point configuration).
-
-``` 
->>> Running beacon.py
-
->>> 
->>> 
-Sending...
-Sent.
-b'010000'
-Sending...
-Sent.
-b'010001'
-Done
-```
-
-11. The number of sent messages depends on the "n" configuration. In the previous example n = 2.
-
-
-## Review Sigfox callback configuration.
-
-Go to the Sigfox Backend page and navigate to Device -> Your-device-ID -> Messages. Check the column "Callbacks". The test is OK if all messages arrived and have a green arrow and a red arrow downwards.
-
-![callback-example](images/sigfox-callback-configuration-example.png)
-
-The green arrow upward indicates the status of the message send from device to the Sigfox Cloud, and the downward arrow indicates, that the device has open the reception windows, if red no message was send to the device.
-
-The response content of the end point previously configured in the callback in the Sigfox Cloud is send back to device if the device requested a response (note that the LoPy4 should enable the reception window when a message is expected).
-
-

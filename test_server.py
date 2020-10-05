@@ -27,6 +27,34 @@ def hello_world():
     return 'Hello, World!'
 
 
+@app.route('/test', methods=['POST'])
+def test():
+    """Responds to any HTTP request.
+    Args:
+        request (flask.Request): HTTP request object.
+    Returns:
+        The response text or any set of values that can be turned into a
+        Response object using
+        `make_response <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>`.
+    """
+    import json
+    request_json = request.get_json()
+    # if request.args and 'device' in request.args:
+    #    return request.args.get('message')
+    if request_json and 'device' in request_json and 'data' in request_json:
+        device = request_json['device']
+        print('Data received from device id:{}, data:{}'.format(device, request_json['data']))
+        if 'ack' in request_json:
+            if request_json['ack'] == 'true':
+                response = {request_json['device']: {'downlinkData': '07f7ffffffffffff'}}
+                print("response -> {}".format(response))
+                return json.dumps(response), 200
+        return '', 204
+    else:
+        return f'Not a correct format message', 404
+
+
+
 @app.route('/post/message', methods=['GET', 'POST'])
 def post_message():
 
