@@ -24,7 +24,7 @@ s.settimeout(10)
 
 c = 10
 submerged_time = 0
-n = 10
+n = 1
 
 # Wait for the beacon to be submerged
 time.sleep(submerged_time)

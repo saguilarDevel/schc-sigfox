@@ -1,4 +1,4 @@
-# End-to-end Test
+# End-to-end Test (Tutorial 5)
 
 One the GFC is created, the Sigfox Backend account is configured and the IDE is ready, the LoPy can begin sending messages thru the Sigfox Cloud to the GCF.
 
@@ -55,6 +55,11 @@ The response content of the end point previously configured in the callback in t
 ![callback-example-bidir](images/sigfox-callback-configuration-example-bidir.png)
 
 
-Check the Logs of the GFC.
+Check the Logs of the GFC. 
 
 ![logview-example-bidir](images/sigfox-callback-configuration-example-bidir-GCF-response.png)
+
+In the logs, the data received can be found and also the response that is sent back to the Sigfox Cloud.
+
+
+Now the LoPy4 is sending and receiving messages from the GCF using the Sigfox Radio Network. The followings steps is to modify (or create a new) GCF that contains the SCHC receiver. Similarly, the LoPy4 code needs to the changed to run the SCHC sender.

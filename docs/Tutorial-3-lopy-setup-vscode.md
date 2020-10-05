@@ -1,4 +1,4 @@
-# LoPy Setup in vscode
+# LoPy Setup in vscode (Tutorial 3)
 
 The objective of this tutorial is to show how to setup the LoPy4 in the Visual Studio Code (vscode).
 
@@ -68,3 +68,4 @@ Please follow these steps to install [the Pymakr VSCode Extension](https://marke
 
 19. It should print the Sigfox Device ID and the Sigfox PAC number. This information is latter required to create the Sigfox Backend account.
 
+Continue with the Sigfox Callback configuration in [Tutorial 4](/docs/Tutorial-4-Sigfox-callback_setup.md).

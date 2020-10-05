@@ -50,4 +50,4 @@ The following steps are required to test the communication end-to-end (LoPy4<->S
 1. Create a Google Cloud Function. [Tutorial 2](/docs/Tutorial-2-cloud-function-setup.md)
 2. Configure the IDE (vscode or atom) with the extension to support Pycom devices (pymark). [Tutorial 3](/docs/Tutorial-3-lopy-setup-vscode.md)
 3. Configure the Google Cloud Function as an end-point in Sigfox Cloud. [Tutorial 4](/docs/Tutorial-4-Sigfox-callback_setup.md)
-4. Run end-to-end test (LoPy4<->Sigfox<->GCF) [Tutorial](/docs/Tutorial-4-Sigfox-callback_setup.md)
+4. Run end-to-end test (LoPy4<->Sigfox<->GCF) [Tutorial 5](/docs/Tutorial-5-test-end-to-end.md)

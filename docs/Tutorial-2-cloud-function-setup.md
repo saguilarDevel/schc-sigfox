@@ -1,6 +1,6 @@
-# Create Callback Function in Google Cloud
+# Create Callback Function in Google Cloud (Tutorial 2)
 
-The objetive of this tutorial is to configure a Google Cloud account to use the Google Cloud Function (GCF) as an end point to the Sigfox Cloud.
+The objetive of this tutorial is to configure a Google Cloud account to use the Google Cloud Function (GCF) to be use as an end point in the Sigfox Cloud.
 
 ## Create a Google Cloud account
 
@@ -33,7 +33,7 @@ Create a google cloud account, can be with a gmail address. More information fro
 ![create-function](images/create-cloud-function-1.png)
 4. Complete creation form, with region.
 5. Set HTTP trigger.
-6. Click the Allow unauthenticated invocations.
+6. Click the Allow unauthenticated invocations. (Security must be implemented by http headers)
 7. Copy cloud function URL and save it for latter.
 8. Click Save and Next.
 9. Choose Python 3.7 as Runtime.
@@ -73,4 +73,63 @@ def schc_sigfox(request):
 
 The code deploy in the Cloud Function will process the message received from Sigfox Cloud (with a certain format). If the POST json message format is incorrect, a 404 error message will be returned. 
 If the json message format is correct, the data received will be printed. Likewise, if the ack flag is set to true, which means that the device is waiting for a response, a downlink message is sent back to the Sigfox Cloud in the response, that will redirect the message to device that init the communication.
+
+## Testing the GCF
+
+To test the GCF, a plugin for chrome called Advance Rest Client is required. Furthermore, the GCF can be tested using curl. 
+
+### Test without ACK
+
+* Open Advance REST Client (app for Chrome browser for send html requests).
+* Set the method to POST. 
+    Set Resquest URL to your GFC (you can check in the Google Console): ```http://your-cloud-function-url/schc_sigfox```
+
+![example request](img/request_example_v1.png)
+
+* In Body, add ```application/json``` and add
+```json
+{
+  "deviceType": "01B29CC4",
+  "device": "1B29CC4",
+  "time": "1596713121",
+  "data": "86970",
+  "seqNumber": "39",
+  "ack": "false"
+}
+```
+Note that the ack field is false, so no response is expected.
+* In Headers add 
+```
+Header Name: Content-Type
+Header Value: application/json
+``` 
+* Click send.
+
+![test-cloud-function-no-ack](images/test-cloud-function-1.png)
+
+* The result is a 204 with no content.
+
+
+### Test with ACK
+
+
+* In Body, replace the "ack" flag value with "true"
+```json
+{
+  "deviceType": "01B29CC4",
+  "device": "1B29CC4",
+  "time": "1596713121",
+  "data": "86970",
+  "seqNumber": "39",
+  "ack": "true"
+}
+```
+* Keep the same configuration and click send.
+
+![test-cloud-function-ack](images/test-cloud-function-2.png)
+
+Now the response is a 200 OK with a json response. In this case, the device id is indicated with some downlink data.
+
+
+Continue withe the LoPy setup in [Tutorial 3](/docs/Tutorial-3-lopy-setup-vscode.md).
 
