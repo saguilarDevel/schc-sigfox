@@ -30,7 +30,9 @@ Create a google cloud account, can be with a gmail address. More information fro
 1. Go to Menu, Functions.
 2. Click on the Create Function button.
 3. Give the Cloud Function a name. Ex. ``` schc_sigfox```
+
 ![create-function](images/create-cloud-function-1.png)
+
 4. Complete creation form, with region.
 5. Set HTTP trigger.
 6. Click the Allow unauthenticated invocations. (Security must be implemented by http headers)
