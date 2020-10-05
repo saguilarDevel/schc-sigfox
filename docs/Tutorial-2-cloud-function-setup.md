@@ -83,10 +83,11 @@ To test the GCF, a plugin for chrome called Advance Rest Client is required. Fur
 ### Test without ACK
 
 * Open Advance REST Client (app for Chrome browser for send html requests).
-* Set the method to POST. 
-    Set Resquest URL to your GFC (you can check in the Google Console): ```http://your-cloud-function-url/schc_sigfox```
 
-![example request](img/request_example_v1.png)
+![test-cloud-function](images/test-cloud-function-0.png)
+
+* Set the method to POST. 
+* Set Resquest URL to your GFC (you can check in the Google Console): ```http://your-cloud-function-url/schc_sigfox```
 
 * In Body, add ```application/json``` and add
 ```json
