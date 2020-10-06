@@ -105,7 +105,7 @@ def hello_get(request):
             fragment_number = fcn_dict[fragment_message.header.FCN]
 
             # Check time validation.
-            last_time_received = read_blob(BUCKET_NAME, "timestamp")
+            last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
             time_received = int(request_dict["time"])
 
             # If this is not the very first fragment and the inactivity timer has been reached, ignore the message. TODO: Send SCHC abort message.
@@ -157,8 +157,8 @@ def hello_get(request):
 
             # If the ACK bitmap has a 0 at the end of a non-final window, a fragment has been lost.
             if fragment_message.is_all_0() and '0' in bitmap_ack:
-                print("[ALLX] Sending ACK for lost fragments...")
-
+                print("[ALL0] Sending ACK for lost fragments...")
+                print("bitmap with errors -> {}".format(bitmap_ack))
                 # Create an ACK message and send it.
                 ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                 response_json = send_ack(request_dict, ack)
@@ -174,7 +174,9 @@ def hello_get(request):
                 ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
                 response_json = send_ack(request_dict, ack)
                 print("Response content -> {}".format(response_json))
-                return response_json, 200
+                # Response to continue, no ACK is sent Back.
+                return '', 204
+                # return response_json, 200
 
             # If the fragment is an ALL-1
             if fragment_message.is_all_1():
