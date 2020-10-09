@@ -8,14 +8,6 @@ def send_request(sendData, timeout):
     url_cloud = 'https://us-central1-schc-sigfox-upc.cloudfunctions.net/hello_get'
     headers = {'content-type': 'application/json'}
     print('sendData -> {}'.format(sendData))
-    # data_dict = {
-    #     "deviceType": "01B29CC4",
-    #     "device": "1B29CC4",
-    #     "time": "1596713121",
-    #     "data": "".format(sendData),
-    #     "seqNumber": "39",
-    #     "ack": "false"
-    # }
     response = requests.post(url_cloud, data=json.dumps(sendData), headers=headers, timeout=timeout)
     # print('response -> {}'.format(response))
     return response
@@ -54,9 +46,6 @@ msg2_8 = {'deviceType': '01B29CC4', 'device': '1B29CC4', 'time': '1602249599', '
 msg2_9 = {'deviceType': '01B29CC4', 'device': '1B29CC4', 'time': '1602249609', 'data': '0f3839',
           'seqNumber': '399', 'ack': 'true'}
 
-
-
-# msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7]
 msgs1 = [msg1, msg2, msg3]
 msgs2 = [msg2_1, msg2_2, msg2_3, msg2_4, msg2_5, msg2_6, msg2_7, msg2_8, msg2_9]
 
