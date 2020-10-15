@@ -44,8 +44,8 @@ def create_folder(bucket_name, folder_name):
 
 def size_blob(bucket_name, blob_name):
     storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
+    bucket = storage_client.get_bucket(bucket_name)
+    blob = bucket.get_blob(blob_name)
     return blob.size
 
 

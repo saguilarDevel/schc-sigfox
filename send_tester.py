@@ -4,11 +4,11 @@ import time
 
 
 def send_request(sendData, timeout):
-    url = 'http://localhost:5000/hello_get'
+    url = 'http://localhost:5000/wyschc_get'
     url_cloud = 'https://us-central1-schc-sigfox-upc.cloudfunctions.net/hello_get'
     headers = {'content-type': 'application/json'}
     print('sendData -> {}'.format(sendData))
-    response = requests.post(url_cloud, data=json.dumps(sendData), headers=headers, timeout=timeout)
+    response = requests.post(url, data=json.dumps(sendData), headers=headers, timeout=timeout)
     # print('response -> {}'.format(response))
     return response
 
