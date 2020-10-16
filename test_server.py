@@ -674,10 +674,6 @@ def wyschc_get():
                         # TODO: This assumes that the last received message is in the last window.
                         for i in range(current_window + 1):
                             for j in range(2 ** n - 1):
-                                print(i)
-                                print(current_window)
-                                print(j)
-                                print(last_index)
                                 print("Loading fragment {}".format(j))
                                 fragment_file = read_blob(BUCKET_NAME,
                                                           "all_windows/window_%d/fragment_%d_%d" % (i, i, j))

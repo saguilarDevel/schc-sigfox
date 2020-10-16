@@ -79,17 +79,3 @@ class Sigfox(Protocol):
 
             else:
                 pass
-
-        # print("-----VALUES-----")
-        # print("RULE_ID_SIZE = " + str(self.RULE_ID_SIZE))
-        # print("T = " + str(self.T))
-        # print("N = " + str(self.N))
-        # print("WINDOW_SIZE = " + str(self.WINDOW_SIZE))
-        # print("BITMAP_SIZE = " + str(self.BITMAP_SIZE))
-        # print("MAX_ACK_REQUESTS = " + str(self.MAX_ACK_REQUESTS))
-        # print("MAX_WIND_FCN = " + str(self.MAX_WIND_FCN))
-        # print("")
-        # print("MTU = " + str(self.MTU))
-        #
-        # print("All headers should be " + str(self.HEADER_LENGTH) + " bits long (" + str(
-        #     self.HEADER_LENGTH / 8) + " bytes).")
