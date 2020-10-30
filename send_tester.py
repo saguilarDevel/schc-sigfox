@@ -5,6 +5,7 @@ import time
 
 def send_request(sendData, timeout):
     url = 'http://localhost:5000/wyschc_get'
+    url_ngrok = 'https://d347a0efcb92.ngrok.io/wyschc_get'
     url_cloud = 'https://us-central1-schc-sigfox-upc.cloudfunctions.net/hello_get'
     headers = {'content-type': 'application/json'}
     print('sendData -> {}'.format(sendData))
@@ -60,6 +61,12 @@ for i, msg in enumerate(msgs2):
     elif response.status_code == 200:
         print('response -> {}'.format(response.text))
 
-    time.sleep(1)
+    time.sleep(5)
 
 print("Finish")
+
+
+# 07f7ffffffffffff
+# 0000011111110111111111111111111111111111111111111111111111111111
+# 080fffffffffffff
+# 0000100000001111111111111111111111111111111111111111111111111111
