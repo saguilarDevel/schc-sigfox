@@ -136,8 +136,8 @@ The Message Timestamp, Device Geolocation, RSSI, Device Temperature and Device B
 
 ### Test case 6 - Testing LoPy, Sigfox Cloud and Local Server using ngrok
 
-For further testing the cloud function locally, or if it runs in a private server, the end point can be exposed using ngrok.
-Ngrok creates a secure tunnel between a public end point and the flask server running locally and can be used to enable communication from the Sigfox Cloud to the local Flask Server. 
+For further testing of the cloud function locally, or if the function runs in a private server, the end point can be exposed using ngrok.
+Ngrok creates a secure tunnel between a public end point and the flask server running locally, and can be used to enable communication from the Sigfox Cloud to the local Flask Server as shown in the image below.
 
 ![example request](images/schc_sigfox_diagrams_6.png)
 
