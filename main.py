@@ -172,18 +172,18 @@ def hello_get(request):
                 print("[ALLX] Sending ACK after window...")
 
                 # Create an ACK message and send it.
-                ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                response_json = send_ack(request_dict, ack)
-                print("200, Response content -> {}".format(response_json))
+                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                # response_json = send_ack(request_dict, ack)
+                # print("200, Response content -> {}".format(response_json))
                 # Response to continue, no ACK is sent Back.
-                # return '', 204
-                return response_json, 200
+                return '', 204
+                # return response_json, 200
 
             # If the fragment is an ALL-1
             if fragment_message.is_all_1():
-                response = {request_dict['device']: {'downlinkData': '080fffffffffffff'}}
-                print("response -> {}".format(json.dumps(response)))
-                return json.dumps(response), 200
+                # response = {request_dict['device']: {'downlinkData': '080fffffffffffff'}}
+                # print("response -> {}".format(json.dumps(response)))
+                # return json.dumps(response), 200
                 # The bitmap in the last window follows the following regular expression: "1*0*1*"
                 # Since the ALL-1, if received, changes the least significant bit of the bitmap.
                 # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:

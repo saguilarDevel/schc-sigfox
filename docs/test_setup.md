@@ -133,3 +133,26 @@ Other information that can be sent from the Sigfox Cloud to the GCF as part of t
 
 The Message Timestamp, Device Geolocation, RSSI, Device Temperature and Device Battery Voltage are metadata parameters provided by the Network. [[draft-ietf-lpwan-schc-over-sigfox-03]](https://www.ietf.org/id/draft-ietf-lpwan-schc-over-sigfox-03.txt)
 
+
+### Test case 6 - Testing LoPy, Sigfox Cloud and Local Server using ngrok
+
+For further testing the cloud function locally, or if it runs in a private server, the end point can be exposed using ngrok.
+Ngrok creates a secure tunnel between a public end point and the flask server running locally and can be used to enable communication from the Sigfox Cloud to the local Flask Server. 
+
+![example request](images/schc_sigfox_diagrams_6.png)
+
+To perform this test you must have an ngrok account and properly setup. More information [here](https://ngrok.com).
+
+First the flask server must be up and running. Then, ngrok service can be started as follows:
+
+```
+ngrok http 5000
+```
+
+This will start the ngrok service and show the url you need to configure in the sigfox cloud. Check the enable and Downlink in the callback. The callback should look as follows:
+
+![sigfox_ngrox_configuration](images/sigfox-ngrok-configuration.png)
+
+Now the messages send from the LoPy are forwarded from the Sigfox Cloud to the local Flask server.
+
+

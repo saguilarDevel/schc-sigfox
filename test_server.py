@@ -662,9 +662,9 @@ def wyschc_get():
 
             # If the fragment is an ALL-1
             if fragment_message.is_all_1():
-                response = {request_dict['device']: {'downlinkData': '080fffffffffffff'}}
-                print("response -> {}".format(json.dumps(response)))
-                return json.dumps(response), 200
+                # response = {request_dict['device']: {'downlinkData': '080fffffffffffff'}}
+                # print("response -> {}".format(json.dumps(response)))
+                # return json.dumps(response), 200
                 # The bitmap in the last window follows the following regular expression: "1*0*1*"
                 # Since the ALL-1, if received, changes the least significant bit of the bitmap.
                 # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:
