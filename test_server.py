@@ -17,7 +17,7 @@ from Messages.Fragment import Fragment
 
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = './credentials/wyschc-f271bdb8ee50.json'
+CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 
 # File where we will store authentication credentials after acquiring them.
 # CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
@@ -500,7 +500,7 @@ def wyschc_get():
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-        BUCKET_NAME = 'wyschc'
+        BUCKET_NAME = 'wyschc-niclabs'
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
@@ -532,6 +532,8 @@ def wyschc_get():
                     for b in range(profile_uplink.BITMAP_SIZE):
                         bitmap += "0"
                     upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+
+            upload_blob(BUCKET_NAME, 0, "timestamp")
 
         print("BLOBs created")
 
@@ -718,4 +720,4 @@ def wyschc_get():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='localhost')
