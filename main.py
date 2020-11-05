@@ -1,5 +1,6 @@
 import re
 import time
+import random
 from flask import abort
 from Entities.Sigfox import Sigfox
 
@@ -28,6 +29,12 @@ def hello_get(request):
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
+        loss_rate = 10
+        coin = random.random()
+        print('random toss {}'.format(coin * 100))
+        if coin * 100 < loss_rate:
+            print("[LOSS] The fragment was lost.")
+            return '', 204
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
@@ -172,9 +179,9 @@ def hello_get(request):
                 print("[ALLX] Sending ACK after window...")
 
                 # Create an ACK message and send it.
-                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                # response_json = send_ack(request_dict, ack)
-                # print("200, Response content -> {}".format(response_json))
+                ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                response_json = send_ack(request_dict, ack)
+                print("200, Response content -> {}".format(response_json))
                 # Response to continue, no ACK is sent Back.
                 return '', 204
                 # return response_json, 200
@@ -196,6 +203,8 @@ def hello_get(request):
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
+                        # Commented this section to solve issue with reassembly
+                        # -----------------------------------------------------
                         # Find the index of the first empty blob:
                         # last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
 
@@ -229,6 +238,7 @@ def hello_get(request):
 
                         # Upload the full message.
                         # upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+                        # -----------------------------------------------------
 
                         # Send last ACK to end communication.
                         print("[ALL1] Reassembled: Sending last ACK")

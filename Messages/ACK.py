@@ -17,11 +17,16 @@ class ACK:
         self.bitmap = bitmap
         self.c = c
 
-        self.header = self.rule_id + self.dtag + self.w + self.bitmap + self.c
+        print('c:{}, bitmap:{}'.format(self.c, self.bitmap))
+        # self.header = self.rule_id + self.dtag + self.w + self.bitmap + self.c
+        if self.c == "1":
+            self.header = self.rule_id + self.dtag + self.w + self.c
+        else:
+            self.header = self.rule_id + self.dtag + self.w + self.c + self.bitmap
         # print("profile.MTU / len(self.header + self.padding) -> {}".format(round(len(self.header + self.padding) / 8)))
         # while len(self.header + self.padding) < round(len(self.header + self.padding) / 8) * 8:
         while len(self.header + self.padding) < profile.MTU:
-            self.padding += '1'
+            self.padding += '0'
 
     def to_string(self):
         return self.header + self.padding

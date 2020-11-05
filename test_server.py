@@ -1,5 +1,5 @@
 import re
-
+import random
 from flask import Flask, request
 import os
 import json
@@ -511,6 +511,13 @@ def wyschc_get():
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
+        loss_rate = 10
+        coin = random.random()
+        print('random toss {}'.format(coin * 100))
+        if coin * 100 < loss_rate:
+            print("[LOSS] The fragment was lost.")
+            return '', 204
+
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
@@ -657,8 +664,8 @@ def wyschc_get():
                 response_json = send_ack(request_dict, ack)
                 print("200, Response content -> {}".format(response_json))
                 # Response to continue, no ACK is sent Back.
-                # return '', 204
-                return response_json, 200
+                return '', 204
+                # return response_json, 200
 
             # If the fragment is an ALL-1
             if fragment_message.is_all_1():
