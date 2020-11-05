@@ -22,6 +22,7 @@ CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
 # File where we will store authentication credentials after acquiring them.
 # CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
+# CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
 
 @app.before_request
