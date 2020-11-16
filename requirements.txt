@@ -5,3 +5,4 @@ google-cloud-storage
 # google-cloud-auth
 Flask==1.1.2
 requests~=2.22.0
+pandas == 1.1.4

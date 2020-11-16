@@ -203,7 +203,7 @@ def hello_get(request):
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
-                        # Commented this section to solve issue with reassembly
+                        # Commented section to solve issue with reassembly
                         # -----------------------------------------------------
                         # Find the index of the first empty blob:
                         # last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
