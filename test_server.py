@@ -560,6 +560,9 @@ def wyschc_get():
                         bitmap += "0"
                     upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
 
+        if not exists_blob(BUCKET_NAME, "timestamp"):
+            upload_blob(BUCKET_NAME, request_dict["time"], "timestamp")
+
         print("BLOBs created")
 
         # Initialize empty window
@@ -614,7 +617,7 @@ def wyschc_get():
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
                         "all_windows/window_%d/fragment_%d_%d" % (current_window, current_window, fragment_number))
 
         # If the FCN could not been found, it almost certainly is the final fragment.
@@ -623,7 +626,7 @@ def wyschc_get():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+            upload_blob_using_threads(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
         # Get some SCHC values from the fragment.
         rule_id = fragment_message.header.RULE_ID
@@ -688,7 +691,7 @@ def wyschc_get():
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
                         last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                        upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                        upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
                                     "all_windows/window_%d/fragment_%d_%d" % (
                                         current_window, current_window, last_index))
                         try:
@@ -769,7 +772,7 @@ def http_reassemble():
         payload = bytearray(reassembler.reassemble())
 
         # Upload the full message.
-        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+        upload_blob_using_threads(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
 
         return '', 204
 
