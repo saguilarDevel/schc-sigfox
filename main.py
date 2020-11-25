@@ -29,12 +29,14 @@ def hello_get(request):
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
-        loss_rate = 10
-        coin = random.random()
-        print('random toss {}'.format(coin * 100))
-        if coin * 100 < loss_rate:
-            print("[LOSS] The fragment was lost.")
-            return '', 204
+        if request_dict['enable_losses']:
+            loss_rate = request_dict["loss_rate"]
+            # loss_rate = 10
+            coin = random.random()
+            print('loss rate: {}, random toss:{}'.format(loss_rate,coin * 100))
+            if coin * 100 < loss_rate:
+                print("[LOSS] The fragment was lost.")
+                return '', 204
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
@@ -136,7 +138,7 @@ def hello_get(request):
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
             print("[RECV] This seems to be the final fragment.")
-
+            print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_0(), fragment_message.is_all_1()))
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
@@ -176,12 +178,14 @@ def hello_get(request):
             # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
             # This is to be modified, as ACK-on-Error does not need an ACK for every window.
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
-                print("[ALLX] Sending ACK after window...")
+                print("[ALL0] All Fragments of current window received")
+                print("[ALL0] No need to send an ACK")
+                # print("[ALLX] Sending ACK after window...")
 
                 # Create an ACK message and send it.
-                ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                response_json = send_ack(request_dict, ack)
-                print("200, Response content -> {}".format(response_json))
+                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                # response_json = send_ack(request_dict, ack)
+                # print("200, Response content -> {}".format(response_json))
                 # Response to continue, no ACK is sent Back.
                 return '', 204
                 # return response_json, 200

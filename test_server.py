@@ -16,14 +16,16 @@ from Entities.Reassembler import Reassembler
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 
+import config.config as config
+
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
-
+# CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
+# CLIENT_SECRETS_FILE = credentials.CLIENT_SECRETS_FILE
 # File where we will store authentication credentials after acquiring them.
 # CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
 # CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
 @app.before_request
 def before_request():
@@ -77,7 +79,7 @@ def post_message():
 
     if request.method == 'POST':
         print("POST RECEIVED")
-        BUCKET_NAME = 'sigfoxschc'
+        BUCKET_NAME = config.BUCKET_NAME
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
 
@@ -274,7 +276,7 @@ def hello_get():
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-        BUCKET_NAME = 'sigfoxschc'
+        BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
@@ -512,12 +514,15 @@ def wyschc_get():
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
-        loss_rate = 10
-        coin = random.random()
-        print('random toss {}'.format(coin * 100))
-        if coin * 100 < loss_rate:
-            print("[LOSS] The fragment was lost.")
-            return '', 204
+        if 'enable_losses' in request_dict:
+            if request_dict['enable_losses']:
+                loss_rate = request_dict["loss_rate"]
+                # loss_rate = 10
+                coin = random.random()
+                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                if coin * 100 < loss_rate:
+                    print("[LOSS] The fragment was lost.")
+                    return '', 204
 
 
         # Get data and Sigfox Sequence Number.
