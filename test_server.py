@@ -90,7 +90,7 @@ def post_message():
 
     if request.method == 'POST':
         print("POST RECEIVED")
-        BUCKET_NAME = config.BUCKET_NAME
+        # BUCKET_NAME = config.BUCKET_NAME
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
         # Get data and Sigfox Sequence Number.
@@ -222,7 +222,8 @@ def wyschc_get():
 
         # Initialize Cloud Storage variables.
         # BUCKET_NAME = 'sigfoxschc'
-        BUCKET_NAME = 'wyschc-niclabs'
+        # BUCKET_NAME = 'wyschc-niclabs'
+        BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
