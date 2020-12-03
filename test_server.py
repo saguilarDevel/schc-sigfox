@@ -29,19 +29,114 @@ app = Flask(__name__)
 CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
+def save_current_fragment(fragment):
+    print("saving fragment")
+    # file = open('fragments_stats.json', 'a+')
+    # file.write(json.dumps(fragment))
+    # file.write('')
+    # file.close()
+    data = {}
+    try:
+        print("Opening file")
+        with open('fragments_stats.json') as json_file:
+            data = json.load(json_file)
+    except Exception as e:
+        print("Exception: {}".format(e))
+        file = open('fragments_stats.json', 'a+')
+        seqNumber = fragment['seqNumber']
+        data[seqNumber] = fragment
+        file.write(json.dumps(data))
+        file.write('')
+        file.close()
+        return
+    print("data: {}".format(data))
+    print("fragment: {}".format(fragment))
+    print("fragment['seqNumber']: {}".format(fragment['seqNumber']))
+    seqNumber = fragment['seqNumber']
+    data[seqNumber] = fragment
+    print("data: {}".format(data))
+    file = open('fragments_stats.json', 'w')
+    file.write(json.dumps(data))
+    file.write('')
+    file.close()
+    return
+
 @app.before_request
 def before_request():
     g.start = time.time()
+    g.current_fragment = {}
+    print('[before_request]: ' + request.endpoint)
+    if request.endpoint == 'wyschc_get':
+        if request.method == 'POST':
+            print("[before_request]: POST RECEIVED")
+            # BUCKET_NAME = config.BUCKET_NAME
+            request_dict = request.get_json()
+            print('[before_request]: Received Sigfox message: {}'.format(request_dict))
+            # Get data and Sigfox Sequence Number.
+            fragment = request_dict["data"]
+            sigfox_sequence_number = request_dict["seqNumber"]
+            device = request_dict['device']
+            print('[before_request]: Data received from device id:{}, data:{}'.format(device, request_dict['data']))
+            # Parse fragment into "fragment = [header, payload]
+            header = bytes.fromhex(fragment[:2])
+            payload = bytearray.fromhex(fragment[2:])
+            data = [header, payload]
+            # Initialize SCHC variables.
+            profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
+            profile_downlink = Sigfox("DOWNLINK", "NO ACK")
+            buffer_size = profile_uplink.MTU
+            n = profile_uplink.N
+            m = profile_uplink.M
+            # Convert to a Fragment class for easier manipulation.
+            fragment_message = Fragment(profile_uplink, data)
+            # Get some SCHC values from the fragment.
+            rule_id = fragment_message.header.RULE_ID
+            dtag = fragment_message.header.DTAG
+            w = fragment_message.header.W
+            g.current_fragment['downlink_enable'] = request_dict['ack']
+            g.current_fragment['sending_start'] = time.time()
+            g.current_fragment['data'] = request_dict["data"]
+            g.current_fragment['FCN'] = fragment_message.header.FCN
+            g.current_fragment['fragment_size'] = len(request_dict['data'])
+            g.current_fragment['RULE_ID'] = fragment_message.header.RULE_ID
+            g.current_fragment['W'] = fragment_message.header.W
+            g.current_fragment['seqNumber'] = sigfox_sequence_number
+            print('[before_request]: seqNum:{}, RULE_ID: {} W: {}, FCN: {}'.format(sigfox_sequence_number,
+                  fragment_message.header.RULE_ID, fragment_message.header.W, fragment_message.header.FCN))
+            print('[before_request]: {}'.format(g.current_fragment))
 
 @app.after_request
 def after_request(response):
     diff = time.time() - g.start
-    print("execution time: {}".format(diff))
-    # if ((response.response) and
-    #     (200 <= response.status_code < 300) and
-    #     (response.content_type.startswith('text/html'))):
-    #     response.set_data(response.get_data().replace(
-    #         b'__EXECUTION_TIME__', bytes(str(diff), 'utf-8')))
+    print("[after_request]: execution time: {}".format(diff))
+    if request.endpoint == 'wyschc_get':
+        g.current_fragment['sending_end'] = time.time()
+        g.current_fragment['send_time'] = diff
+        g.current_fragment['lost'] = False
+
+        if response.status_code == 204:
+            print("[after_request]: response.status_code == 204")
+            print(response.get_data())
+            if 'fragment lost' in str(response.get_data()):
+                g.current_fragment['lost'] = True
+
+        if response.status_code == 200:
+            print("[after_request]: response.status_code == 200")
+            response_dict = json.loads(response.get_data())
+            print("[after_request]: response_dict: {}".format(response_dict))
+
+            for device in response_dict:
+                print("[after_request]: {}".format(response_dict[device]['downlinkData']))
+                g.current_fragment['ack'] = response_dict[device]['downlinkData']
+                g.current_fragment['ack_send'] = True
+
+        print('[after_request]: current fragment:{}'.format(g.current_fragment))
+        save_current_fragment(g.current_fragment)
+        # ack_received
+        # sending_end
+        # ack
+        # send_time
+
     return response
 
 @app.route('/')
@@ -114,19 +209,32 @@ def post_message():
         rule_id = fragment_message.header.RULE_ID
         dtag = fragment_message.header.DTAG
         w = fragment_message.header.W
+        print('RULE_ID: {} W: {}, FCN: {}'.format(fragment_message.header.RULE_ID,fragment_message.header.W, fragment_message.header.FCN))
         if 'ack' in request_dict:
             if request_dict['ack'] == 'true':
                 print('w:{}'.format(w))
                 if w == '00':
+                    # print('ACK already send for this window, move along')
+                    # counter_w0 = 0
+                    # return '', 204
                     if counter_w0 == 1:
-                        print('ACK already send for this window, move along')
+                        # print('ACK already send for this window, move along')
+                        print("This time send an ACK for window 1")
                         counter_w0 = 0
-                        return '', 204
+                        bitmap = '0000001'
+                        ack = ACK(profile_downlink, rule_id, dtag, "01", bitmap, '0')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
+                        return 'fragment lost', 204
                     counter_w0 += 1
+                    print('lets say we lost the All-0, so move along')
+                    return 'fragment lost', 204
                     # return str(counter)
                     # Create an ACK message and send it.
                     bitmap = '1011111'
-                    ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                    bitmap = '1000000'
+                    bitmap = '0100001'
+                    ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                     response_json = send_ack(request_dict, ack)
                     print("200, Response content -> {}".format(response_json))
                     # response = {request_dict['device']: {'downlinkData': '07f7ffffffffffff'}}
@@ -134,9 +242,31 @@ def post_message():
                     return response_json, 200
                 elif w == '01':
                     if counter_w1 == 1:
+
+                        print("This time send an ACK for window 1")
+                        # counter_w0 = 0
+                        counter_w1 += 1
+                        bitmap = '0000001'
+                        ack = ACK(profile_downlink, rule_id, dtag, "01", bitmap, '0')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
+                        return '', 204
+
+                    elif counter_w1 == 2:
+                        print('Resend an ACK for window 1')
+                        counter_w1 += 1
+                        bitmap = '0000001'
+                        ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
+                        # response = {request_dict['device']: {'downlinkData': '07f7ffffffffffff'}}
+                        # print("response -> {}".format(response))
+                        return response_json, 200
+
+                    elif counter_w1 == 3:
                         print('ACK already send for this window, send last ACK')
                         counter_w1 = 0
-                        bitmap = '1111111'
+                        bitmap = '0100001'
                         ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                         response_json = send_ack(request_dict, ack)
                         print("200, Response content -> {}".format(response_json))
@@ -144,10 +274,20 @@ def post_message():
                         # print("response -> {}".format(response))
                         return response_json, 200
 
+
+                        bitmap = '0100001'
+                        ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
                     counter_w1 += 1
                     # Create an ACK message and send it.
                     bitmap = '0000001'
+
                     ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+
+                    # Test for loss of All-0 in window 0
+                    bitmap = '1010110'
+                    ack = ACK(profile_downlink, rule_id, dtag, '00', bitmap, '0')
                     # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                     response_json = send_ack(request_dict, ack)
                     print("200, Response content -> {}".format(response_json))
@@ -214,7 +354,7 @@ def wyschc_get():
                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                 if coin * 100 < loss_rate:
                     print("[LOSS] The fragment was lost.")
-                    return '', 204
+                    return 'fragment lost', 204
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
@@ -434,7 +574,8 @@ def http_reassemble():
 
         # Initialize Cloud Storage variables.
         # BUCKET_NAME = 'sigfoxschc'
-        BUCKET_NAME = 'wyschc-niclabs'
+        # BUCKET_NAME = 'wyschc-niclabs'
+        BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")

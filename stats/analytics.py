@@ -31,18 +31,20 @@ df1_transposed.astype({"FCN": str, "RULE_ID": str,  "W": str,  "ack": str, "data
 # print(df1_transposed.columns)
 # print(df1_transposed[df1_transposed['download_enable'].isin([False])])
 
-df_nowait = df1_transposed[df1_transposed['download_enable'].isin([False])]
-print("Fragments - no dowload requested")
+
+df_nowait = df1_transposed[df1_transposed['downlink_enable'].isin([False])]
+print("Fragments - no donwlink requested")
 print(df_nowait['send_time'])
 print("std:{}".format(df_nowait['send_time'].std(axis=0, skipna=True)))
 print("mean:{}".format(df_nowait['send_time'].mean(axis=0, skipna=True)))
 
-df_wait = df1_transposed[df1_transposed['download_enable'].isin([True])]
-print("Fragments - dowload requested")
+df_wait = df1_transposed[df1_transposed['downlink_enable'].isin([True])]
+print("Fragments - downlink requested")
 print(df_wait['send_time'])
 print("std:{}".format(df_wait['send_time'].std(axis=0, skipna=True)))
 print("mean:{}".format(df_wait['send_time'].mean(axis=0, skipna=True)))
 
+df1_transposed.to_excel('test_stats.xlsx', engine='xlsxwriter')
 
 # print(df1['FCN'])
 
