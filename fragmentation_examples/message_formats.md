@@ -30,6 +30,7 @@ The RECOMMENDED Fragmentation Header size is 8 bits, and it is composed as follo
 How to differentiate an All-1 fragment with no payload from a Sender Abort.
 
 The ACK size is 13 bits. Padding must be added to complete the 64 bits sigfox downlink maximum payload size.
+
 ```text
 ACK Success: [ Rule ID | Dtag |   W  | C-1 | (P-0) ]
 ACK Failure: [ Rule ID | Dtag |   W  | C-0 | Bitmap | (P-0) ]

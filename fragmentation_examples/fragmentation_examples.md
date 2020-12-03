@@ -42,23 +42,7 @@ Last packet fragment is marked with the FCN = All-1 (1111).
 
 ### ACK-on-Error Mode
 
-```text
-        Sender               Receiver
-          |-----W=0, FCN=6----->|
-          |-----W=0, FCN=5----->|
-          |-----W=0, FCN=4----->|
-          |-----W=0, FCN=3----->|
-          |-----W=0, FCN=2----->|
-          |-----W=0, FCN=1----->|
-          |-----W=0, FCN=0----->|
-      (no ACK)
-          |-----W=1, FCN=6----->|
-          |-----W=1, FCN=5----->|
-          |-----W=1, FCN=4----->|
-          |--W=1, FCN=7 + RCS-->| Integrity check: success
-          |<-- ACK, W=1, C=1 ---| C=1
-        (End)
-```
+
 #### Case No losses
 
 ```text
