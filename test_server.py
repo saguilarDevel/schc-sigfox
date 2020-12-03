@@ -29,7 +29,10 @@ app = Flask(__name__)
 CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
+filename = './stats/files/server/fragments_stats_v2.2.json'
+
 def save_current_fragment(fragment):
+    global filename
     print("saving fragment")
     # file = open('fragments_stats.json', 'a+')
     # file.write(json.dumps(fragment))
@@ -38,11 +41,11 @@ def save_current_fragment(fragment):
     data = {}
     try:
         print("Opening file")
-        with open('fragments_stats.json') as json_file:
+        with open(filename) as json_file:
             data = json.load(json_file)
     except Exception as e:
         print("Exception: {}".format(e))
-        file = open('fragments_stats.json', 'a+')
+        file = open(filename, 'a+')
         seqNumber = fragment['seqNumber']
         data[seqNumber] = fragment
         file.write(json.dumps(data))
@@ -55,7 +58,7 @@ def save_current_fragment(fragment):
     seqNumber = fragment['seqNumber']
     data[seqNumber] = fragment
     print("data: {}".format(data))
-    file = open('fragments_stats.json', 'w')
+    file = open(filename, 'w')
     file.write(json.dumps(data))
     file.write('')
     file.close()
@@ -113,7 +116,8 @@ def after_request(response):
         g.current_fragment['sending_end'] = time.time()
         g.current_fragment['send_time'] = diff
         g.current_fragment['lost'] = False
-
+        g.current_fragment['ack'] = ''
+        g.current_fragment['ack_send'] = False
         if response.status_code == 204:
             print("[after_request]: response.status_code == 204")
             print(response.get_data())
@@ -495,13 +499,15 @@ def wyschc_get():
 
             # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
             # This is to be modified, as ACK-on-Error does not need an ACK for every window.
+            # No need to send an ACK if the bitmap has all 1.
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
                 print("[ALLX] Sending ACK after window...")
 
                 # Create an ACK message and send it.
-                ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                response_json = send_ack(request_dict, ack)
-                print("200, Response content -> {}".format(response_json))
+                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                # response_json = send_ack(request_dict, ack)
+                print("204, Response content -> ''")
+                # print("200, Response content -> {}".format(response_json))
                 # Response to continue, no ACK is sent Back.
                 return '', 204
                 # return response_json, 200
