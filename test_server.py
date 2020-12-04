@@ -29,7 +29,7 @@ app = Flask(__name__)
 CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
-filename = './stats/files/server/fragments_stats_v2.2.json'
+filename = './stats/files/server/fragments_stats_v2.5.json'
 
 def save_current_fragment(fragment):
     global filename
@@ -52,12 +52,12 @@ def save_current_fragment(fragment):
         file.write('')
         file.close()
         return
-    print("data: {}".format(data))
-    print("fragment: {}".format(fragment))
-    print("fragment['seqNumber']: {}".format(fragment['seqNumber']))
+    # print("data: {}".format(data))
+    # print("fragment: {}".format(fragment))
+    # print("fragment['seqNumber']: {}".format(fragment['seqNumber']))
     seqNumber = fragment['seqNumber']
     data[seqNumber] = fragment
-    print("data: {}".format(data))
+    # print("data: {}".format(data))
     file = open(filename, 'w')
     file.write(json.dumps(data))
     file.write('')
@@ -96,11 +96,11 @@ def before_request():
             rule_id = fragment_message.header.RULE_ID
             dtag = fragment_message.header.DTAG
             w = fragment_message.header.W
-            g.current_fragment['downlink_enable'] = request_dict['ack']
-            g.current_fragment['sending_start'] = time.time()
-            g.current_fragment['data'] = request_dict["data"]
+            g.current_fragment['s-downlink_enable'] = request_dict['ack']
+            g.current_fragment['s-sending_start'] = time.time()
+            g.current_fragment['s-data'] = request_dict["data"]
             g.current_fragment['FCN'] = fragment_message.header.FCN
-            g.current_fragment['fragment_size'] = len(request_dict['data'])
+            g.current_fragment['s-fragment_size'] = len(data)
             g.current_fragment['RULE_ID'] = fragment_message.header.RULE_ID
             g.current_fragment['W'] = fragment_message.header.W
             g.current_fragment['seqNumber'] = sigfox_sequence_number
@@ -113,16 +113,17 @@ def after_request(response):
     diff = time.time() - g.start
     print("[after_request]: execution time: {}".format(diff))
     if request.endpoint == 'wyschc_get':
-        g.current_fragment['sending_end'] = time.time()
-        g.current_fragment['send_time'] = diff
-        g.current_fragment['lost'] = False
-        g.current_fragment['ack'] = ''
-        g.current_fragment['ack_send'] = False
+        g.current_fragment['s-sending_end'] = time.time()
+        g.current_fragment['s-send_time'] = diff
+        g.current_fragment['s-lost'] = False
+        g.current_fragment['s-ack'] = ''
+        g.current_fragment['s-ack_send'] = False
         if response.status_code == 204:
             print("[after_request]: response.status_code == 204")
             print(response.get_data())
             if 'fragment lost' in str(response.get_data()):
-                g.current_fragment['lost'] = True
+                print('ups.. fragment lost')
+                g.current_fragment['s-lost'] = True
 
         if response.status_code == 200:
             print("[after_request]: response.status_code == 200")
@@ -131,8 +132,8 @@ def after_request(response):
 
             for device in response_dict:
                 print("[after_request]: {}".format(response_dict[device]['downlinkData']))
-                g.current_fragment['ack'] = response_dict[device]['downlinkData']
-                g.current_fragment['ack_send'] = True
+                g.current_fragment['s-ack'] = response_dict[device]['downlinkData']
+                g.current_fragment['s-ack_send'] = True
 
         print('[after_request]: current fragment:{}'.format(g.current_fragment))
         save_current_fragment(g.current_fragment)
