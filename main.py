@@ -1,6 +1,8 @@
 import re
 import time
 import random
+import requests
+
 from flask import abort
 from Entities.Sigfox import Sigfox
 
@@ -139,6 +141,7 @@ def hello_get(request):
         except KeyError:
             print("[RECV] This seems to be the final fragment.")
             print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_0(), fragment_message.is_all_1()))
+            # print("RULE_ID: {}, W:{}, FCN:{}".format(fragment.header.RULE_ID, fragment.header.W, fragment.header.FCN))
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
@@ -207,42 +210,20 @@ def hello_get(request):
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
-                        # Commented section to solve issue with reassembly
-                        # -----------------------------------------------------
-                        # Find the index of the first empty blob:
-                        # last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-
-                        # print("[ALL1] Last fragment. Reassembling...")
-
-                        # Upload the fragment
-                        # upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
-                        #             "all_windows/window_%d/fragment_%d_%d" % (
-                        #                 current_window, current_window, last_index))
-
-                        # Get all the fragments into an array in the format "fragment = [header, payload]"
-                        fragments = []
-
-                        # TODO: This assumes that the last received message is in the last window.
-                        # for i in range(current_window + 1):
-                        #     for j in range(2 ** n - 1):
-                        #         print("Loading fragment {}".format(j))
-                        #         fragment_file = read_blob(BUCKET_NAME,
-                        #                                   "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
-                        #         print(fragment_file)
-                        #         ultimate_header = fragment_file[0]
-                        #         ultimate_payload = fragment_file[1:]
-                        #         ultimate_fragment = [ultimate_header.encode(), ultimate_payload.encode()]
-                        #         fragments.append(ultimate_fragment)
-                        #         if i == current_window and j == last_index:
-                        #             break
-
-                        # Instantiate a Reassembler and start reassembling.
-                        # reassembler = Reassembler(profile_uplink, fragments)
-                        # payload = bytearray(reassembler.reassemble())
-
-                        # Upload the full message.
-                        # upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
-                        # -----------------------------------------------------
+                        last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                        upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                                    "all_windows/window_%d/fragment_%d_%d" % (
+                                        current_window, current_window, last_index))
+                        print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
+                        try:
+                            print('Activating reassembly process...')
+                            _ = requests.post(url='https://us-central1-schc-sigfox-upc.cloudfunctions.net/http_reassemble',
+                                              json={"last_index": last_index, "current_window": current_window},
+                                              timeout=1)
+                        # except requests.exceptions.ReadTimeout:
+                        #     pass
+                        except Exception as e:
+                            print("exception in reassembly call: {}".format(e))
 
                         # Send last ACK to end communication.
                         print("[ALL1] Reassembled: Sending last ACK")
@@ -270,3 +251,55 @@ def hello_get(request):
     else:
         print('Invalid HTTP Method to invoke Cloud Function. Only POST supported')
         return abort(405)
+
+
+def http_reassemble(request):
+
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("[REASSEMBLE] POST RECEIVED")
+        request_dict = request.get_json()
+        print('Received HTTP message: {}'.format(request_dict))
+
+        current_window = int(request_dict["current_window"])
+        last_index = int(request_dict["last_index"])
+
+        # Initialize Cloud Storage variables.
+        BUCKET_NAME = 'sigfoxschc'
+        # BUCKET_NAME = 'wyschc-niclabs'
+        # BUCKET_NAME = config.BUCKET_NAME
+
+        # Initialize SCHC variables.
+        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
+        n = profile_uplink.N
+        # Find the index of the first empty blob:
+
+        print("[REASSEMBLE] Reassembling...")
+
+        # Get all the fragments into an array in the format "fragment = [header, payload]"
+        fragments = []
+
+        # TODO: This assumes that the last received message is in the last window.
+        for i in range(current_window + 1):
+            for j in range(2 ** n - 1):
+                print("Loading fragment {}".format(j))
+                fragment_file = read_blob(BUCKET_NAME,
+                                          "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
+                print(fragment_file)
+                ultimate_header = fragment_file[0]
+                ultimate_payload = fragment_file[1:]
+                ultimate_fragment = [ultimate_header.encode(), ultimate_payload.encode()]
+                fragments.append(ultimate_fragment)
+                if i == current_window and j == last_index:
+                    break
+
+        # Instantiate a Reassembler and start reassembling.
+        reassembler = Reassembler(profile_uplink, fragments)
+        payload = bytearray(reassembler.reassemble())
+
+        # Upload the full message.
+        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+
+        return '', 204

@@ -36,6 +36,20 @@ The following are the steps required to create the callback in the Sigfox Cloud:
     "ack" : "{ack}"
 }
 ```
+New code:
+```json
+{
+"deviceType" : "{deviceTypeId}",
+"device" : "{device}",
+"time" : "{time}",
+"data" : "{data}",
+"seqNumber" : "{seqNumber}",
+"ack" : "{ack}",
+"loss_rate":10,
+"enable_losses":false
+}
+```
+
 
 The result of the configuration should look as follows:
 
