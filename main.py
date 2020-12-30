@@ -45,7 +45,7 @@ def hello_get(request):
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-        BUCKET_NAME = 'sigfoxschc'
+        BUCKET_NAME = 'sigfox-schc'
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
