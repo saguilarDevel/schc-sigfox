@@ -1,10 +1,10 @@
 import pandas as pd
 import json
+import requests
 
 pd.set_option('display.max_columns', None)
 
-# json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/stats_file.json') as json_file:
+with open('LoPy/stats_file.json') as json_file:
     data = json.load(json_file)
 
 tx_json = {}
@@ -24,6 +24,7 @@ df1 = pd.read_json(str(json.dumps(data['fragments'], sort_keys=True)))
 # df1.astype({"Column 6": bool})
 # print(df1.dtypes)
 df1_transposed = df1.T # or df1.transpose()
+print("Sum of fragments transmission duration: {}".format(df1_transposed['send_time'].sum(axis=0,skipna=True)))
 print(df1_transposed)
 df1_transposed.astype({"FCN": str, "RULE_ID": str,  "W": str,  "ack": str, "data": str, "download_enable": bool,
                        "rssi": int, "send_time": float, "sending_end": float, "sending_start": float})
@@ -32,17 +33,32 @@ df1_transposed.astype({"FCN": str, "RULE_ID": str,  "W": str,  "ack": str, "data
 # print(df1_transposed[df1_transposed['download_enable'].isin([False])])
 
 df_nowait = df1_transposed[df1_transposed['download_enable'].isin([False])]
-print("Fragments - no dowload requested")
+print("\nRegular Fragments")
 print(df_nowait['send_time'])
+print("sum:{}".format(df_nowait['send_time'].sum(axis=0, skipna=True)))
 print("std:{}".format(df_nowait['send_time'].std(axis=0, skipna=True)))
 print("mean:{}".format(df_nowait['send_time'].mean(axis=0, skipna=True)))
 
 df_wait = df1_transposed[df1_transposed['download_enable'].isin([True])]
-print("Fragments - dowload requested")
+print("\nFragments - download requested")
 print(df_wait['send_time'])
+print("sum:{}".format(df_wait['send_time'].sum(axis=0, skipna=True)))
 print("std:{}".format(df_wait['send_time'].std(axis=0, skipna=True)))
 print("mean:{}".format(df_wait['send_time'].mean(axis=0, skipna=True)))
 
+df_all_0 = df_wait[df_wait['FCN'].isin(['000'])]
+print("\nAll-0 Fragments")
+print(df_all_0['send_time'])
+print("sum:{}".format(df_all_0['send_time'].sum(axis=0, skipna=True)))
+print("std:{}".format(df_all_0['send_time'].std(axis=0, skipna=True)))
+print("mean:{}".format(df_all_0['send_time'].mean(axis=0, skipna=True)))
+
+df_all_0 = df_wait[df_wait['FCN'].isin(['111'])]
+print("\nAll-1 Fragments")
+print(df_all_0['send_time'])
+#print("sum:{}".format(df_wait['send_time'].sum(axis=0, skipna=True)))
+#print("std:{}".format(df_wait['send_time'].std(axis=0, skipna=True)))
+#print("mean:{}".format(df_wait['send_time'].mean(axis=0, skipna=True)))
 
 # print(df1['FCN'])
 

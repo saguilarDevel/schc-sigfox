@@ -20,6 +20,7 @@ import config.config as config
 
 app = Flask(__name__)
 
+CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 # CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 # CLIENT_SECRETS_FILE = credentials.CLIENT_SECRETS_FILE
 # File where we will store authentication credentials after acquiring them.
@@ -220,7 +221,7 @@ def wyschc_get():
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-        BUCKET_NAME = 'sigfoxschc'
+        BUCKET_NAME = 'sigfox-schc'
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
