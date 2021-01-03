@@ -12,6 +12,7 @@ from Messages.Fragment import Fragment
 
 from function import *
 from blobHelperFunctions import *
+import config.config as config
 
 def hello_get(request):
     """HTTP Cloud Function.
@@ -31,21 +32,13 @@ def hello_get(request):
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
-        if request_dict['enable_losses']:
-            loss_rate = request_dict["loss_rate"]
-            # loss_rate = 10
-            coin = random.random()
-            print('loss rate: {}, random toss:{}'.format(loss_rate,coin * 100))
-            if coin * 100 < loss_rate:
-                print("[LOSS] The fragment was lost.")
-                return '', 204
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-        BUCKET_NAME = 'sigfox-schc'
+        BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
@@ -100,6 +93,16 @@ def hello_get(request):
         # Convert to a Fragment class for easier manipulation.
         fragment_message = Fragment(profile_uplink, data)
 
+        # if 'enable_losses' in request_dict and not(fragment_message.is_all_0() or fragment_message.is_all_1()):
+        #     if request_dict['enable_losses']:
+        #         loss_rate = request_dict["loss_rate"]
+        #         # loss_rate = 10
+        #         coin = random.random()
+        #         print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+        #         if coin * 100 < loss_rate:
+        #             print("[LOSS] The fragment was lost.")
+        #             return 'fragment lost', 204
+
         # Get current window for this fragment.
         current_window = int(fragment_message.header.W, 2)
 
@@ -129,6 +132,13 @@ def hello_get(request):
                 current_window) + "th window.")
             print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
 
+            losses_mask = read_blob(BUCKET_NAME, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+            if (losses_mask[fragment_number]) != '0':
+                losses_mask = replace_bit(losses_mask, fragment_number, str(int(losses_mask[fragment_number])-1))
+                upload_blob(BUCKET_NAME, losses_mask, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+                print("[LOSS] The fragment was lost.")
+                return 'fragment lost', 204
+
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
@@ -140,7 +150,7 @@ def hello_get(request):
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
             print("[RECV] This seems to be the final fragment.")
-            print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_0(), fragment_message.is_all_1()))
+            print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_1(), fragment_message.is_all_0()))
             # print("RULE_ID: {}, W:{}, FCN:{}".format(fragment.header.RULE_ID, fragment.header.W, fragment.header.FCN))
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
@@ -202,7 +212,7 @@ def hello_get(request):
                 # Since the ALL-1, if received, changes the least significant bit of the bitmap.
                 # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:
                 # 1110001 is a valid bitmap, 1101001 is not.
-                pattern = re.compile("1*0*1*")
+                pattern = re.compile("1*0*1")
 
                 # If the bitmap matches the regex, check if the last two received fragments are consecutive.
                 if pattern.fullmatch(bitmap):
@@ -235,6 +245,12 @@ def hello_get(request):
                         # return response_json, 200
                         # response_json = send_ack(request_dict, last_ack)
                         print("200, Response content -> {}".format(response_json))
+                        return response_json, 200
+                    else:
+                        # Send NACK at the end of the window.
+                        print("[ALLX] Sending NACK for lost fragments...")
+                        ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
+                        response_json = send_ack(request_dict, ack)
                         return response_json, 200
 
                     # If they are not, there is a gap between two fragments: a fragment has been lost.
@@ -301,5 +317,55 @@ def http_reassemble(request):
 
         # Upload the full message.
         upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+
+        return '', 204
+
+def clean(request):
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
+
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("POST RECEIVED")
+        BUCKET_NAME = config.BUCKET_NAME
+        profile = Sigfox("UPLINK", "ACK ON ERROR")
+        for i in range(2 ** profile.M):
+            upload_blob(BUCKET_NAME, "0000000", "all_windows/window_%d/bitmap_%d" % (i, i))
+            upload_blob(BUCKET_NAME, "0000000", "all_windows/window_%d/losses_mask_%d" % (i, i))
+
+        return '', 204
+
+def losses_mask(request):
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
+
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("POST RECEIVED")
+        BUCKET_NAME = config.BUCKET_NAME
+        request_dict = request.get_json()
+        print('Received Request message: {}'.format(request_dict))
+        losses_mask = request_dict["mask"]
+        profile = Sigfox("UPLINK", "ACK ON ERROR")
+        for i in range(2 ** profile.M):
+            upload_blob(BUCKET_NAME, losses_mask, "all_windows/window_%d/losses_mask_%d" % (i, i))
 
         return '', 204

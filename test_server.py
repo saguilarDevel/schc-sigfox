@@ -1,5 +1,7 @@
 import re
 import random
+
+import requests
 from flask import Flask, request
 import os
 import json
@@ -22,25 +24,125 @@ app = Flask(__name__)
 
 CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 # CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
-# CLIENT_SECRETS_FILE = credentials.CLIENT_SECRETS_FILE
+
 # File where we will store authentication credentials after acquiring them.
-# CREDENTIALS_FILE = './credentials/wyschc-d4543f4ee89e.json'
-# CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+
+CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
+
+filename = './stats/files/server/fragments_stats_v2.5.json'
+
+def save_current_fragment(fragment):
+    global filename
+    print("saving fragment")
+    # file = open('fragments_stats.json', 'a+')
+    # file.write(json.dumps(fragment))
+    # file.write('')
+    # file.close()
+    data = {}
+    try:
+        print("Opening file")
+        with open(filename) as json_file:
+            data = json.load(json_file)
+    except Exception as e:
+        print("Exception: {}".format(e))
+        file = open(filename, 'a+')
+        seqNumber = fragment['seqNumber']
+        data[seqNumber] = fragment
+        file.write(json.dumps(data))
+        file.write('')
+        file.close()
+        return
+    # print("data: {}".format(data))
+    # print("fragment: {}".format(fragment))
+    # print("fragment['seqNumber']: {}".format(fragment['seqNumber']))
+    seqNumber = fragment['seqNumber']
+    data[seqNumber] = fragment
+    # print("data: {}".format(data))
+    file = open(filename, 'w')
+    file.write(json.dumps(data))
+    file.write('')
+    file.close()
+    return
 
 @app.before_request
 def before_request():
     g.start = time.time()
+    g.current_fragment = {}
+    print('[before_request]: ' + request.endpoint)
+    if request.endpoint == 'wyschc_get':
+        if request.method == 'POST':
+            print("[before_request]: POST RECEIVED")
+            # BUCKET_NAME = config.BUCKET_NAME
+            request_dict = request.get_json()
+            print('[before_request]: Received Sigfox message: {}'.format(request_dict))
+            # Get data and Sigfox Sequence Number.
+            fragment = request_dict["data"]
+            sigfox_sequence_number = request_dict["seqNumber"]
+            device = request_dict['device']
+            print('[before_request]: Data received from device id:{}, data:{}'.format(device, request_dict['data']))
+            # Parse fragment into "fragment = [header, payload]
+            header = bytes.fromhex(fragment[:2])
+            payload = bytearray.fromhex(fragment[2:])
+            data = [header, payload]
+            # Initialize SCHC variables.
+            profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
+            profile_downlink = Sigfox("DOWNLINK", "NO ACK")
+            buffer_size = profile_uplink.MTU
+            n = profile_uplink.N
+            m = profile_uplink.M
+            # Convert to a Fragment class for easier manipulation.
+            fragment_message = Fragment(profile_uplink, data)
+            # Get some SCHC values from the fragment.
+            rule_id = fragment_message.header.RULE_ID
+            dtag = fragment_message.header.DTAG
+            w = fragment_message.header.W
+            g.current_fragment['s-downlink_enable'] = request_dict['ack']
+            g.current_fragment['s-sending_start'] = time.time()
+            g.current_fragment['s-data'] = request_dict["data"]
+            g.current_fragment['FCN'] = fragment_message.header.FCN
+            g.current_fragment['s-fragment_size'] = len(data)
+            g.current_fragment['RULE_ID'] = fragment_message.header.RULE_ID
+            g.current_fragment['W'] = fragment_message.header.W
+            g.current_fragment['seqNumber'] = sigfox_sequence_number
+            print('[before_request]: seqNum:{}, RULE_ID: {} W: {}, FCN: {}'.format(sigfox_sequence_number,
+                  fragment_message.header.RULE_ID, fragment_message.header.W, fragment_message.header.FCN))
+            print('[before_request]: {}'.format(g.current_fragment))
 
 @app.after_request
 def after_request(response):
     diff = time.time() - g.start
-    print("execution time: {}".format(diff))
-    # if ((response.response) and
-    #     (200 <= response.status_code < 300) and
-    #     (response.content_type.startswith('text/html'))):
-    #     response.set_data(response.get_data().replace(
-    #         b'__EXECUTION_TIME__', bytes(str(diff), 'utf-8')))
+    print("[after_request]: execution time: {}".format(diff))
+    if request.endpoint == 'wyschc_get':
+        g.current_fragment['s-sending_end'] = time.time()
+        g.current_fragment['s-send_time'] = diff
+        g.current_fragment['s-lost'] = False
+        g.current_fragment['s-ack'] = ''
+        g.current_fragment['s-ack_send'] = False
+        if response.status_code == 204:
+            print("[after_request]: response.status_code == 204")
+            print(response.get_data())
+            if 'fragment lost' in str(response.get_data()):
+                print('ups.. fragment lost')
+                g.current_fragment['s-lost'] = True
+
+        if response.status_code == 200:
+            print("[after_request]: response.status_code == 200")
+            response_dict = json.loads(response.get_data())
+            print("[after_request]: response_dict: {}".format(response_dict))
+
+            for device in response_dict:
+                print("[after_request]: {}".format(response_dict[device]['downlinkData']))
+                g.current_fragment['s-ack'] = response_dict[device]['downlinkData']
+                g.current_fragment['s-ack_send'] = True
+
+        print('[after_request]: current fragment:{}'.format(g.current_fragment))
+        save_current_fragment(g.current_fragment)
+        # ack_received
+        # sending_end
+        # ack
+        # send_time
+
     return response
 
 @app.route('/')
@@ -89,7 +191,7 @@ def post_message():
 
     if request.method == 'POST':
         print("POST RECEIVED")
-        BUCKET_NAME = config.BUCKET_NAME
+        # BUCKET_NAME = config.BUCKET_NAME
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
         # Get data and Sigfox Sequence Number.
@@ -113,19 +215,32 @@ def post_message():
         rule_id = fragment_message.header.RULE_ID
         dtag = fragment_message.header.DTAG
         w = fragment_message.header.W
+        print('RULE_ID: {} W: {}, FCN: {}'.format(fragment_message.header.RULE_ID,fragment_message.header.W, fragment_message.header.FCN))
         if 'ack' in request_dict:
             if request_dict['ack'] == 'true':
                 print('w:{}'.format(w))
                 if w == '00':
+                    # print('ACK already send for this window, move along')
+                    # counter_w0 = 0
+                    # return '', 204
                     if counter_w0 == 1:
-                        print('ACK already send for this window, move along')
+                        # print('ACK already send for this window, move along')
+                        print("This time send an ACK for window 1")
                         counter_w0 = 0
-                        return '', 204
+                        bitmap = '0000001'
+                        ack = ACK(profile_downlink, rule_id, dtag, "01", bitmap, '0')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
+                        return 'fragment lost', 204
                     counter_w0 += 1
+                    print('lets say we lost the All-0, so move along')
+                    return 'fragment lost', 204
                     # return str(counter)
                     # Create an ACK message and send it.
                     bitmap = '1011111'
-                    ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                    bitmap = '1000000'
+                    bitmap = '0100001'
+                    ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                     response_json = send_ack(request_dict, ack)
                     print("200, Response content -> {}".format(response_json))
                     # response = {request_dict['device']: {'downlinkData': '07f7ffffffffffff'}}
@@ -133,9 +248,31 @@ def post_message():
                     return response_json, 200
                 elif w == '01':
                     if counter_w1 == 1:
+
+                        print("This time send an ACK for window 1")
+                        # counter_w0 = 0
+                        counter_w1 += 1
+                        bitmap = '0000001'
+                        ack = ACK(profile_downlink, rule_id, dtag, "01", bitmap, '0')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
+                        return '', 204
+
+                    elif counter_w1 == 2:
+                        print('Resend an ACK for window 1')
+                        counter_w1 += 1
+                        bitmap = '0000001'
+                        ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
+                        # response = {request_dict['device']: {'downlinkData': '07f7ffffffffffff'}}
+                        # print("response -> {}".format(response))
+                        return response_json, 200
+
+                    elif counter_w1 == 3:
                         print('ACK already send for this window, send last ACK')
                         counter_w1 = 0
-                        bitmap = '1111111'
+                        bitmap = '0100001'
                         ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                         response_json = send_ack(request_dict, ack)
                         print("200, Response content -> {}".format(response_json))
@@ -143,10 +280,20 @@ def post_message():
                         # print("response -> {}".format(response))
                         return response_json, 200
 
+
+                        bitmap = '0100001'
+                        ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
+                        response_json = send_ack(request_dict, ack)
+                        print("200, Response content -> {}".format(response_json))
                     counter_w1 += 1
                     # Create an ACK message and send it.
                     bitmap = '0000001'
+
                     ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+
+                    # Test for loss of All-0 in window 0
+                    bitmap = '1010110'
+                    ack = ACK(profile_downlink, rule_id, dtag, '00', bitmap, '0')
                     # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                     response_json = send_ack(request_dict, ack)
                     print("200, Response content -> {}".format(response_json))
@@ -184,7 +331,57 @@ def hello_get():
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
 
+@app.route('/clean', methods=['GET', 'POST'])
+def clean():
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
 
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("POST RECEIVED")
+        BUCKET_NAME = config.BUCKET_NAME
+        profile= Sigfox("UPLINK", "ACK ON ERROR")
+        for i in range(2**profile.M):
+            upload_blob(BUCKET_NAME, "0000000", "all_windows/window_%d/bitmap_%d" % (i,i))
+            upload_blob(BUCKET_NAME, "0000000", "all_windows/window_%d/losses_mask_%d" % (i, i))
+
+        return '', 204
+
+@app.route('/losses_mask', methods=['GET', 'POST'])
+def losses_mask():
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
+
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("POST RECEIVED")
+        BUCKET_NAME = config.BUCKET_NAME
+        request_dict = request.get_json()
+        print('Received Request message: {}'.format(request_dict))
+        losses_mask = request_dict["mask"]
+        profile= Sigfox("UPLINK", "ACK ON ERROR")
+        for i in range(2**profile.M):
+            upload_blob(BUCKET_NAME, losses_mask, "all_windows/window_%d/losses_mask_%d" % (i,i))
+
+        return '', 204
 
 @app.route('/wyschc_get', methods=['GET', 'POST'])
 def wyschc_get():
@@ -205,23 +402,16 @@ def wyschc_get():
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
-        if 'enable_losses' in request_dict:
-            if request_dict['enable_losses']:
-                loss_rate = request_dict["loss_rate"]
-                # loss_rate = 10
-                coin = random.random()
-                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
-                if coin * 100 < loss_rate:
-                    print("[LOSS] The fragment was lost.")
-                    return '', 204
-
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-        BUCKET_NAME = 'sigfox-schc'
+
+        # BUCKET_NAME = 'sigfoxschc'
+        # BUCKET_NAME = 'wyschc-niclabs'
+        BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
@@ -279,6 +469,16 @@ def wyschc_get():
 
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+
+        if 'enable_losses' in request_dict and not(fragment_message.is_all_0() or fragment_message.is_all_1()):
+            if request_dict['enable_losses']:
+                loss_rate = request_dict["loss_rate"]
+                # loss_rate = 10
+                coin = random.random()
+                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                if coin * 100 < loss_rate:
+                    print("[LOSS] The fragment was lost.")
+                    return 'fragment lost', 204
 
         # Try getting the fragment number from the FCN dictionary.
         try:
@@ -353,13 +553,15 @@ def wyschc_get():
 
             # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
             # This is to be modified, as ACK-on-Error does not need an ACK for every window.
+            # No need to send an ACK if the bitmap has all 1.
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
                 print("[ALLX] Sending ACK after window...")
 
                 # Create an ACK message and send it.
-                ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                response_json = send_ack(request_dict, ack)
-                print("200, Response content -> {}".format(response_json))
+                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
+                # response_json = send_ack(request_dict, ack)
+                print("204, Response content -> ''")
+                # print("200, Response content -> {}".format(response_json))
                 # Response to continue, no ACK is sent Back.
                 return '', 204
                 # return response_json, 200
@@ -373,47 +575,21 @@ def wyschc_get():
                 # Since the ALL-1, if received, changes the least significant bit of the bitmap.
                 # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:
                 # 1110001 is a valid bitmap, 1101001 is not.
-                pattern = re.compile("1*0*1*")
+                pattern = re.compile("1*0*1")
 
                 # If the bitmap matches the regex, check if the last two received fragments are consecutive.
                 if pattern.fullmatch(bitmap):
-
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
-                        # Find the index of the first empty blob:
-                        # last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-
-                        # print("[ALL1] Last fragment. Reassembling...")
-
-                        # Upload the fragment
-                        # upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
-                        #             "all_windows/window_%d/fragment_%d_%d" % (
-                        #                 current_window, current_window, last_index))
-
-                        # Get all the fragments into an array in the format "fragment = [header, payload]"
-                        fragments = []
-
-                        # TODO: This assumes that the last received message is in the last window.
-                        # for i in range(current_window + 1):
-                        #     for j in range(2 ** n - 1):
-                        #         print("Loading fragment {}".format(j))
-                        #         fragment_file = read_blob(BUCKET_NAME,
-                        #                                   "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
-                        #         print(fragment_file)
-                        #         ultimate_header = fragment_file[0]
-                        #         ultimate_payload = fragment_file[1:]
-                        #         ultimate_fragment = [ultimate_header.encode(), ultimate_payload.encode()]
-                        #         fragments.append(ultimate_fragment)
-                        #         if i == current_window and j == last_index:
-                        #             break
-
-                        # Instantiate a Reassembler and start reassembling.
-                        # reassembler = Reassembler(profile_uplink, fragments)
-                        # payload = bytearray(reassembler.reassemble())
-
-                        # Upload the full message.
-                        # upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+                        last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                        upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                                    "all_windows/window_%d/fragment_%d_%d" % (
+                                        current_window, current_window, last_index))
+                        try:
+                            _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window}, timeout=0.0000000001)
+                        except requests.exceptions.ReadTimeout:
+                            pass
 
                         # Send last ACK to end communication.
                         print("[ALL1] Reassembled: Sending last ACK")
@@ -425,6 +601,12 @@ def wyschc_get():
                         # return response_json, 200
                         # response_json = send_ack(request_dict, last_ack)
                         print("200, Response content -> {}".format(response_json))
+                        return response_json, 200
+                    else:
+                        # Send NACK at the end of the window.
+                        print("[ALLX] Sending NACK for lost fragments...")
+                        ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
+                        response_json = send_ack(request_dict, ack)
                         return response_json, 200
 
                     # If they are not, there is a gap between two fragments: a fragment has been lost.
@@ -442,6 +624,56 @@ def wyschc_get():
         print('Invalid HTTP Method to invoke Cloud Function. Only POST supported')
         return abort(405)
 
+@app.route('/http_reassemble', methods=['GET', 'POST'])
+def http_reassemble():
+
+    if request.method == "POST":
+
+        # Get request JSON.
+        print("[REASSEMBLE] POST RECEIVED")
+        request_dict = request.get_json()
+        print('Received HTTP message: {}'.format(request_dict))
+
+        current_window = int(request_dict["current_window"])
+        last_index = int(request_dict["last_index"])
+
+        # Initialize Cloud Storage variables.
+        # BUCKET_NAME = 'sigfoxschc'
+        # BUCKET_NAME = 'wyschc-niclabs'
+        BUCKET_NAME = config.BUCKET_NAME
+
+        # Initialize SCHC variables.
+        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
+        n = profile_uplink.N
+        # Find the index of the first empty blob:
+
+        print("[REASSEMBLE] Reassembling...")
+
+        # Get all the fragments into an array in the format "fragment = [header, payload]"
+        fragments = []
+
+        # TODO: This assumes that the last received message is in the last window.
+        for i in range(current_window + 1):
+            for j in range(2 ** n - 1):
+                print("Loading fragment {}".format(j))
+                fragment_file = read_blob(BUCKET_NAME,
+                                          "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
+                print(fragment_file)
+                ultimate_header = fragment_file[0]
+                ultimate_payload = fragment_file[1:]
+                ultimate_fragment = [ultimate_header.encode(), ultimate_payload.encode()]
+                fragments.append(ultimate_fragment)
+                if i == current_window and j == last_index:
+                    break
+
+        # Instantiate a Reassembler and start reassembling.
+        reassembler = Reassembler(profile_uplink, fragments)
+        payload = bytearray(reassembler.reassemble())
+
+        # Upload the full message.
+        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+
+        return '', 204
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
