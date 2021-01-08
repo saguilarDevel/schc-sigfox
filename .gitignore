@@ -1,6 +1,12 @@
 venv/
 credentials/
 /.idea/
-
+Entities/__pycache__/
+ Messages/__pycache__/
+__pycache__/
+config/__pycache__/
+pymakr.conf
+stats/LoPy/
+stats_file.json
 .vscode
-/stats/files/
+stats/
