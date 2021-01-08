@@ -9,4 +9,4 @@ pymakr.conf
 stats/LoPy/
 stats_file.json
 .vscode
-config/config.py
+stats/
