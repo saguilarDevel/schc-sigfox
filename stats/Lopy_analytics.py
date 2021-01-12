@@ -4,7 +4,7 @@ import json
 pd.set_option('display.max_columns', None)
 
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/LoPy/stats_file_v2.2.json') as json_file:
+with open('files/LoPy/stats_file_v2.7.json') as json_file:
     data = json.load(json_file)
 
 tx_json = {}
@@ -44,7 +44,7 @@ print(df_wait['send_time'])
 print("std:{}".format(df_wait['send_time'].std(axis=0, skipna=True)))
 print("mean:{}".format(df_wait['send_time'].mean(axis=0, skipna=True)))
 
-df1_transposed.to_excel('test_stats_2.2.xlsx', engine='xlsxwriter')
+df1_transposed.to_excel('test_stats_2.7_v2.xlsx', engine='xlsxwriter')
 
 # print(df1['FCN'])
 
