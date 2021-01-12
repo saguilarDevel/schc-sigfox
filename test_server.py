@@ -22,6 +22,7 @@ import config.config as config
 
 app = Flask(__name__)
 
+CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 # CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
 # File where we will store authentication credentials after acquiring them.
@@ -81,12 +82,25 @@ def before_request():
             device = request_dict['device']
             print('[before_request]: Data received from device id:{}, data:{}'.format(device, request_dict['data']))
             # Parse fragment into "fragment = [header, payload]
-            header = bytes.fromhex(fragment[:2])
-            payload = bytearray.fromhex(fragment[2:])
+            header_bytes = None
+            header_first_hex = fragment[:1]
+            if (header_first_hex) == '0' or '1':
+                header = bytes.fromhex(fragment[:2])
+                payload = bytearray.fromhex(fragment[2:])
+                header_bytes = 1
+            elif (header_first_hex) == '2':
+                header = bytearray.fromhex(fragment[:4])
+                payload = bytearray.fromhex(fragment[4:])
+                header_bytes = 2
+            else:
+                print("Wrong header in fragment")
+                return 'wrong header', 204
+
+
             data = [header, payload]
             # Initialize SCHC variables.
-            profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
-            profile_downlink = Sigfox("DOWNLINK", "NO ACK")
+            profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+            profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
             buffer_size = profile_uplink.MTU
             n = profile_uplink.N
             m = profile_uplink.M
@@ -330,7 +344,64 @@ def hello_get():
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
 
+@app.route('/clean', methods=['GET', 'POST'])
+def clean():
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
 
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("POST RECEIVED")
+        BUCKET_NAME = config.BUCKET_NAME
+        request_dict = request.get_json()
+        print('Received Request message: {}'.format(request_dict))
+        header_bytes = int(request_dict["header_bytes"])
+        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        bitmap = ''
+        for i in range(2**profile.N - 1):
+            bitmap += '0'
+        for i in range(2**profile.M):
+            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
+
+        return '', 204
+
+@app.route('/losses_mask', methods=['GET', 'POST'])
+def losses_mask():
+    """HTTP Cloud Function.
+    Args:
+        request (flask.Request): The request object.
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
+    Returns:
+        The response text, or any set of values that can be turned into a
+        Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
+
+    # Wait for an HTTP POST request.
+    if request.method == 'POST':
+
+        # Get request JSON.
+        print("POST RECEIVED")
+        BUCKET_NAME = config.BUCKET_NAME
+        request_dict = request.get_json()
+        print('Received Request message: {}'.format(request_dict))
+        mask = request_dict["mask"]
+        header_bytes = int(request_dict["header_bytes"])
+        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        for i in range(2**profile.M):
+            upload_blob(BUCKET_NAME, mask, "all_windows/window_%d/losses_mask_%d" % (i,i))
+
+        return '', 204
 
 @app.route('/wyschc_get', methods=['GET', 'POST'])
 def wyschc_get():
@@ -351,28 +422,36 @@ def wyschc_get():
         print("POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
-        if 'enable_losses' in request_dict:
-            if request_dict['enable_losses']:
-                loss_rate = request_dict["loss_rate"]
-                # loss_rate = 10
-                coin = random.random()
-                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
-                if coin * 100 < loss_rate:
-                    print("[LOSS] The fragment was lost.")
-                    return 'fragment lost', 204
 
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
+
         # BUCKET_NAME = 'sigfoxschc'
         # BUCKET_NAME = 'wyschc-niclabs'
         BUCKET_NAME = config.BUCKET_NAME
 
+        # Parse fragment into "fragment = [header, payload]
+        header_bytes = None
+        header_first_hex = fragment[:1]
+        if (header_first_hex) == '0' or (header_first_hex) == '1':
+            header = bytes.fromhex(fragment[:2])
+            payload = bytearray.fromhex(fragment[2:])
+            header_bytes = 1
+        elif (header_first_hex) == '2':
+            header = bytearray.fromhex(fragment[:4])
+            payload = bytearray.fromhex(fragment[4:])
+            header_bytes = 2
+        else:
+            print("Wrong header in fragment")
+            return 'wrong header', 204
+
+        data = [header, payload]
         # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
-        profile_downlink = Sigfox("DOWNLINK", "NO ACK")
+        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
         buffer_size = profile_uplink.MTU
         n = profile_uplink.N
         m = profile_uplink.M
@@ -411,12 +490,7 @@ def wyschc_get():
         # Compute the fragment compressed number (FCN) from the Profile
         fcn_dict = {}
         for j in range(2 ** n - 1):
-            fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], 3)] = j
-
-        # Parse fragment into "fragment = [header, payload]
-        header = bytes.fromhex(fragment[:2])
-        payload = bytearray.fromhex(fragment[2:])
-        data = [header, payload]
+            fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], n)] = j
 
         # Convert to a Fragment class for easier manipulation.
         fragment_message = Fragment(profile_uplink, data)
@@ -427,20 +501,31 @@ def wyschc_get():
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
+        if 'enable_losses' in request_dict and not(fragment_message.is_all_0() or fragment_message.is_all_1()):
+            if request_dict['enable_losses']:
+                loss_rate = request_dict["loss_rate"]
+                # loss_rate = 10
+                coin = random.random()
+                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                if coin * 100 < loss_rate:
+                    print("[LOSS] The fragment was lost.")
+                    return 'fragment lost', 204
+
         # Try getting the fragment number from the FCN dictionary.
         try:
             fragment_number = fcn_dict[fragment_message.header.FCN]
             upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
 
-            # Check time validation.
-            last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
             time_received = int(request_dict["time"])
+            if exists_blob(BUCKET_NAME, "timestamp"):
+                # Check time validation.
+                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
 
-            # If this is not the very first fragment and the inactivity timer has been reached, ignore the message.
-            # TODO: Send SCHC abort message.
-            if str(fragment_number) != "0" and str(
-                    current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
-                return json.dumps({"message": "Inactivity timer reached. Message ignored."}), 200
+                # If this is not the very first fragment and the inactivity timer has been reached, ignore the message.
+                # TODO: Send SCHC abort message.
+                if str(fragment_number) != "0" and str(
+                        current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
+                    return json.dumps({"message": "Inactivity timer reached. Message ignored."}), 200
 
             # Upload current timestamp.
             upload_blob(BUCKET_NAME, time_received, "timestamp")
@@ -455,7 +540,7 @@ def wyschc_get():
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+            upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                         "all_windows/window_%d/fragment_%d_%d" % (current_window, current_window, fragment_number))
 
         # If the FCN could not been found, it almost certainly is the final fragment.
@@ -522,20 +607,19 @@ def wyschc_get():
                 # Since the ALL-1, if received, changes the least significant bit of the bitmap.
                 # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:
                 # 1110001 is a valid bitmap, 1101001 is not.
-                pattern = re.compile("1*0*1*")
+                pattern = re.compile("1*0*1")
 
                 # If the bitmap matches the regex, check if the last two received fragments are consecutive.
                 if pattern.fullmatch(bitmap):
-
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
                         last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                        upload_blob(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                        upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                     "all_windows/window_%d/fragment_%d_%d" % (
                                         current_window, current_window, last_index))
                         try:
-                            _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window}, timeout=0.0000000001)
+                            _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes}, timeout=0.0000000001)
                         except requests.exceptions.ReadTimeout:
                             pass
 
@@ -549,6 +633,12 @@ def wyschc_get():
                         # return response_json, 200
                         # response_json = send_ack(request_dict, last_ack)
                         print("200, Response content -> {}".format(response_json))
+                        return response_json, 200
+                    else:
+                        # Send NACK at the end of the window.
+                        print("[ALLX] Sending NACK for lost fragments...")
+                        ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
+                        response_json = send_ack(request_dict, ack)
                         return response_json, 200
 
                     # If they are not, there is a gap between two fragments: a fragment has been lost.
@@ -578,6 +668,7 @@ def http_reassemble():
 
         current_window = int(request_dict["current_window"])
         last_index = int(request_dict["last_index"])
+        header_bytes = int(request_dict["header_bytes"])
 
         # Initialize Cloud Storage variables.
         # BUCKET_NAME = 'sigfoxschc'
@@ -585,7 +676,7 @@ def http_reassemble():
         BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
+        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         n = profile_uplink.N
         # Find the index of the first empty blob:
 
@@ -601,8 +692,8 @@ def http_reassemble():
                 fragment_file = read_blob(BUCKET_NAME,
                                           "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
                 print(fragment_file)
-                ultimate_header = fragment_file[0]
-                ultimate_payload = fragment_file[1:]
+                ultimate_header = fragment_file[:header_bytes]
+                ultimate_payload = fragment_file[header_bytes:]
                 ultimate_fragment = [ultimate_header.encode(), ultimate_payload.encode()]
                 fragments.append(ultimate_fragment)
                 if i == current_window and j == last_index:
@@ -611,9 +702,8 @@ def http_reassemble():
         # Instantiate a Reassembler and start reassembling.
         reassembler = Reassembler(profile_uplink, fragments)
         payload = bytearray(reassembler.reassemble())
-
         # Upload the full message.
-        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "Reassembled_message")
 
         return '', 204
 
