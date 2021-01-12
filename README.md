@@ -20,12 +20,16 @@ Give name, Service account ID and description.
 
 Download "your_credentials.json" to the /credentials folder created before. 
 
-In test_server.py, replace the PATH to your credential file.
+In config/config.py, replace the PATH to your credential file.
 ```
 CLIENT_SECRETS_FILE = '/PATH/credentials/your_credentials.json'
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
 ```
 
+Also update the Bucket name used for the storage.
+
+```
+BUCKET_NAME = 'your-bucket-name'
+```
 ## Execution
 
 At this point, the test is done in the following way:

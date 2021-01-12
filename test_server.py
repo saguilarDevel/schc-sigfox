@@ -22,12 +22,12 @@ import config.config as config
 
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
+#CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 # CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
 # File where we will store authentication credentials after acquiring them.
 
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+#CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
 filename = './stats/files/server/fragments_stats_v2.7.json'
