@@ -277,7 +277,7 @@ def hello_get(request):
                             print('Activating reassembly process...')
                             _ = requests.post(url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
                                               json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
-                                              timeout=0.0000000001)
+                                              timeout=1)
                         # except requests.exceptions.ReadTimeout:
                         #     pass
                         except Exception as e:
