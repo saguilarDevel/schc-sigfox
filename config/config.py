@@ -3,7 +3,7 @@
 # git rm --cached config/config.py
 
 # Cloud Storage Bucket Name
-BUCKET_NAME = 'sigfox-schc'
+BUCKET_NAME = 'sigfoxschc'
 #
 CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
