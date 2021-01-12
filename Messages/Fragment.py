@@ -58,3 +58,6 @@ class Fragment:
         for x in fcn:
             fcn_set.add(x)
         return len(fcn_set) == 1 and "0" in fcn_set
+
+    def expects_ack(self):
+        return self.is_all_0() or self.is_all_1()
