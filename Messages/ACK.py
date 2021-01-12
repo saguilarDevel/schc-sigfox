@@ -1,3 +1,7 @@
+def bitstring_to_bytes(s):
+    return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
+
+
 class ACK:
 
     profile = None
@@ -17,14 +21,10 @@ class ACK:
         self.bitmap = bitmap
         self.c = c
 
-        print('c:{}, bitmap:{}'.format(self.c, self.bitmap))
-        # self.header = self.rule_id + self.dtag + self.w + self.bitmap + self.c
         if self.c == "1":
             self.header = self.rule_id + self.dtag + self.w + self.c
         else:
             self.header = self.rule_id + self.dtag + self.w + self.c + self.bitmap
-        # print("profile.MTU / len(self.header + self.padding) -> {}".format(round(len(self.header + self.padding) / 8)))
-        # while len(self.header + self.padding) < round(len(self.header + self.padding) / 8) * 8:
         while len(self.header + self.padding) < profile.MTU:
             self.padding += '0'
 
@@ -32,10 +32,7 @@ class ACK:
         return self.header + self.padding
 
     def to_bytes(self):
-        return self.bitstring_to_bytes(self.header + self.padding)
+        return bitstring_to_bytes(self.header + self.padding)
 
     def length(self):
         return len(self.header + self.padding)
-
-    def bitstring_to_bytes(self, s):
-        return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
