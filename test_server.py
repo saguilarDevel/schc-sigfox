@@ -22,12 +22,12 @@ import config.config as config
 
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
+#CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 # CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
 # File where we will store authentication credentials after acquiring them.
 
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+#CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
 filename = './stats/files/server/fragments_stats_v2.7.json'
@@ -178,7 +178,6 @@ def test():
     """
     import json
     request_json = request.get_json()
-
     # if request.args and 'device' in request.args:
     #    return request.args.get('message')
     if request_json and 'device' in request_json and 'data' in request_json:
@@ -186,7 +185,6 @@ def test():
         print('Data received from device id:{}, data:{}'.format(device, request_json['data']))
         if 'ack' in request_json:
             if request_json['ack'] == 'true':
-
                 response = {request_json['device']: {'downlinkData': '07f7ffffffffffff'}}
                 print("response -> {}".format(response))
                 return json.dumps(response), 200
@@ -642,6 +640,7 @@ def wyschc_get():
             print("[LOSS] The fragment was lost.")
             return '', 204
 
+
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
@@ -692,11 +691,7 @@ def wyschc_get():
                     upload_blob(BUCKET_NAME, "", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
 
                 # Create the blob for each bitmap.
-                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME,
-                                                                                                        "all_windows"
-                                                                                                        "/window_%d"
-                                                                                                        "/bitmap_%d"
-                                                                                                        % (i, i)) == 0):
+                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
                     bitmap = ""
                     for b in range(profile_uplink.BITMAP_SIZE):
                         bitmap += "0"
@@ -817,7 +812,6 @@ def wyschc_get():
 
             # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
             # This is to be modified, as ACK-on-Error does not need an ACK for every window.
-            # No need to send an ACK if the bitmap has all 1.
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
                 print("[ALLX] Sending ACK after window...")
 
