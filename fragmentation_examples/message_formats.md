@@ -15,9 +15,12 @@ The RECOMMENDED Fragmentation Header size is 8 bits, and it is composed as follo
 * RCS: Not used
 
 ```text
-
-    |---------- Header ----------|
-    [ Rule ID | Dtag | W |  FCN  | payload (11 bytes) ]  
+    
+    |-- SCHC Fragment Header ----|
+             |-- T --|-M-|-- N --|
+    +-- ... -+- ... -+---+- ... -+~~~~~~~~~~~~~~~~~~~~+
+    | Rule ID | Dtag | W |  FCN  | payload (11 bytes) |
+    +-- ... -+- ... -+---+- ... -+~~~~~~~~~~~~~~~~~~~~+
 
 ```
 ```text
