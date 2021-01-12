@@ -8,15 +8,19 @@ from Messages.Fragment import Fragment
 filename = "example.txt"
 seqNumber = 1
 
+msg2_1 = {'deviceType': '01B29CC4', 'device': '1B29CC4', 'time': '1602249495', 'data': '063132333435363738393132',
+          'seqNumber': '391', 'ack': 'false'}
+
 
 def post(data):
 	global seqNumber
-	payload = {
+	payload_dict = {
 		"deviceType": "WYSCHC",
 		"device": "4D5A87",
 		"time": str(int(time.time())),
 		"data": data,
-		"seqNumber": str(seqNumber)
+		"seqNumber": str(seqNumber),
+		"ack": "false"
 	}
 	seqNumber += 1
 	url = "http://0.0.0.0:5000/post/message"

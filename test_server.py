@@ -22,23 +22,21 @@ import config.config as config
 
 app = Flask(__name__)
 
-CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
-# CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
-
 # File where we will store authentication credentials after acquiring them.
 
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
+"""
 filename = './stats/files/server/fragments_stats_v2.7.json'
+
 
 def save_current_fragment(fragment):
     global filename
     print("saving fragment")
-    # file = open('fragments_stats.json', 'a+')
-    # file.write(json.dumps(fragment))
-    # file.write('')
-    # file.close()
+    file = open(filename, 'a+')
+    file.write(json.dumps(fragment))
+    file.write('')
+    file.close()
     data = {}
     try:
         print("Opening file")
@@ -64,6 +62,7 @@ def save_current_fragment(fragment):
     file.write('')
     file.close()
     return
+"""
 
 @app.before_request
 def before_request():
@@ -96,7 +95,6 @@ def before_request():
                 print("Wrong header in fragment")
                 return 'wrong header', 204
 
-
             data = [header, payload]
             # Initialize SCHC variables.
             profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
@@ -119,8 +117,11 @@ def before_request():
             g.current_fragment['W'] = fragment_message.header.W
             g.current_fragment['seqNumber'] = sigfox_sequence_number
             print('[before_request]: seqNum:{}, RULE_ID: {} W: {}, FCN: {}'.format(sigfox_sequence_number,
-                  fragment_message.header.RULE_ID, fragment_message.header.W, fragment_message.header.FCN))
+                                                                                   fragment_message.header.RULE_ID,
+                                                                                   fragment_message.header.W,
+                                                                                   fragment_message.header.FCN))
             print('[before_request]: {}'.format(g.current_fragment))
+
 
 @app.after_request
 def after_request(response):
@@ -150,13 +151,16 @@ def after_request(response):
                 g.current_fragment['s-ack_send'] = True
 
         print('[after_request]: current fragment:{}'.format(g.current_fragment))
+        """
         save_current_fragment(g.current_fragment)
+        """
         # ack_received
         # sending_end
         # ack
         # send_time
 
     return response
+
 
 @app.route('/')
 def hello_world():
@@ -183,7 +187,6 @@ def test():
         print('Data received from device id:{}, data:{}'.format(device, request_json['data']))
         if 'ack' in request_json:
             if request_json['ack'] == 'true':
-
                 response = {request_json['device']: {'downlinkData': '07f7ffffffffffff'}}
                 print("response -> {}".format(response))
                 return json.dumps(response), 200
@@ -228,7 +231,8 @@ def post_message():
         rule_id = fragment_message.header.RULE_ID
         dtag = fragment_message.header.DTAG
         w = fragment_message.header.W
-        print('RULE_ID: {} W: {}, FCN: {}'.format(fragment_message.header.RULE_ID,fragment_message.header.W, fragment_message.header.FCN))
+        print('RULE_ID: {} W: {}, FCN: {}'.format(fragment_message.header.RULE_ID, fragment_message.header.W,
+                                                  fragment_message.header.FCN))
         if 'ack' in request_dict:
             if request_dict['ack'] == 'true':
                 print('w:{}'.format(w))
@@ -293,7 +297,6 @@ def post_message():
                         # print("response -> {}".format(response))
                         return response_json, 200
 
-
                         bitmap = '0100001'
                         ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                         response_json = send_ack(request_dict, ack)
@@ -334,7 +337,6 @@ def hello_get():
 
     # Wait for an HTTP POST request.
     if request.method == 'POST':
-
         # Get request JSON.
         print("POST RECEIVED")
         request_dict = request.get_json()
@@ -343,6 +345,7 @@ def hello_get():
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
+
 
 @app.route('/clean', methods=['GET', 'POST'])
 def clean():
@@ -367,13 +370,14 @@ def clean():
         header_bytes = int(request_dict["header_bytes"])
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         bitmap = ''
-        for i in range(2**profile.N - 1):
+        for i in range(2 ** profile.N - 1):
             bitmap += '0'
-        for i in range(2**profile.M):
+        for i in range(2 ** profile.M):
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
 
         return '', 204
+
 
 @app.route('/losses_mask', methods=['GET', 'POST'])
 def losses_mask():
@@ -398,10 +402,11 @@ def losses_mask():
         mask = request_dict["mask"]
         header_bytes = int(request_dict["header_bytes"])
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        for i in range(2**profile.M):
-            upload_blob(BUCKET_NAME, mask, "all_windows/window_%d/losses_mask_%d" % (i,i))
+        for i in range(2 ** profile.M):
+            upload_blob(BUCKET_NAME, mask, "all_windows/window_%d/losses_mask_%d" % (i, i))
 
         return '', 204
+
 
 @app.route('/wyschc_get', methods=['GET', 'POST'])
 def wyschc_get():
@@ -429,8 +434,6 @@ def wyschc_get():
 
         # Initialize Cloud Storage variables.
 
-        # BUCKET_NAME = 'sigfoxschc'
-        # BUCKET_NAME = 'wyschc-niclabs'
         BUCKET_NAME = config.BUCKET_NAME
 
         # Parse fragment into "fragment = [header, payload]
@@ -474,7 +477,11 @@ def wyschc_get():
                     upload_blob(BUCKET_NAME, "", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
 
                 # Create the blob for each bitmap.
-                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
+                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME,
+                                                                                                        "all_windows"
+                                                                                                        "/window_%d"
+                                                                                                        "/bitmap_%d"
+                                                                                                        % (i, i)) == 0):
                     bitmap = ""
                     for b in range(profile_uplink.BITMAP_SIZE):
                         bitmap += "0"
@@ -506,7 +513,7 @@ def wyschc_get():
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
-        if 'enable_losses' in request_dict and not(fragment_message.is_all_0() or fragment_message.is_all_1()):
+        if 'enable_losses' in request_dict and not (fragment_message.is_all_0() or fragment_message.is_all_1()):
             if request_dict['enable_losses']:
                 loss_rate = request_dict["loss_rate"]
                 # loss_rate = 10
@@ -629,7 +636,9 @@ def wyschc_get():
                             # _ = requests.post(url='http://localhost:5000/http_reassemble',
                             #                   json={"last_index": last_index, "current_window": current_window},
                             #                   timeout=0.0000000001)
-                            _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes}, timeout=0.0000000001)
+                            _ = requests.post(url='http://localhost:5000/http_reassemble',
+                                              json={"last_index": last_index, "current_window": current_window,
+                                                    "header_bytes": header_bytes}, timeout=0.0000000001)
                         except requests.exceptions.ReadTimeout:
                             pass
 
@@ -666,9 +675,9 @@ def wyschc_get():
         print('Invalid HTTP Method to invoke Cloud Function. Only POST supported')
         return abort(405)
 
+
 @app.route('/http_reassemble', methods=['GET', 'POST'])
 def http_reassemble():
-
     if request.method == "POST":
 
         # Get request JSON.
@@ -711,12 +720,14 @@ def http_reassemble():
 
         # Instantiate a Reassembler and start reassembling.
         reassembler = Reassembler(profile_uplink, fragments)
-        payload = bytearray(reassembler.reassemble())
-
+        payload = bytearray(reassembler.reassemble()).decode("utf-8")
+        with open("PAYLOAD", "w") as file:
+            file.write(payload)
         # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
+        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
 
         return '', 204
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

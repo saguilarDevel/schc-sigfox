@@ -3,9 +3,9 @@
 # git rm --cached config/config.py
 
 # Cloud Storage Bucket Name
-BUCKET_NAME = 'sigfox-schc'
+BUCKET_NAME = 'wyschc-niclabs'
 #
-CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b.json'
+CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 
 # File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = './credentials/true-sprite-292308-8fa4cf95223b.json'
+CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
