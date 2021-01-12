@@ -490,7 +490,12 @@ def wyschc_get():
         # Compute the fragment compressed number (FCN) from the Profile
         fcn_dict = {}
         for j in range(2 ** n - 1):
-            fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], n)] = j
+            fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], 3)] = j
+
+        # Parse fragment into "fragment = [header, payload]
+        header = bytes.fromhex(fragment[:2])
+        payload = bytearray.fromhex(fragment[2:])
+        data = [header, payload]
 
         # Convert to a Fragment class for easier manipulation.
         fragment_message = Fragment(profile_uplink, data)
@@ -540,8 +545,9 @@ def wyschc_get():
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                        "all_windows/window_%d/fragment_%d_%d" % (current_window, current_window, fragment_number))
+            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                                      "all_windows/window_%d/fragment_%d_%d" % (
+                                          current_window, current_window, fragment_number))
 
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
@@ -549,7 +555,8 @@ def wyschc_get():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+            upload_blob_using_threads(BUCKET_NAME, bitmap,
+                                      "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
         # Get some SCHC values from the fragment.
         rule_id = fragment_message.header.RULE_ID
@@ -615,10 +622,13 @@ def wyschc_get():
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
                         last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                        upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                    "all_windows/window_%d/fragment_%d_%d" % (
-                                        current_window, current_window, last_index))
+                        upload_blob_using_threads(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                                                  "all_windows/window_%d/fragment_%d_%d" % (
+                                                      current_window, current_window, last_index))
                         try:
+                            # _ = requests.post(url='http://localhost:5000/http_reassemble',
+                            #                   json={"last_index": last_index, "current_window": current_window},
+                            #                   timeout=0.0000000001)
                             _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes}, timeout=0.0000000001)
                         except requests.exceptions.ReadTimeout:
                             pass
@@ -702,8 +712,9 @@ def http_reassemble():
         # Instantiate a Reassembler and start reassembling.
         reassembler = Reassembler(profile_uplink, fragments)
         payload = bytearray(reassembler.reassemble())
+
         # Upload the full message.
-        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "Reassembled_message")
+        upload_blob_using_threads(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
 
         return '', 204
 

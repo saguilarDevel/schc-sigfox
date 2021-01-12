@@ -1,6 +1,13 @@
+import threading
+
 from google.cloud import storage
 import json
 
+
+def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
+    print("Uploading with threads...")
+    thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
+    thread.start()
 
 
 def upload_blob(bucket_name, blob_text, destination_blob_name):

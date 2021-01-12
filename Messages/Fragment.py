@@ -1,13 +1,14 @@
 from Messages.Header import Header
 
+
 def zfill(string, width):
     if len(string) < width:
         return ("0" * (width - len(string))) + string
     else:
         return string
 
-class Fragment:
 
+class Fragment:
     profile = None
     header_length = 0
     rule_id_size = 0
@@ -36,7 +37,6 @@ class Fragment:
         fcn = str(header[self.rule_id_size + self.t + self.m:self.rule_id_size + self.t + self.m + self.n])
         c = ""
 
-
         self.header = Header(self.profile, rule_id, dtag, window, fcn, c)
 
         self.payload = payload
@@ -58,5 +58,3 @@ class Fragment:
         for x in fcn:
             fcn_set.add(x)
         return len(fcn_set) == 1 and "0" in fcn_set
-
-
