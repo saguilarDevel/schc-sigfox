@@ -231,53 +231,21 @@ def hello_get(request):
 
                 pattern2 = re.compile("0*1")
                 if pattern2.fullmatch(bitmap):
-                    last_index = 0
-                    upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                "all_windows/window_%d/fragment_%d_%d" % (
-                                    current_window, current_window, last_index))
-                    print("Info for reassemble: last_index:{}, current_window:{}".format(last_index, current_window))
-                    try:
-                        print('Activating reassembly process...')
-                        _ = requests.post(
-                            url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
-                            json={"last_index": last_index, "current_window": current_window,
-                                  "header_bytes": header_bytes},
-                            timeout=0.0000000001)
-                    # except requests.exceptions.ReadTimeout:
-                    #     pass
-                    except Exception as e:
-                        print("exception in reassembly call: {}".format(e))
-
-                    # Send last ACK to end communication.
-                    print("[ALL1] Reassembled: Sending last ACK")
-                    bitmap = ''
-                    for k in range(profile_uplink.BITMAP_SIZE):
-                        bitmap += '0'
-                    last_ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
-                    response_json = send_ack(request_dict, last_ack)
-                    # return response_json, 200
-                    # response_json = send_ack(request_dict, last_ack)
-                    print("200, Response content -> {}".format(response_json))
-                    return response_json, 200
-
-                pattern = re.compile("1*0*1")
-
-                # If the bitmap matches the regex, check if the last two received fragments are consecutive.
-                if pattern.fullmatch(bitmap):
-
-                    # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
-                    if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
-
-                        last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                    # Downlink Errors
+                    dl_errors = int(read_blob(BUCKET_NAME, "dl_errors"))
+                    if dl_errors == 0:
+                        last_index = 0
                         upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                     "all_windows/window_%d/fragment_%d_%d" % (
                                         current_window, current_window, last_index))
-                        print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
+                        print("Info for reassemble: last_index:{}, current_window:{}".format(last_index, current_window))
                         try:
                             print('Activating reassembly process...')
-                            _ = requests.post(url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
-                                              json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
-                                              timeout=0.0000000001)
+                            _ = requests.post(
+                                url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
+                                json={"last_index": last_index, "current_window": current_window,
+                                      "header_bytes": header_bytes},
+                                timeout=0.0000000001)
                         # except requests.exceptions.ReadTimeout:
                         #     pass
                         except Exception as e:
@@ -294,6 +262,53 @@ def hello_get(request):
                         # response_json = send_ack(request_dict, last_ack)
                         print("200, Response content -> {}".format(response_json))
                         return response_json, 200
+                    else:
+                        dl_errors -= 1
+                        upload_blob(BUCKET_NAME, dl_errors, "dl_errors")
+                        print("[DL-ERROR] We simulate a downlink error. We don't send an ACK")
+                        return '', 204
+
+                pattern = re.compile("1*0*1")
+
+                # If the bitmap matches the regex, check if the last two received fragments are consecutive.
+                if pattern.fullmatch(bitmap):
+
+                    # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
+                    if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
+                        # Downlink Errors
+                        dl_errors = int(read_blob(BUCKET_NAME, "dl_errors"))
+                        if dl_errors == 0:
+                            last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                            upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                                        "all_windows/window_%d/fragment_%d_%d" % (
+                                            current_window, current_window, last_index))
+                            print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
+                            try:
+                                print('Activating reassembly process...')
+                                _ = requests.post(url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
+                                                  json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
+                                                  timeout=0.0000000001)
+                            # except requests.exceptions.ReadTimeout:
+                            #     pass
+                            except Exception as e:
+                                print("exception in reassembly call: {}".format(e))
+
+                            # Send last ACK to end communication.
+                            print("[ALL1] Reassembled: Sending last ACK")
+                            bitmap = ''
+                            for k in range(profile_uplink.BITMAP_SIZE):
+                                bitmap += '0'
+                            last_ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
+                            response_json = send_ack(request_dict, last_ack)
+                            # return response_json, 200
+                            # response_json = send_ack(request_dict, last_ack)
+                            print("200, Response content -> {}".format(response_json))
+                            return response_json, 200
+                        else:
+                            dl_errors -= 1
+                            upload_blob(BUCKET_NAME, dl_errors, "dl_errors")
+                            print("[DL-ERROR] We simulate a downlink error. We don't send an ACK")
+                            return '', 204
                     else:
                         # Send NACK at the end of the window.
                         print("[ALLX] Sending NACK for lost fragments...")
