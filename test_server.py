@@ -22,31 +22,36 @@ import config.config as config
 
 app = Flask(__name__)
 
-#CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
+# CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 # CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 
 # File where we will store authentication credentials after acquiring them.
 
-#CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+# CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
-filename = './stats/files/server/fragments_stats_v2.8.json'
-
+# Filename must be a json file starting with a /
+filename = '/fragments_stats_v3.3.json'
+filename_dir = os.path.dirname(__file__)
+save_path = os.path.join(filename_dir, 'stats', 'files', 'server')
 def save_current_fragment(fragment):
+    global filename_dir
+    # print("filename_dir-> " + filename_dir)
     global filename
-    print("saving fragment")
+    global save_path
+    # print("saving" + filename + "  at " + save_path)
     # file = open('fragments_stats.json', 'a+')
     # file.write(json.dumps(fragment))
     # file.write('')
     # file.close()
     data = {}
     try:
-        print("Opening file")
-        with open(filename) as json_file:
+        print("[Save File]: Searching for file")
+        with open(save_path + filename) as json_file:
             data = json.load(json_file)
     except Exception as e:
-        print("Exception: {}".format(e))
-        file = open(filename, 'a+')
+        print("[Save File]: Creating file because  {}".format(e))
+        file = open(save_path + filename, 'a+')
         seqNumber = fragment['seqNumber']
         data[seqNumber] = fragment
         file.write(json.dumps(data))
@@ -59,7 +64,7 @@ def save_current_fragment(fragment):
     seqNumber = fragment['seqNumber']
     data[seqNumber] = fragment
     # print("data: {}".format(data))
-    file = open(filename, 'w')
+    file = open(save_path + filename, 'w')
     file.write(json.dumps(data))
     file.write('')
     file.close()
@@ -69,8 +74,10 @@ def save_current_fragment(fragment):
 def before_request():
     g.start = time.time()
     g.current_fragment = {}
-    print('[before_request]: ' + request.endpoint)
-    if request.endpoint == 'wyschc_get':
+    if request.endpoint is None:
+        print("No request endpoint")
+    elif request.endpoint == 'wyschc_get':
+        print('[before_request]: ' + request.endpoint)
         if request.method == 'POST':
             print("[before_request]: POST RECEIVED")
             # BUCKET_NAME = config.BUCKET_NAME
