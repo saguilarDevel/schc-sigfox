@@ -4,7 +4,7 @@ import json
 pd.set_option('display.max_columns', None)
 
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/LoPy/stats_file_v2.7.json', encoding='ISO-8859-1') as json_file:
+with open('files/LoPy/LoPy_stats_file_311_v4.0.json', encoding='ISO-8859-1') as json_file:
     data = json.load(json_file)
 
 tx_json = {}

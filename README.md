@@ -92,7 +92,7 @@ The end point that will receive the request should be configured
 An output file with the fragment information will be store here
 
 ```python
-filename = './stats/files/server/fragments_stats_v2.7.json'
+filename = '/fragments_stats_v2.7.json'
 ```
 
 For each new transmission the version of the file should be modify.

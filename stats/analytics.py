@@ -4,9 +4,10 @@ import requests
 
 # Uncomment for complete diplay
 # pd.set_option('display.max_columns', None)
-version = '2.7'
+version = '4.1'
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/LoPy/stats_file_v'+version+'.json') as json_file:
+# with open('files/LoPy/stats_file_v'+version+'.json') as json_file:
+with open('files/LoPy/LoPy_stats_file_v'+version+'.json') as json_file:
     data = json.load(json_file)
 
 tx_json = {}
@@ -28,7 +29,7 @@ df1 = pd.read_json(str(json.dumps(data['fragments'], sort_keys=True)))
 df1_transposed = df1.T # or df1.transpose()
 print("Sum of fragments transmission duration: {}".format(df1_transposed['send_time'].sum(axis=0,skipna=True)))
 print(df1_transposed)
-df1_transposed.astype({"FCN": str, "RULE_ID": str,  "W": str,  "ack": str, "data": str, "download_enable": bool,
+df1_transposed.astype({"FCN": str, "RULE_ID": str,  "W": str,  "ack": str, "data": str, "downlink_enable": bool,
                        "rssi": int, "send_time": float, "sending_end": float, "sending_start": float})
 print('LoPy fragments')
 print(df1_transposed)
@@ -36,14 +37,14 @@ print(df1_transposed)
 # print(df1_transposed.columns)
 # print(df1_transposed[df1_transposed['download_enable'].isin([False])])
 
-df_nowait = df1_transposed[df1_transposed['download_enable'].isin([False])]
+df_nowait = df1_transposed[df1_transposed['downlink_enable'].isin([False])]
 print("\nRegular Fragments")
 print(df_nowait['send_time'])
 print("sum:{}".format(df_nowait['send_time'].sum(axis=0, skipna=True)))
 print("std:{}".format(df_nowait['send_time'].std(axis=0, skipna=True)))
 print("mean:{}".format(df_nowait['send_time'].mean(axis=0, skipna=True)))
 
-df_wait = df1_transposed[df1_transposed['download_enable'].isin([True])]
+df_wait = df1_transposed[df1_transposed['downlink_enable'].isin([True])]
 print("\nFragments - download requested")
 print(df_wait['send_time'])
 print("sum:{}".format(df_wait['send_time'].sum(axis=0, skipna=True)))
@@ -110,6 +111,6 @@ concat = pd.concat([df2_transposed, df1_transposed], keys=["Cloud", "LoPy"])
 print(concat)
 #no_duplicates = merged.drop_duplicates(subset=['seqNumber',"send_time"])
 #no_duplicates.sort_values(by=['seqNumber']).to_excel('no_dup_test_stats_v'+version+'_2.xlsx', engine='xlsxwriter')
-concat.sort_values(by=['seqNumber']).to_excel('merged_test_stats_v'+version+'_2.xlsx', engine='xlsxwriter')
+concat.sort_values(by=['seqNumber']).to_excel('merged_test_stats_v'+version+'.xlsx', engine='xlsxwriter')
 # concat = pd.concat([df1_transposed, df2_transposed]).drop_duplicates().reset_index(drop=True)
 # print(concat)
