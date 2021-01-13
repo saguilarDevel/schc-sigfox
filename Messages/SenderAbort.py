@@ -1,7 +1,9 @@
+from Entities.Sigfox import Sigfox
+from Messages.Fragment import Fragment
 from Messages.Header import Header
 
 
-class SenderAbort:
+class SenderAbort(Fragment):
     profile = None
     header_length = 0
     rule_id_size = 0
@@ -12,15 +14,14 @@ class SenderAbort:
     header = None
     padding = ''
 
-    def __init__(self, profile, rule_id, dtag, w):
+    def __init__(self, profile, header):
         self.profile = profile
-
-        self.header = Header(profile=profile,
-                             rule_id=rule_id,
-                             dtag=dtag,
-                             w=w,
-                             fcn="1"*profile.N,
-                             c="")
+        rule_id = header.RULE_ID
+        dtag = header.DTAG
+        w = header.W
+        fcn = "1" * profile.N
 
         while len(self.header.string + self.padding) < profile.MTU:
             self.padding += '0'
+
+        super().__init__(profile, rule_id + dtag + w + fcn + self.padding)

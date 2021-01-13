@@ -435,7 +435,6 @@ def wyschc_get():
         BUCKET_NAME = config.BUCKET_NAME
 
         # Parse fragment into "fragment = [header, payload]
-        header_bytes = None
         header_first_hex = fragment[:1]
         if (header_first_hex) == '0' or (header_first_hex) == '1':
             header = bytes.fromhex(fragment[:2])

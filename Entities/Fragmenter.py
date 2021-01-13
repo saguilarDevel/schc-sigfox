@@ -2,13 +2,7 @@
 
 from math import ceil, floor
 from Messages.Header import Header
-
-
-def zfill(string, width):
-    if len(string) < width:
-        return ("0" * (width - len(string))) + string
-    else:
-        return string
+from function import zfill
 
 
 class Fragmenter:
@@ -34,7 +28,8 @@ class Fragmenter:
             print(len(fragment_list))
             print((2 ** self.profile.M) * self.profile.WINDOW_SIZE)
             print(
-                "The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be selected.")
+                "The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be "
+                "selected.")
         # What does this mean?
         # Sending packet does not fit (should be tested in fragmentation)
 

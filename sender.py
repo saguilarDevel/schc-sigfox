@@ -7,11 +7,13 @@ from requests import Timeout
 from Entities.Fragmenter import Fragmenter
 from Entities.Sigfox import Sigfox
 from Messages.Fragment import Fragment
+from Messages.SenderAbort import SenderAbort
 from function import zfill
 
 filename = "example.txt"
 seqNumber = 1
 device = "4D5A87"
+enable_losses = False
 
 
 def post(fragment_sent):
@@ -21,8 +23,8 @@ def post(fragment_sent):
     profile = fragment_sent.profile
 
     if fragment_sent.is_all_0():
-        print("[POST] This is an All-0. Using All-0 Timeout.")
-        request_timeout = profile.ALL0_TIMEOUT
+        print("[POST] This is an All-0. Using All-0 SIGFOX_DL_TIMEOUT Timeout.")
+        request_timeout = profile.SIGFOX_DL_TIMEOUT
     elif fragment_sent.is_all_1():
         print("[POST] This is an All-1. Using RETRANSMISSION_TIMER_VALUE. Increasing ACK attempts.")
         attempts += 1
@@ -38,6 +40,10 @@ def post(fragment_sent):
         "seqNumber": str(seqNumber),
         "ack": fragment_sent.expects_ack()
     }
+
+    if enable_losses:
+        print("Losses are enabled")
+        payload_dict = {**payload_dict, **{"enable_losses": enable_losses}}
 
     print(f"[POST] Posting fragment {fragment_sent.hex} to {url}")
 
@@ -76,7 +82,12 @@ def post(fragment_sent):
                 return post(fragment_sent)
             # Else, exit with an error.
             else:
-                print("ERROR: MAX_ACK_REQUESTS reached. Goodbye!")
+                print("ERROR: MAX_ACK_REQUESTS reached. Sending Sender-Abort.")
+                header = fragment_sent.header
+                abort = SenderAbort(profile, header)
+
+                post(abort)
+
                 print("A Sender-Abort must be sent...")
                 exit(1)
 
