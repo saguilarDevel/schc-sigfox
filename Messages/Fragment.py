@@ -1,4 +1,5 @@
 from Messages.Header import Header
+from function import bitstring_to_bytes
 
 
 def zfill(string, width):
@@ -18,6 +19,7 @@ class Fragment:
 
     header = None
     payload = None
+    string = ''
 
     def __init__(self, profile, fragment):
         self.profile = profile
@@ -38,12 +40,17 @@ class Fragment:
         c = ""
 
         self.header = Header(self.profile, rule_id, dtag, window, fcn, c)
-
         self.payload = payload
+        self.bytes = self.header.bytes + self.payload
+        self.string = self.bytes.decode()
+        self.hex = self.bytes.hex()
 
     def test(self):
-        print("Header: " + self.header.string)
-        print("Payload: " + str(self.payload))
+        print(f"Header: {self.header.string}")
+        print(f"Payload: {str(self.payload)}")
+        print(f"String: {self.string}")
+        print(f"Bytes: {self.bytes}")
+        print(f"Hex: {self.hex}")
 
     def is_all_1(self):
         fcn = self.header.FCN

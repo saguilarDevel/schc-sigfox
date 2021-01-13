@@ -26,7 +26,6 @@ app = Flask(__name__)
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
-"""
 filename = './stats/files/server/fragments_stats_v2.7.json'
 
 
@@ -62,7 +61,6 @@ def save_current_fragment(fragment):
     file.write('')
     file.close()
     return
-"""
 
 @app.before_request
 def before_request():
@@ -461,7 +459,7 @@ def wyschc_get():
 
         # If fragment size is greater than buffer size, ignore it and end function.
         if len(fragment) / 2 * 8 > buffer_size:  # Fragment is hex, 1 hex = 1/2 byte
-            return json.dumps({"message": "Fragment size is greater than buffer size D:"}), 200
+            return json.dumps({"message": "Fragment size is greater than buffer size"}), 200
 
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
         if not exists_blob(BUCKET_NAME, "all_windows/"):
@@ -576,8 +574,8 @@ def wyschc_get():
             last_sequence_number = read_blob(BUCKET_NAME, "SSN")
         upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
 
-        # If the fragment is at the end of a window (ALL-0 or ALL-1)
-        if fragment_message.is_all_0() or fragment_message.is_all_1():
+        # If the fragment is at the end of a window (ALL-0 or ALL-1) it expects an ACK.
+        if fragment_message.expects_ack():
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
             for i in range(current_window + 1):

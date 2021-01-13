@@ -7,32 +7,42 @@ from requests import Timeout
 from Entities.Fragmenter import Fragmenter
 from Entities.Sigfox import Sigfox
 from Messages.Fragment import Fragment
+from function import zfill
 
 filename = "example.txt"
 seqNumber = 1
 device = "4D5A87"
 
 
-def post(data_sent, profile, ack_expected):
-    global seqNumber, attempts
-    if ack_expected:
-        attempts += 1
-    url = "http://0.0.0.0:5000/post/wyschc-get"
+def post(fragment_sent):
+    global seqNumber, attempts, current_window
+    url = "http://localhost:5000/wyschc_get"
     headers = {'content-type': 'application/json'}
-    http_timeout = profile.RETRANSMISSION_TIMER_VALUE if ack_expected else 45
+    profile = fragment_sent.profile
+
+    if fragment_sent.is_all_0():
+        print("[POST] This is an All-0. Using All-0 Timeout.")
+        request_timeout = profile.ALL0_TIMEOUT
+    elif fragment_sent.is_all_1():
+        print("[POST] This is an All-1. Using RETRANSMISSION_TIMER_VALUE. Increasing ACK attempts.")
+        attempts += 1
+        request_timeout = profile.RETRANSMISSION_TIMER_VALUE
+    else:
+        request_timeout = 45
+
     payload_dict = {
         "deviceType": "WYSCHC",
         "device": device,
         "time": str(int(time.time())),
-        "data": data_sent,
+        "data": fragment_sent.hex,
         "seqNumber": str(seqNumber),
-        "ack": ack_expected
+        "ack": fragment_sent.expects_ack()
     }
 
-    print(f"[POST] Posting fragment to {url}")
+    print(f"[POST] Posting fragment {fragment_sent.hex} to {url}")
 
     try:
-        response = requests.post(url, data=json.dumps(payload_dict), headers=headers, timeout=http_timeout)
+        response = requests.post(url, data=json.dumps(payload_dict), headers=headers, timeout=request_timeout)
         seqNumber += 1
         print(f"[POST] Response: {response}")
         downlink_data = None
@@ -57,17 +67,24 @@ def post(data_sent, profile, ack_expected):
 
     # If the timer expires
     except Timeout:
+
         # If an ACK was expected
-        if ack_expected:
+        if fragment_sent.is_all_1():
             # If the attempts counter is strictly less than MAX_ACK_REQUESTS, try again
             if attempts < profile_uplink.MAX_ACK_REQUESTS:
                 print("SCHC Timeout reached while waiting for an ACK. Sending the ACK Request again...")
-                return post(data_sent, profile, ack_expected)
+                return post(fragment_sent)
             # Else, exit with an error.
             else:
                 print("ERROR: MAX_ACK_REQUESTS reached. Goodbye!")
                 print("A Sender-Abort must be sent...")
                 exit(1)
+
+        # If the ACK can be not sent
+        if fragment_sent.is_all_0():
+            print("All-0 timeout reached. Proceeding to next window.")
+            current_window += 1
+            return 204, None
 
         # Else, HTTP communication failed.
         else:
@@ -90,8 +107,12 @@ i = 0
 current_window = 0
 profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes=1)
 profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes=1)
-index_bitmap = profile_uplink.RULE_ID_SIZE + profile_uplink.T + profile_uplink.M
-index_c = index_bitmap + profile_uplink.BITMAP_SIZE
+
+ack_index_dtag = profile_uplink.RULE_ID_SIZE
+ack_index_w = ack_index_dtag + profile_uplink.T
+ack_index_c = ack_index_w + profile_uplink.M
+ack_index_bitmap = ack_index_c + 1
+ack_index_padding = ack_index_bitmap + profile_uplink.BITMAP_SIZE
 
 # Fragment the file.
 fragmenter = Fragmenter(profile_uplink, message)
@@ -105,8 +126,9 @@ fragment = None
 if len(fragment_list) > (2 ** profile_uplink.M) * profile_uplink.WINDOW_SIZE:
     print(len(fragment_list))
     print((2 ** profile_uplink.M) * profile_uplink.WINDOW_SIZE)
-    print(
-        "The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be selected.")
+    print("ERROR: The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be "
+          "selected.")
+    exit(1)
 
 # Start sending fragments.
 while i < len(fragment_list):
@@ -123,7 +145,7 @@ while i < len(fragment_list):
 
     # Send the data.
     print("Sending...")
-    http_message, ack = post(data, profile_uplink, ack_expected=fragment.expects_ack())
+    http_message, ack = post(fragment)
 
     # If 204, the fragment was sent successfully. Increase the fragment index
     if http_message == 204:
@@ -137,11 +159,11 @@ while i < len(fragment_list):
             exit(1)
 
         # Extracting data from the ACK
-        ack_decoded = ack.decode()
-        ack_window = int(ack_decoded[profile_uplink.RULE_ID_SIZE + profile_uplink.T:index_bitmap], 2)
-        bitmap = ack_decoded[index_bitmap:index_bitmap + profile_uplink.BITMAP_SIZE]
-        c = ack_decoded[index_c]
-        print(f"ACK: {ack_decoded}")
+        ack = zfill(bin(int(ack, 16))[2:], 64)
+        ack_window = int(ack[ack_index_w:ack_index_c], 2)
+        c = ack[ack_index_c]
+        bitmap = ack[ack_index_bitmap:ack_index_padding]
+        print(f"ACK: {ack}")
         print(f"ACK window: {str(ack_window)}")
         print(f"ACK bitmap: {bitmap}")
         print(f"ACK C bit: {c}")
@@ -167,19 +189,21 @@ while i < len(fragment_list):
                 # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                 if bitmap[j] == '0':
                     print(
-                        f"The {str(j)}th ({str((2 ** profile_uplink.N - 1) * ack_window + j)} / {str(len(fragment_list))}) fragment was lost! Sending again...")
+                        f"The "
+                        f"{str(j)}th ({str((2 ** profile_uplink.N - 1) * ack_window + j)} / {str(len(fragment_list))}) "
+                        f"fragment was lost! Sending again...")
                     # Try sending again the lost fragment.
                     try:
-                        fragment_to_be_resent = fragment_list[(2 ** profile_uplink.N - 1) * ack_window + j]
-                        data_to_be_resent = bytes(fragment_to_be_resent[0] + fragment_to_be_resent[1])
-                        print(f"Lost fragment: {data_to_be_resent}")
-                        resent = post(data_to_be_resent, profile_uplink, ack_expected=False)
+                        fragment_to_be_resent = Fragment(profile_uplink,
+                                                         fragment_list[(2 ** profile_uplink.N - 1) * ack_window + j])
+                        print(f"Lost fragment: {fragment_to_be_resent.string}")
+                        resent = post(fragment_to_be_resent)
                     # If the fragment could not be indexed, we are at the last window with no fragment to be resent.
                     # The last fragment received should be an All-1.
                     except IndexError:
                         print("No fragment found.")
                         # Request las ACK sending the All-1 again.
-                        _, last_ack = post(data, profile_uplink, ack_expected=True)
+                        _, last_ack = post(fragment)
 
             # After retransmission (or not), proceed to the next window.
             current_window += 1
@@ -188,18 +212,19 @@ while i < len(fragment_list):
 
         # After sending the lost fragments, send the last ACK-REQ (All-0) again.
         if resent is not None:
-            _, ack = post(data, profile_uplink, ack_expected=True)
+            _, ack = post(fragment)
 
         # After sending the lost fragments, if the last received fragment was an All-1,
         # we need to expect the last ACK.
         if fragment.is_all_1():
             # Get the last ACK.
-            c = last_ack.decode()[index_c]
+            c = last_ack.decode()[ack_index_c]
 
             if c == '1':
                 if ack_window == (current_window % 2 ** profile_uplink.M):
                     print(
-                        "Last ACK received: Fragments reassembled successfully. End of transmission. (While retransmitting)")
+                        "Last ACK received: Fragments reassembled successfully. End of transmission. (While "
+                        "retransmitting)")
                     exit(0)
                 else:
                     print("Last ACK window does not correspond to last window. (While retransmitting)")

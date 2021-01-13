@@ -1,5 +1,4 @@
-def bitstring_to_bytes(s):
-    return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
+from function import bitstring_to_bytes
 
 
 class ACK:

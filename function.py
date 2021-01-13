@@ -18,3 +18,7 @@ def replace_bit(string, position, value):
 
 def find(string, character):
     return [i for i, ltr in enumerate(string) if ltr == character]
+
+
+def bitstring_to_bytes(s):
+    return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
