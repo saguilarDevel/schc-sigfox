@@ -65,6 +65,7 @@ def save_current_fragment(fragment):
     file.close()
     return
 
+
 @app.before_request
 def before_request():
     g.start = time.time()
@@ -122,6 +123,7 @@ def before_request():
                   fragment_message.header.RULE_ID, fragment_message.header.W, fragment_message.header.FCN))
             print('[before_request]: {}'.format(g.current_fragment))
 
+
 @app.after_request
 def after_request(response):
     diff = time.time() - g.start
@@ -157,6 +159,7 @@ def after_request(response):
         # send_time
 
     return response
+
 
 @app.route('/')
 def hello_world():
@@ -480,6 +483,9 @@ def wyschc_get():
                         bitmap += "0"
                     upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
 
+        if not exists_blob(BUCKET_NAME, "timestamp"):
+            upload_blob(BUCKET_NAME, request_dict["time"], "timestamp")
+
         print("BLOBs created")
 
         # Initialize empty window
@@ -540,8 +546,9 @@ def wyschc_get():
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                        "all_windows/window_%d/fragment_%d_%d" % (current_window, current_window, fragment_number))
+            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                                      "all_windows/window_%d/fragment_%d_%d" % (
+                                          current_window, current_window, fragment_number))
 
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
@@ -549,7 +556,8 @@ def wyschc_get():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+            upload_blob_using_threads(BUCKET_NAME, bitmap,
+                                      "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
         # Get some SCHC values from the fragment.
         rule_id = fragment_message.header.RULE_ID
@@ -615,11 +623,11 @@ def wyschc_get():
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
 
                         last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                        upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                    "all_windows/window_%d/fragment_%d_%d" % (
-                                        current_window, current_window, last_index))
+                        upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                                                  "all_windows/window_%d/fragment_%d_%d" % (
+                                                      current_window, current_window, last_index))
                         try:
-                            _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes}, timeout=0.0000000001)
+                            _ = requests.post(url='http://localhost:5000/http_reassemble', json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes}, timeout=1)
                         except requests.exceptions.ReadTimeout:
                             pass
 
@@ -656,9 +664,9 @@ def wyschc_get():
         print('Invalid HTTP Method to invoke Cloud Function. Only POST supported')
         return abort(405)
 
+
 @app.route('/http_reassemble', methods=['GET', 'POST'])
 def http_reassemble():
-
     if request.method == "POST":
 
         # Get request JSON.
@@ -703,9 +711,10 @@ def http_reassemble():
         reassembler = Reassembler(profile_uplink, fragments)
         payload = bytearray(reassembler.reassemble())
         # Upload the full message.
-        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "Reassembled_message")
+        upload_blob_using_threads(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
 
         return '', 204
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
