@@ -2,10 +2,11 @@ import pandas as pd
 import json
 import requests
 
-pd.set_option('display.max_columns', None)
-
+# Uncomment for complete diplay
+# pd.set_option('display.max_columns', None)
+version = '2.7'
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/LoPy/stats_file_v2.5.json') as json_file:
+with open('files/LoPy/stats_file_v'+version+'.json') as json_file:
     data = json.load(json_file)
 
 tx_json = {}
@@ -79,7 +80,7 @@ print(df_all_0['send_time'])
 
 # print(df1['FCN'])
 
-with open('files/server/fragments_stats_v2.5.json') as json_file:
+with open('files/server/fragments_stats_v'+version+'.json') as json_file:
     data = json.load(json_file)
 
 df2 = pd.read_json(str(json.dumps(data, sort_keys=True)))
@@ -103,9 +104,12 @@ print(df2_transposed)
 # merged_inner = pd.merge(left=df1_transposed, right=df2_transposed, how='left',
 #                         left_on=['FCN', 'RULE_ID', 'W'],
 #                         right_on=['FCN', 'RULE_ID', 'W'])
-merged = pd.merge(df1_transposed, df2_transposed, on=["FCN", "RULE_ID", "W"], how='inner',)
+#merged = pd.merge(df2_transposed, df1_transposed, on=["FCN", "RULE_ID", "W"])
+concat = pd.concat([df2_transposed, df1_transposed], keys=["Cloud", "LoPy"])
 
-print(merged)
-merged.to_excel('test_stats_2.5.xlsx', engine='xlsxwriter')
+print(concat)
+#no_duplicates = merged.drop_duplicates(subset=['seqNumber',"send_time"])
+#no_duplicates.sort_values(by=['seqNumber']).to_excel('no_dup_test_stats_v'+version+'_2.xlsx', engine='xlsxwriter')
+concat.sort_values(by=['seqNumber']).to_excel('merged_test_stats_v'+version+'_2.xlsx', engine='xlsxwriter')
 # concat = pd.concat([df1_transposed, df2_transposed]).drop_duplicates().reset_index(drop=True)
 # print(concat)

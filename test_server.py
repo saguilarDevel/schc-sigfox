@@ -30,7 +30,7 @@ CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
-filename = './stats/files/server/fragments_stats_v2.5.json'
+filename = './stats/files/server/fragments_stats_v2.7.json'
 
 def save_current_fragment(fragment):
     global filename
@@ -111,10 +111,10 @@ def before_request():
             dtag = fragment_message.header.DTAG
             w = fragment_message.header.W
             g.current_fragment['s-downlink_enable'] = request_dict['ack']
-            g.current_fragment['s-sending_start'] = time.time()
+            g.current_fragment['s-sending_start'] = g.start
             g.current_fragment['s-data'] = request_dict["data"]
             g.current_fragment['FCN'] = fragment_message.header.FCN
-            g.current_fragment['s-fragment_size'] = len(data)
+            g.current_fragment['s-fragment_size'] = len(request_dict["data"])
             g.current_fragment['RULE_ID'] = fragment_message.header.RULE_ID
             g.current_fragment['W'] = fragment_message.header.W
             g.current_fragment['seqNumber'] = sigfox_sequence_number
