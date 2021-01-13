@@ -30,23 +30,29 @@ CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b'
 CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
-filename = './stats/files/server/fragments_stats_v2.7.json'
+# Filename must be a json file starting with a /
+filename = '/fragments_stats_v4.1.json'
+filename_dir = os.path.dirname(__file__)
+save_path = os.path.join(filename_dir, 'stats', 'files', 'server')
 
 def save_current_fragment(fragment):
+    global filename_dir
     global filename
-    print("saving fragment")
+    global save_path
+    print("[Save File]: Saving fragment")
     # file = open('fragments_stats.json', 'a+')
     # file.write(json.dumps(fragment))
     # file.write('')
     # file.close()
     data = {}
     try:
-        print("Opening file")
-        with open(filename) as json_file:
+        print("[Save File]: Searching for file")
+        with open(save_path + filename)  as json_file:
             data = json.load(json_file)
+        print("[Save File]: File Found")
     except Exception as e:
-        print("Exception: {}".format(e))
-        file = open(filename, 'a+')
+        print("[Save File]: Creating file because  {}".format(e))
+        file = open(save_path + filename, 'a+')
         seqNumber = fragment['seqNumber']
         data[seqNumber] = fragment
         file.write(json.dumps(data))
@@ -59,7 +65,7 @@ def save_current_fragment(fragment):
     seqNumber = fragment['seqNumber']
     data[seqNumber] = fragment
     # print("data: {}".format(data))
-    file = open(filename, 'w')
+    file = open(save_path + filename, 'w')
     file.write(json.dumps(data))
     file.write('')
     file.close()
@@ -70,8 +76,10 @@ def save_current_fragment(fragment):
 def before_request():
     g.start = time.time()
     g.current_fragment = {}
-    print('[before_request]: ' + request.endpoint)
-    if request.endpoint == 'wyschc_get':
+    if request.endpoint is None:
+        print("[before_request]: No request endpoint")
+    elif request.endpoint == 'wyschc_get':
+        print('[before_request]: ' + request.endpoint)
         if request.method == 'POST':
             print("[before_request]: POST RECEIVED")
             # BUCKET_NAME = config.BUCKET_NAME
@@ -85,7 +93,7 @@ def before_request():
             # Parse fragment into "fragment = [header, payload]
             header_bytes = None
             header_first_hex = fragment[:1]
-            if (header_first_hex) == '0' or '1':
+            if (header_first_hex) == '0' or (header_first_hex) == '1':
                 header = bytes.fromhex(fragment[:2])
                 payload = bytearray.fromhex(fragment[2:])
                 header_bytes = 1
@@ -94,9 +102,8 @@ def before_request():
                 payload = bytearray.fromhex(fragment[4:])
                 header_bytes = 2
             else:
-                print("Wrong header in fragment")
+                print("[before_request]: Wrong header in fragment")
                 return 'wrong header', 204
-
 
             data = [header, payload]
             # Initialize SCHC variables.
@@ -107,6 +114,9 @@ def before_request():
             m = profile_uplink.M
             # Convert to a Fragment class for easier manipulation.
             fragment_message = Fragment(profile_uplink, data)
+
+            # Get current window for this fragment.
+            current_window = int(fragment_message.header.W, 2)
             # Get some SCHC values from the fragment.
             rule_id = fragment_message.header.RULE_ID
             dtag = fragment_message.header.DTAG
@@ -138,7 +148,7 @@ def after_request(response):
             print("[after_request]: response.status_code == 204")
             print(response.get_data())
             if 'fragment lost' in str(response.get_data()):
-                print('ups.. fragment lost')
+                print('[after_request]: ups.. fragment lost')
                 g.current_fragment['s-lost'] = True
 
         if response.status_code == 200:
@@ -422,7 +432,7 @@ def wyschc_get():
     if request.method == 'POST':
 
         # Get request JSON.
-        print("POST RECEIVED")
+        print("[SCHC-SIGFOX]: POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
 

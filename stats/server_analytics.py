@@ -4,7 +4,7 @@ import json
 pd.set_option('display.max_columns', None)
 
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/server/fragments_stats_v2.2.json') as json_file:
+with open('files/server/fragments_stats_v4.0.json') as json_file:
     data = json.load(json_file)
 
 df1 = pd.read_json(str(json.dumps(data, sort_keys=True)))
