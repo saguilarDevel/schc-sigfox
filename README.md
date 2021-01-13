@@ -20,12 +20,16 @@ Give name, Service account ID and description.
 
 Download "your_credentials.json" to the /credentials folder created before. 
 
-In test_server.py, replace the PATH to your credential file.
+In config/config.py, replace the PATH to your credential file.
 ```
 CLIENT_SECRETS_FILE = '/PATH/credentials/your_credentials.json'
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
 ```
 
+Also update the Bucket name used for the storage.
+
+```
+BUCKET_NAME = 'your-bucket-name'
+```
 ## Execution
 
 At this point, the test is done in the following way:
@@ -36,7 +40,7 @@ python3 test_server.py
 ```
 Excepted result
 
-``` Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)```
+``` Running on http://0.0.0.0:5000/test (Press CTRL+C to quit)```
 
 * Open AdvanceREST (app for Chrome browser for send html requests).
 * Set the method to POST. Set Resquest URL to: ```http://0.0.0.0:5000/post/message```
@@ -65,53 +69,34 @@ Header Value: application/json
 
 Actual output of the flask server:
 ```
-POST RECEIVED
-Received Sigfox message: {'deviceType': '01B29CC4', 'device': '1B29CC4', 'time': '1596713121', 'data': '86970', 'seqNumber': '39', 'ack': 'false'}
-File uploaded to timestamp.
-File uploaded to timestamp.
-BLOB Created
-fragment 8,6970
-data [b'8', bytearray(b'6970')]
-[RECV] This corresponds to the 6th fragment of the 3th window.
-[RECV] Sigfox sequence number: 39
-File uploaded to all_windows/window_3/bitmap_3.
-File uploaded to all_windows/window_3/fragment_3_6.
-File uploaded to SSN.
-[2020-08-14 18:24:17,742] ERROR in app: Exception on /post/message [POST]
-Traceback (most recent call last):
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/venv/lib/python3.7/site-packages/flask/app.py", line 2447, in wsgi_app
-    response = self.full_dispatch_request()
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/venv/lib/python3.7/site-packages/flask/app.py", line 1952, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/venv/lib/python3.7/site-packages/flask/app.py", line 1821, in handle_user_exception
-    reraise(exc_type, exc_value, tb)
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/venv/lib/python3.7/site-packages/flask/_compat.py", line 39, in reraise
-    raise value
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/venv/lib/python3.7/site-packages/flask/app.py", line 1950, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/venv/lib/python3.7/site-packages/flask/app.py", line 1936, in dispatch_request
-    return self.view_functions[rule.endpoint](**req.view_args)
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/test_server.py", line 149, in post_message
-    bitmap_ack = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap%d" % (i, i))
-  File "/Users/sergioaguilar/PycharmProjects/SCHCfox/blobHelperFunctions.py", line 16, in read_blob
-    return blob.download_as_string()
-AttributeError: 'NoneType' object has no attribute 'download_as_string'
-127.0.0.1 - - [14/Aug/2020 18:24:17] "POST /post/message HTTP/1.1" 500 -
-
+[before_request]: test
+Data received from device id:1B29CC4, data:063132333435363738393130
+response -> {'1B29CC4': {'downlinkData': '07f7ffffffffffff'}}
+[after_request]: execution time: 0.0002422332763671875
 ```
 Output of AdvanceREST
 
-![example request](img/request_example_v1_response.png)
+![example request](docs/images/request_example_v2_response.png)
 
 
-## Next Steps
+## Enable statistics
 
-* Solve issues of read_blob function. 
-* Modify the sender.py to enable Rest api communications with the server.
-* Continue testing to make ACK-on-Error work on the cloud.
+The statitics are collected using the before and after function of the flask server.
 
+The end point that will receive the request should be configured
 
+```python
+    if request.endpoint == 'wyschc_get':
+```
 
+An output file with the fragment information will be store here
+
+```python
+filename = '/fragments_stats_v2.7.json'
+```
+
+For each new transmission the version of the file should be modify.
+It can be the same version as the LoPy stats file.
 
 
 
