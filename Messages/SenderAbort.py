@@ -1,6 +1,7 @@
 from Entities.Sigfox import Sigfox
 from Messages.Fragment import Fragment
 from Messages.Header import Header
+from function import bitstring_to_bytes
 
 
 class SenderAbort(Fragment):
@@ -20,8 +21,9 @@ class SenderAbort(Fragment):
         dtag = header.DTAG
         w = header.W
         fcn = "1" * profile.N
+        self.header = Header(profile, rule_id, dtag, w, fcn)
 
         while len(self.header.string + self.padding) < profile.MTU:
             self.padding += '0'
 
-        super().__init__(profile, rule_id + dtag + w + fcn + self.padding)
+        super().__init__(profile, [bitstring_to_bytes(rule_id + dtag + w + fcn), self.padding.encode()])

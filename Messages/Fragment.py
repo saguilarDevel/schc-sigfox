@@ -1,5 +1,5 @@
 from Messages.Header import Header
-from function import bitstring_to_bytes, zfill
+from function import bitstring_to_bytes, zfill, is_monochar
 
 
 class Fragment:
@@ -47,17 +47,17 @@ class Fragment:
 
     def is_all_1(self):
         fcn = self.header.FCN
-        fcn_set = set()
-        for x in fcn:
-            fcn_set.add(x)
-        return len(fcn_set) == 1 and "1" in fcn_set
+        payload = self.payload.decode()
+        return fcn[0] == '1' and is_monochar(fcn) and not (payload[0] == '0' and is_monochar(payload))
 
     def is_all_0(self):
         fcn = self.header.FCN
-        fcn_set = set()
-        for x in fcn:
-            fcn_set.add(x)
-        return len(fcn_set) == 1 and "0" in fcn_set
+        return fcn[0] == '0' and is_monochar(fcn)
 
     def expects_ack(self):
         return self.is_all_0() or self.is_all_1()
+
+    def is_sender_abort(self):
+        fcn = self.header.FCN
+        padding = self.payload.decode()
+        return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)

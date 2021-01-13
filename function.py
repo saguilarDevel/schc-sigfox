@@ -22,3 +22,7 @@ def find(string, character):
 
 def bitstring_to_bytes(s):
     return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
+
+
+def is_monochar(s):
+    return len(set(s)) == 1
