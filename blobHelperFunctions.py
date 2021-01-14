@@ -18,7 +18,7 @@ def upload_blob(bucket_name, blob_text, destination_blob_name):
     if type(blob_text) == bytes or type(blob_text) == bytearray:
         blob_text = blob_text.encode()
     blob.upload_from_string(str(blob_text))
-    print('File uploaded to {}.'.format(destination_blob_name))
+    print(f'File uploaded to {destination_blob_name}.')
 
 
 def read_blob(bucket_name, blob_name):
@@ -47,7 +47,7 @@ def create_folder(bucket_name, folder_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
-    print('Folder uploaded to {}.'.format(folder_name))
+    print(f'Folder uploaded to {folder_name}.')
 
 
 def size_blob(bucket_name, blob_name):
@@ -59,8 +59,32 @@ def size_blob(bucket_name, blob_name):
 
 def send_ack(request, ack):
     device = request["device"]
-    print("ack string -> {}".format(ack.to_string()))
+    print(f"ack string -> {ack.to_string()}")
     response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
     response_json = json.dumps(response_dict)
-    print("response_json -> {}".format(response_json))
+    print(f"response_json -> {response_json}")
     return response_json
+
+
+def initialize_blobs(bucket_name, profile):
+    if not exists_blob(bucket_name, "all_windows/"):
+        print("INITIALIZING... (be patient)")
+        create_folder(bucket_name, "all_windows/")
+
+        # For each window in the SCHC Profile, create its blob.
+        for i in range(2 ** profile.M):
+            create_folder(bucket_name, f"all_windows/window_{i}/")
+
+            # For each fragment in the SCHC Profile, create its blob.
+            for j in range(2 ** profile.N - 1):
+                upload_blob(bucket_name, "", f"all_windows/window_{i}/fragment_{i}_{j}")
+
+            # Create the blob for each bitmap.
+            if not exists_blob(bucket_name, f"all_windows/window_{i}/bitmap_{i}" or size_blob(bucket_name,
+                                                                                              f"all_windows/"
+                                                                                              f"window_{i}/"
+                                                                                              f"bitmap_{i}") == 0):
+                bitmap = ""
+                for b in range(profile.BITMAP_SIZE):
+                    bitmap += "0"
+                upload_blob(bucket_name, bitmap, f"all_windows/window_{i}/bitmap_{i}")

@@ -461,28 +461,7 @@ def wyschc_get():
             return json.dumps({"message": "Fragment size is greater than buffer size"}), 200
 
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
-        if not exists_blob(BUCKET_NAME, "all_windows/"):
-            print("INITIALIZING... (be patient)")
-            create_folder(BUCKET_NAME, "all_windows/")
-
-            # For each window in the SCHC Profile, create its blob.
-            for i in range(2 ** m):
-                create_folder(BUCKET_NAME, "all_windows/window_%d/" % i)
-
-                # For each fragment in the SCHC Profile, create its blob.
-                for j in range(2 ** n - 1):
-                    upload_blob(BUCKET_NAME, "", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
-
-                # Create the blob for each bitmap.
-                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME,
-                                                                                                        "all_windows"
-                                                                                                        "/window_%d"
-                                                                                                        "/bitmap_%d"
-                                                                                                        % (i, i)) == 0):
-                    bitmap = ""
-                    for b in range(profile_uplink.BITMAP_SIZE):
-                        bitmap += "0"
-                    upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+        initialize_blobs(BUCKET_NAME, profile_uplink)
 
         print("BLOBs created")
 
@@ -508,14 +487,14 @@ def wyschc_get():
         current_window = int(fragment_message.header.W, 2)
 
         # Get the current bitmap.
-        bitmap = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+        bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
         if 'enable_losses' in request_dict and not (fragment_message.is_all_0() or fragment_message.is_all_1()):
             if request_dict['enable_losses']:
                 loss_rate = request_dict["loss_rate"]
                 # loss_rate = 10
                 coin = random.random()
-                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                print(f'loss rate: {loss_rate}, random toss:{coin * 100}')
                 if coin * 100 < loss_rate:
                     print("[LOSS] The fragment was lost.")
                     return 'fragment lost', 204
@@ -540,18 +519,16 @@ def wyschc_get():
             upload_blob(BUCKET_NAME, time_received, "timestamp")
 
             # Print some data for the user.
-            print("[RECV] This corresponds to the " + str(fragment_number) + "th fragment of the " + str(
-                current_window) + "th window.")
-            print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
+            print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment of the {str(current_window)}th window.")
+            print(f"[RECV] Sigfox sequence number: {str(sigfox_sequence_number)}")
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+            upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
             # Upload the fragment data.
             upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
-                                      "all_windows/window_%d/fragment_%d_%d" % (
-                                          current_window, current_window, fragment_number))
+                                      f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
@@ -560,7 +537,7 @@ def wyschc_get():
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
             upload_blob_using_threads(BUCKET_NAME, bitmap,
-                                      "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+                                      f"all_windows/window_{current_window}/bitmap_{current_window}")
 
         # Get some SCHC values from the fragment.
         rule_id = fragment_message.header.RULE_ID
@@ -578,7 +555,7 @@ def wyschc_get():
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
             for i in range(current_window + 1):
-                bitmap_ack = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i))
+                bitmap_ack = read_blob(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
                 print(bitmap_ack)
                 window_ack = i
                 if '0' in bitmap_ack:
@@ -587,11 +564,11 @@ def wyschc_get():
             # If the ACK bitmap has a 0 at the end of a non-final window, a fragment has been lost.
             if fragment_message.is_all_0() and '0' in bitmap_ack:
                 print("[ALL0] Sending ACK for lost fragments...")
-                print("bitmap with errors -> {}".format(bitmap_ack))
+                print(f"bitmap with errors -> {bitmap_ack}")
                 # Create an ACK message and send it.
                 ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                 response_json = send_ack(request_dict, ack)
-                print("Response content -> {}".format(response_json))
+                print(f"Response content -> {response_json}")
                 return response_json, 200
 
             # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
@@ -627,8 +604,8 @@ def wyschc_get():
 
                         last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
                         upload_blob_using_threads(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                                  "all_windows/window_%d/fragment_%d_%d" % (
-                                                      current_window, current_window, last_index))
+                                                  f"all_windows/window_{current_window}/"
+                                                  f"fragment_{current_window}_{last_index}")
                         try:
                             # _ = requests.post(url='http://localhost:5000/http_reassemble',
                             #                   json={"last_index": last_index, "current_window": current_window},
@@ -648,7 +625,7 @@ def wyschc_get():
                         response_json = send_ack(request_dict, last_ack)
                         # return response_json, 200
                         # response_json = send_ack(request_dict, last_ack)
-                        print("200, Response content -> {}".format(response_json))
+                        print(f"200, Response content -> {response_json}")
                         return response_json, 200
                     else:
                         # Send NACK at the end of the window.
@@ -680,7 +657,7 @@ def http_reassemble():
         # Get request JSON.
         print("[REASSEMBLE] POST RECEIVED")
         request_dict = request.get_json()
-        print('Received HTTP message: {}'.format(request_dict))
+        print(f'Received HTTP message: {request_dict}')
 
         current_window = int(request_dict["current_window"])
         last_index = int(request_dict["last_index"])
@@ -704,9 +681,8 @@ def http_reassemble():
         # TODO: This assumes that the last received message is in the last window.
         for i in range(current_window + 1):
             for j in range(2 ** n - 1):
-                print("Loading fragment {}".format(j))
-                fragment_file = read_blob(BUCKET_NAME,
-                                          "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
+                print(f"Loading fragment {j}")
+                fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
                 print(fragment_file)
                 ultimate_header = fragment_file[:header_bytes]
                 ultimate_payload = fragment_file[header_bytes:]

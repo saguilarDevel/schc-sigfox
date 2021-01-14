@@ -13,7 +13,6 @@ from function import zfill
 filename = "example.txt"
 seqNumber = 1
 device = "4D5A87"
-enable_losses = False
 
 
 def post(fragment_sent, retransmit=False):
@@ -40,10 +39,6 @@ def post(fragment_sent, retransmit=False):
         "seqNumber": str(seqNumber),
         "ack": fragment_sent.expects_ack()
     }
-
-    if enable_losses:
-        print("Losses are enabled")
-        payload_dict = {**payload_dict, **{"enable_losses": enable_losses}}
 
     print(f"[POST] Posting fragment {fragment_sent.hex} to {url}")
 
