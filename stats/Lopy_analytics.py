@@ -4,7 +4,7 @@ import json
 pd.set_option('display.max_columns', None)
 
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
-with open('files/LoPy/LoPy_stats_file_v4.1.json', encoding='ISO-8859-1') as json_file:
+with open('files/LoPy/LoPy_stats_file_v4.7.json', encoding='ISO-8859-1') as json_file:
     data = json.load(json_file)
 
 tx_json = {}
@@ -65,7 +65,7 @@ print("sum:{}".format(df_all1['send_time'].sum(axis=0, skipna=True)))
 print("mean:{}".format(df_all1['send_time'].mean(axis=0, skipna=True)))
 print("std:{}".format(df_all1['send_time'].std(axis=0, skipna=True)))
 
-df1_transposed.to_excel('test_stats_2.7_v2.xlsx', engine='xlsxwriter')
+df1_transposed.to_excel('test_stats_4.7.xlsx', engine='xlsxwriter')
 
 print("Transmission Time (excluding code overhead):{}".format(df1_transposed['send_time'].sum(axis=0, skipna=True)))
 # print(df1['FCN'])

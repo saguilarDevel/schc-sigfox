@@ -5,7 +5,7 @@ import json
 
 
 def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
-    print("Uploading with threads...")
+    print("[BLOB]: Uploading with threads...")
     thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
     thread.start()
 
@@ -18,7 +18,7 @@ def upload_blob(bucket_name, blob_text, destination_blob_name):
     if type(blob_text) == bytes or type(blob_text) == bytearray:
         blob_text = blob_text.encode()
     blob.upload_from_string(str(blob_text))
-    print('File uploaded to {}.'.format(destination_blob_name))
+    print('[BLOB]: File uploaded to {}.'.format(destination_blob_name))
 
 
 def read_blob(bucket_name, blob_name):
@@ -47,7 +47,7 @@ def create_folder(bucket_name, folder_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
-    print('Folder uploaded to {}.'.format(folder_name))
+    print('[BLOB]: Folder uploaded to {}.'.format(folder_name))
 
 
 def size_blob(bucket_name, blob_name):

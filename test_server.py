@@ -31,7 +31,7 @@ CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
 # Filename must be a json file starting with a /
-filename = '/fragments_stats_v4.1.json'
+filename = '/fragments_stats_v4.8.json'
 filename_dir = os.path.dirname(__file__)
 save_path = os.path.join(filename_dir, 'stats', 'files', 'server')
 
@@ -155,11 +155,15 @@ def after_request(response):
             print("[after_request]: response.status_code == 200")
             response_dict = json.loads(response.get_data())
             print("[after_request]: response_dict: {}".format(response_dict))
-
-            for device in response_dict:
-                print("[after_request]: {}".format(response_dict[device]['downlinkData']))
-                g.current_fragment['s-ack'] = response_dict[device]['downlinkData']
-                g.current_fragment['s-ack_send'] = True
+            if 'message' in response_dict:
+                print(response_dict['message'])
+                if 'Message ignored' in response_dict['message']:
+                    g.current_fragment['s-ignored'] = True
+            else:
+                for device in response_dict:
+                    print("[after_request]: {}".format(response_dict[device]['downlinkData']))
+                    g.current_fragment['s-ack'] = response_dict[device]['downlinkData']
+                    g.current_fragment['s-ack_send'] = True
 
         print('[after_request]: current fragment:{}'.format(g.current_fragment))
         save_current_fragment(g.current_fragment)
@@ -373,10 +377,10 @@ def clean():
     if request.method == 'POST':
 
         # Get request JSON.
-        print("POST RECEIVED")
+        print("[Clean]: POST RECEIVED")
         BUCKET_NAME = config.BUCKET_NAME
         request_dict = request.get_json()
-        print('Received Request message: {}'.format(request_dict))
+        print('[Clean]: Received Request message: {}'.format(request_dict))
         header_bytes = int(request_dict["header_bytes"])
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         bitmap = ''
@@ -385,6 +389,7 @@ def clean():
         for i in range(2**profile.M):
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
+        print("[Clean]: Clean completed")
 
         return '', 204
 
@@ -699,6 +704,9 @@ def http_reassemble():
         # Find the index of the first empty blob:
 
         print("[REASSEMBLE] Reassembling...")
+        print("[REASSEMBLE] current_window: {}".format(current_window))
+        print("[REASSEMBLE] last_index: {}".format(last_index))
+
 
         # Get all the fragments into an array in the format "fragment = [header, payload]"
         fragments = []
@@ -722,7 +730,11 @@ def http_reassemble():
         payload = bytearray(reassembler.reassemble())
         # Upload the full message.
         upload_blob_using_threads(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
-
+        try:
+            _ = requests.post(url='http://localhost:5000/clean',
+                              json={"header_bytes": header_bytes}, timeout=1)
+        except requests.exceptions.ReadTimeout:
+            pass
         return '', 204
 
 

@@ -20,7 +20,7 @@ class Sigfox(Protocol):
         self.direction = direction
         self.mode = mode
         self.RETRANSMISSION_TIMER_VALUE = 45  # (45) enough to let a downlink message to be sent if needed
-        self.INACTIVITY_TIMER_VALUE = 10  # (60) for demo purposes
+        self.INACTIVITY_TIMER_VALUE = 200  # (60) for demo purposes
 
         self.L2_WORD_SIZE = 8   # The L2 word size used by Sigfox is 1 byte
 

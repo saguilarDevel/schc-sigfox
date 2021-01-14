@@ -4,7 +4,7 @@ import requests
 
 # Uncomment for complete diplay
 # pd.set_option('display.max_columns', None)
-version = '4.1'
+version = '4.7'
 # json_file = json.loads('/Users/sergioaguilar/PycharmProjects/SCHCfox/stats/files/stats_file_v2.json')
 # with open('files/LoPy/stats_file_v'+version+'.json') as json_file:
 with open('files/LoPy/LoPy_stats_file_v'+version+'.json') as json_file:
