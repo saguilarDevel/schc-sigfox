@@ -8,6 +8,8 @@ import json
 from flask import abort, g
 import time
 from google.cloud import storage
+
+from Messages.ReceiverAbort import ReceiverAbort
 from function import *
 from blobHelperFunctions import *
 from Entities.Fragmenter import Fragmenter
@@ -427,37 +429,33 @@ def wyschc_get():
         print('Received Sigfox message: {}'.format(request_dict))
 
         # Get data and Sigfox Sequence Number.
-        fragment = request_dict["data"]
+        raw_data = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
 
         # Initialize Cloud Storage variables.
-
         BUCKET_NAME = config.BUCKET_NAME
 
-        # Parse fragment into "fragment = [header, payload]
-        header_first_hex = fragment[:1]
-        if (header_first_hex) == '0' or (header_first_hex) == '1':
-            header = bytes.fromhex(fragment[:2])
-            payload = bytearray.fromhex(fragment[2:])
+        header_first_hex = raw_data[:1]
+        if header_first_hex == '0' or header_first_hex == '1':
+            header = bytes.fromhex(raw_data[:2])
+            payload = bytearray.fromhex(raw_data[2:])
             header_bytes = 1
-        elif (header_first_hex) == '2':
-            header = bytearray.fromhex(fragment[:4])
-            payload = bytearray.fromhex(fragment[4:])
+        elif header_first_hex == '2':
+            header = bytearray.fromhex(raw_data[:4])
+            payload = bytearray.fromhex(raw_data[4:])
             header_bytes = 2
         else:
-            print("Wrong header in fragment")
+            print("Wrong header in raw_data")
             return 'wrong header', 204
 
-        data = [header, payload]
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
-        buffer_size = profile_uplink.MTU
         n = profile_uplink.N
         m = profile_uplink.M
 
         # If fragment size is greater than buffer size, ignore it and end function.
-        if len(fragment) / 2 * 8 > buffer_size:  # Fragment is hex, 1 hex = 1/2 byte
+        if len(raw_data) / 2 * 8 > profile_uplink.MTU:  # Fragment is hex, 1 hex = 1/2 byte
             return json.dumps({"message": "Fragment size is greater than buffer size"}), 200
 
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
@@ -475,13 +473,15 @@ def wyschc_get():
         for j in range(2 ** n - 1):
             fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], 3)] = j
 
-        # Parse fragment into "fragment = [header, payload]
-        header = bytes.fromhex(fragment[:2])
-        payload = bytearray.fromhex(fragment[2:])
-        data = [header, payload]
-
+        # Parse raw_data into "data = [header, payload]
         # Convert to a Fragment class for easier manipulation.
+        header = bytes.fromhex(raw_data[:2])
+        payload = bytearray.fromhex(raw_data[2:])
+        data = [header, payload]
         fragment_message = Fragment(profile_uplink, data)
+
+        if fragment_message.is_sender_abort():
+            return 'Sender-Abort received', 500
 
         # Get current window for this fragment.
         current_window = int(fragment_message.header.W, 2)
@@ -489,6 +489,17 @@ def wyschc_get():
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
+        # Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
+        # lost, separated by windows.
+        with open("loss_mask.txt", "r") as fd:
+            loss_mask = []
+            for line in fd:
+                if not line.startswith("#"):
+                    loss_mask.append(line)
+
+        print(f"Loss mask: {loss_mask}")
+
+        # Controlling random losses.
         if 'enable_losses' in request_dict and not (fragment_message.is_all_0() or fragment_message.is_all_1()):
             if request_dict['enable_losses']:
                 loss_rate = request_dict["loss_rate"]
@@ -511,9 +522,15 @@ def wyschc_get():
 
                 # If this is not the very first fragment and the inactivity timer has been reached, ignore the message.
                 # TODO: Send SCHC abort message.
-                if str(fragment_number) != "0" and str(
-                        current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
-                    return json.dumps({"message": "Inactivity timer reached. Message ignored."}), 200
+                if str(fragment_number) != "0" and str(current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
+                    abort = ReceiverAbort(profile_uplink,
+                                          fragment_message.header.RULE_ID,
+                                          fragment_message.header.DTAG,
+                                          fragment_message.header.W)
+                    response_json = send_ack(request_dict, abort)
+                    print(f"Response content -> {response_json}")
+                    return response_json, 200
+
 
             # Upload current timestamp.
             upload_blob(BUCKET_NAME, time_received, "timestamp")

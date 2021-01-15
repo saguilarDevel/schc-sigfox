@@ -22,7 +22,8 @@ class ReceiverAbort:
                              fcn='',
                              c='1')
 
-        # if the Header does not end at an L2 Word boundary, append bits set to 1 as needed to reach the next L2 Word boundary.
+        # if the Header does not end at an L2 Word boundary,
+        # append bits set to 1 as needed to reach the next L2 Word boundary.
         while len(self.header.string + self.padding) % profile.L2_WORD_SIZE != 0:
             self.padding += '1'
 

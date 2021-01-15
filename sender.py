@@ -6,6 +6,7 @@ from requests import Timeout
 
 from Entities.Fragmenter import Fragmenter
 from Entities.Sigfox import Sigfox
+from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.SenderAbort import SenderAbort
 from function import zfill
@@ -83,6 +84,18 @@ def post(fragment_sent, retransmit=False):
             print(f"ACK window: {str(ack_window)}")
             print(f"ACK bitmap: {bitmap}")
             print(f"ACK C bit: {c}")
+
+            ack_object = ACK(profile_uplink,
+                             ack[:ack_index_dtag],
+                             ack[ack_index_dtag:ack_index_w],
+                             ack[ack_index_w:ack_index_bitmap],
+                             ack[ack_index_c],
+                             ack[ack_index_bitmap, ack_index_padding],
+                             ack[ack_index_padding:])
+
+            if ack_object.is_receiver_abort():
+                print("ERROR: Receiver Abort received. Aborting communication.")
+                exit(1)
 
             # If the W field in the SCHC ACK corresponds to the last window of the SCHC Packet:
             if ack_window == last_window:
