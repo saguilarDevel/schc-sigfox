@@ -20,9 +20,9 @@ class Sigfox(Protocol):
         self.direction = direction
         self.mode = mode
         self.RETRANSMISSION_TIMER_VALUE = 45  # (45) enough to let a downlink message to be sent if needed
-        self.INACTIVITY_TIMER_VALUE = 10  # (60) for demo purposes
+        self.INACTIVITY_TIMER_VALUE = 60  # (60) for demo purposes
 
-        self.SIGFOX_DL_TIMEOUT = 5  # This is to be tested
+        self.SIGFOX_DL_TIMEOUT = 10  # This is to be tested
 
         self.L2_WORD_SIZE = 8   # The L2 word size used by Sigfox is 1 byte
 
@@ -33,9 +33,10 @@ class Sigfox(Protocol):
         self.MESSAGE_INTEGRITY_CHECK_SIZE = None  # TBD
         self.RCS_ALGORITHM = None  # TBD
 
-        if direction == "UPLINK":
-            self.MTU = 12 * 8
+        self.UPLINK_MTU = 12*8
+        self.DOWNLINK_MTU = 8*8
 
+        if direction == "UPLINK":
             # if mode == "NO ACK":
             #     self.HEADER_LENGTH = 8
             #     self.RULE_ID_SIZE = 2  # recommended
@@ -69,7 +70,6 @@ class Sigfox(Protocol):
                 self.MAX_WIND_FCN = 6  # SHOULD be
 
         if direction == "DOWNLINK":
-            self.MTU = 8 * 8
             if mode == "NO ACK":
                 self.HEADER_LENGTH = 8
                 self.RULE_ID_SIZE = 2

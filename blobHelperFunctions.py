@@ -33,6 +33,7 @@ def delete_blob(bucket_name, blob_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
     blob.delete()
+    print(f"[BHF] Deleted blob {blob_name}")
 
 
 def exists_blob(bucket_name, blob_name):

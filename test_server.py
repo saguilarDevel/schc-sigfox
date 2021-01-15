@@ -64,6 +64,7 @@ def save_current_fragment(fragment):
     file.close()
     return
 
+
 @app.before_request
 def before_request():
     g.start = time.time()
@@ -99,7 +100,7 @@ def before_request():
             # Initialize SCHC variables.
             profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
             profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
-            buffer_size = profile_uplink.MTU
+            buffer_size = profile_uplink.UPLINK_MTU
             n = profile_uplink.N
             m = profile_uplink.M
             # Convert to a Fragment class for easier manipulation.
@@ -222,7 +223,7 @@ def post_message():
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
         profile_downlink = Sigfox("DOWNLINK", "NO ACK")
-        buffer_size = profile_uplink.MTU
+        buffer_size = profile_uplink.UPLINK_MTU
         n = profile_uplink.N
         m = profile_uplink.M
         # Convert to a Fragment class for easier manipulation.
@@ -449,17 +450,16 @@ def wyschc_get():
             return 'wrong header', 204
 
         # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
-        n = profile_uplink.N
-        m = profile_uplink.M
+        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        n = profile.N
+        m = profile.M
 
         # If fragment size is greater than buffer size, ignore it and end function.
-        if len(raw_data) / 2 * 8 > profile_uplink.MTU:  # Fragment is hex, 1 hex = 1/2 byte
+        if len(raw_data) / 2 * 8 > profile.UPLINK_MTU:  # Fragment is hex, 1 hex = 1/2 byte
             return json.dumps({"message": "Fragment size is greater than buffer size"}), 200
 
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
-        initialize_blobs(BUCKET_NAME, profile_uplink)
+        initialize_blobs(BUCKET_NAME, profile)
 
         # Initialize empty window
         window = []
@@ -476,17 +476,16 @@ def wyschc_get():
         header = bytes.fromhex(raw_data[:2])
         payload = bytearray.fromhex(raw_data[2:])
         data = [header, payload]
-        fragment_message = Fragment(profile_uplink, data)
+        fragment_message = Fragment(profile, data)
 
         if fragment_message.is_sender_abort():
             return 'Sender-Abort received', 204
 
-        # Get current window for this fragment.
-        current_window = int(fragment_message.header.W, 2)
+        # Get data from this fragment.
         fcn = fragment_message.header.FCN
         rule_id = fragment_message.header.RULE_ID
         dtag = fragment_message.header.DTAG
-        w = fragment_message.header.W
+        current_window = int(fragment_message.header.W, 2)
 
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
@@ -497,7 +496,11 @@ def wyschc_get():
             loss_mask = []
             for line in fd:
                 if not line.startswith("#"):
-                    loss_mask.append(line)
+                    for char in line:
+                        try:
+                            loss_mask.append(int(char))
+                        except ValueError:
+                            pass
 
         print(f"Loss mask: {loss_mask}")
 
@@ -512,50 +515,31 @@ def wyschc_get():
                     print("[LOSS] The fragment was lost.")
                     return 'fragment lost', 204
 
-        # Check if the fragment is (not) an All-1
-        if not fcn.is_monochar() and fcn[0] == 1:
-            fragment_number = fcn_dict[fragment_message.header.FCN]
+        # Inactivity timer validation
+        time_received = int(request_dict["time"])
 
-            # Check if fragment is to be lost
-            position = current_window*profile_uplink.WINDOW_SIZE + fragment_number
-            if loss_mask[position] != 0:
-                loss_mask[position] -= 1
-                return 'fragment lost', 204
+        if exists_blob(BUCKET_NAME, "timestamp"):
+            # Check time validation.
+            last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+            print(f"[RECV] Previous timestamp: {last_time_received}")
+            print(f"[RECV] This timestamp: {time_received}")
 
-            upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
+            # If the inactivity timer has been reached, abort communication.
+            if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
+                print("[RECV] Inactivity timer reached. Ending session.")
+                delete_blob(BUCKET_NAME, "timestamp")
+                receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                print("Sending Sender Abort")
+                response_json = send_ack(request_dict, receiver_abort)
+                print(f"Response content -> {response_json}")
+                return response_json, 200
 
-            time_received = int(request_dict["time"])
-            if exists_blob(BUCKET_NAME, "timestamp"):
-                # Check time validation.
-                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+        # Upload fragment number and timestamp
 
-                # If the inactivity timer has been reached, abort communication.
-                if time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
-                    receiver_abort = ReceiverAbort(profile_uplink,
-                                          fragment_message.header.RULE_ID,
-                                          fragment_message.header.DTAG,
-                                          fragment_message.header.W)
-                    response_json = send_ack(request_dict, receiver_abort)
-                    print(f"Response content -> {response_json}")
-                    return response_json, 200
+        upload_blob(BUCKET_NAME, time_received, "timestamp")
 
-            # Upload current timestamp.
-            upload_blob(BUCKET_NAME, time_received, "timestamp")
-
-            # Print some data for the user.
-            print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment of the {str(current_window)}th window.")
-            print(f"[RECV] Sigfox sequence number: {str(sigfox_sequence_number)}")
-
-            # Update bitmap and upload it.
-            bitmap = replace_bit(bitmap, fragment_number, '1')
-            upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
-
-            # Upload the fragment data.
-            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
-                                      f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
-
-        # If the fragment is All-1
-        else:
+        # Check if the fragment is an All-1
+        if is_monochar(fcn) and fcn[0] == '1':
             print("[RECV] This is an All-1.")
 
             # Check if fragment is to be lost (All-1 is the very last fragment)
@@ -568,6 +552,31 @@ def wyschc_get():
             upload_blob_using_threads(BUCKET_NAME,
                                       bitmap,
                                       f"all_windows/window_{current_window}/bitmap_{current_window}")
+
+        # Else, it is a normal fragment.
+        else:
+            fragment_number = fcn_dict[fragment_message.header.FCN]
+
+            # Check if fragment is to be lost
+            position = current_window * profile.WINDOW_SIZE + fragment_number
+            if loss_mask[position] != 0:
+                loss_mask[position] -= 1
+                return 'fragment lost', 204
+
+            upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
+
+            # Print some data for the user.
+            print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment "
+                  f"of the {str(current_window)}th window.")
+            print(f"[RECV] Sigfox sequence number: {str(sigfox_sequence_number)}")
+
+            # Update bitmap and upload it.
+            bitmap = replace_bit(bitmap, fragment_number, '1')
+            upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
+
+            # Upload the fragment data.
+            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+                                      f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # Get last and current Sigfox sequence number (SSN)
         last_sequence_number = 0
@@ -596,7 +605,7 @@ def wyschc_get():
                 if '0' in bitmap_ack:
                     print("[ALL0] Lost fragments have been detected. Preparing ACK.")
                     print(f"[ALL0] Bitmap with errors -> {bitmap_ack}")
-                    ack = ACK(profile=profile_downlink,
+                    ack = ACK(profile=profile,
                               rule_id=rule_id,
                               dtag=dtag,
                               w=zfill(format(window_ack, 'b'), m),
@@ -620,7 +629,7 @@ def wyschc_get():
                     if current_window != window_ack:
                         print("[ALL1] Lost fragments have been detected. Preparing ACK.")
                         print(f"[ALL1] Bitmap with errors -> {bitmap_ack}")
-                        ack = ACK(profile=profile_downlink,
+                        ack = ACK(profile=profile,
                                   rule_id=rule_id,
                                   dtag=dtag,
                                   w=zfill(format(window_ack, 'b'), m),
@@ -645,6 +654,8 @@ def wyschc_get():
                             # accept the ALL-1 and start reassembling
                             if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                                 print("[ALL1] Integrity checking complete, launching reassembler.")
+                                # All-1 does not define a fragment number, so its fragment number must be the next
+                                # of the last registered fragment number.
                                 last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
                                 upload_blob_using_threads(BUCKET_NAME,
                                                           data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
@@ -662,9 +673,9 @@ def wyschc_get():
                                 # currently have tiles for).
                                 print("[ALL1] Preparing last ACK")
                                 bitmap = ''
-                                for k in range(profile_uplink.BITMAP_SIZE):
+                                for k in range(profile.BITMAP_SIZE):
                                     bitmap += '0'
-                                last_ack = ACK(profile=profile_downlink,
+                                last_ack = ACK(profile=profile,
                                                rule_id=rule_id,
                                                dtag=dtag,
                                                w=zfill(format(window_ack, 'b'), m),
@@ -675,13 +686,14 @@ def wyschc_get():
                                 # response_json = send_ack(request_dict, last_ack)
                                 print(f"200, Response content -> {response_json}")
                                 print("[ALL1] Last ACK has been sent.")
+                                delete_blob(BUCKET_NAME, "timestamp")
                                 return response_json, 200
                         # If the last two fragments are not consecutive, or the bitmap didn't match the regex,
                         # send an ACK reporting losses.
                         else:
                             # Send NACK at the end of the window.
                             print("[ALLX] Sending NACK for lost fragments...")
-                            ack = ACK(profile=profile_downlink,
+                            ack = ACK(profile=profile,
                                       rule_id=rule_id,
                                       dtag=dtag,
                                       w=zfill(format(window_ack, 'b'), m),
@@ -699,7 +711,6 @@ def wyschc_get():
 
 @app.route('/http_reassemble', methods=['GET', 'POST'])
 def http_reassemble():
-
     if request.method == "POST":
         print(">>>[RSMB] The reassembler has been launched.")
         # Get request JSON.

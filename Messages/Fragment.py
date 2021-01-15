@@ -1,5 +1,5 @@
 from Messages.Header import Header
-from function import bitstring_to_bytes, zfill, is_monochar
+from function import zfill, is_monochar
 
 
 class Fragment:

@@ -75,31 +75,26 @@ def post(fragment_sent, retransmit=False):
             attempts = 0
             ack = response.json()[device]["downlinkData"]
 
-            if not fragment_sent.expects_ack():
-                print(f"ERROR: ACK received but not requested ({ack}).")
-                exit(1)
-
-            # Extracting data from the ACK
-            ack = zfill(bin(int(ack, 16))[2:], 64)
-            ack_window = int(ack[ack_index_w:ack_index_c], 2)
-            c = ack[ack_index_c]
-            bitmap = ack[ack_index_bitmap:ack_index_padding]
-            print(f"ACK: {ack}")
-            print(f"ACK window: {str(ack_window)}")
-            print(f"ACK bitmap: {bitmap}")
-            print(f"ACK C bit: {c}")
-
-            ack_object = ACK(profile_uplink,
-                             ack[:ack_index_dtag],
-                             ack[ack_index_dtag:ack_index_w],
-                             ack[ack_index_w:ack_index_bitmap],
-                             ack[ack_index_c],
-                             ack[ack_index_bitmap, ack_index_padding],
-                             ack[ack_index_padding:])
+            # Parse ACK
+            ack = zfill(bin(int(ack, 16))[2:], profile_uplink.DOWNLINK_MTU)
+            ack_object = ACK.parse_from_hex(profile_uplink, ack)
 
             if ack_object.is_receiver_abort():
                 print("ERROR: Receiver Abort received. Aborting communication.")
                 exit(1)
+
+            if not fragment_sent.expects_ack():
+                print(f"ERROR: ACK received but not requested ({ack}).")
+                exit(1)
+
+            # Extract data from ACK
+            ack_window = ack_object.w
+            c = ack_object.c
+            bitmap = ack_object.bitmap
+            print(f"ACK: {ack}")
+            print(f"ACK window: {str(ack_window)}")
+            print(f"ACK bitmap: {bitmap}")
+            print(f"ACK C bit: {c}")
 
             # If the W field in the SCHC ACK corresponds to the last window of the SCHC Packet:
             if ack_window == last_window:
@@ -197,12 +192,6 @@ i = 0
 current_window = 0
 profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes=1)
 profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes=1)
-
-ack_index_dtag = profile_uplink.RULE_ID_SIZE
-ack_index_w = ack_index_dtag + profile_uplink.T
-ack_index_c = ack_index_w + profile_uplink.M
-ack_index_bitmap = ack_index_c + 1
-ack_index_padding = ack_index_bitmap + profile_uplink.BITMAP_SIZE
 
 # Fragment the file.
 fragmenter = Fragmenter(profile_uplink, message)
