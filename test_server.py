@@ -461,8 +461,6 @@ def wyschc_get():
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
         initialize_blobs(BUCKET_NAME, profile_uplink)
 
-        print("BLOBs created")
-
         # Initialize empty window
         window = []
         for i in range(2 ** n - 1):
@@ -481,10 +479,14 @@ def wyschc_get():
         fragment_message = Fragment(profile_uplink, data)
 
         if fragment_message.is_sender_abort():
-            return 'Sender-Abort received', 500
+            return 'Sender-Abort received', 204
 
         # Get current window for this fragment.
         current_window = int(fragment_message.header.W, 2)
+        fcn = fragment_message.header.FCN
+        rule_id = fragment_message.header.RULE_ID
+        dtag = fragment_message.header.DTAG
+        w = fragment_message.header.W
 
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
@@ -510,9 +512,16 @@ def wyschc_get():
                     print("[LOSS] The fragment was lost.")
                     return 'fragment lost', 204
 
-        # Try getting the fragment number from the FCN dictionary.
-        try:
+        # Check if the fragment is (not) an All-1
+        if not fcn.is_monochar() and fcn[0] == 1:
             fragment_number = fcn_dict[fragment_message.header.FCN]
+
+            # Check if fragment is to be lost
+            position = current_window*profile_uplink.WINDOW_SIZE + fragment_number
+            if loss_mask[position] != 0:
+                loss_mask[position] -= 1
+                return 'fragment lost', 204
+
             upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
 
             time_received = int(request_dict["time"])
@@ -520,17 +529,15 @@ def wyschc_get():
                 # Check time validation.
                 last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
 
-                # If this is not the very first fragment and the inactivity timer has been reached, ignore the message.
-                # TODO: Send SCHC abort message.
-                if str(fragment_number) != "0" and str(current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
-                    abort = ReceiverAbort(profile_uplink,
+                # If the inactivity timer has been reached, abort communication.
+                if time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
+                    receiver_abort = ReceiverAbort(profile_uplink,
                                           fragment_message.header.RULE_ID,
                                           fragment_message.header.DTAG,
                                           fragment_message.header.W)
-                    response_json = send_ack(request_dict, abort)
+                    response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
                     return response_json, 200
-
 
             # Upload current timestamp.
             upload_blob(BUCKET_NAME, time_received, "timestamp")
@@ -547,19 +554,20 @@ def wyschc_get():
             upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
                                       f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
-        # If the FCN could not been found, it almost certainly is the final fragment.
-        except KeyError:
-            print("[RECV] This seems to be the final fragment.")
+        # If the fragment is All-1
+        else:
+            print("[RECV] This is an All-1.")
+
+            # Check if fragment is to be lost (All-1 is the very last fragment)
+            if loss_mask[-1] != 0:
+                loss_mask[-1] -= 1
+                return 'fragment lost', 204
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob_using_threads(BUCKET_NAME, bitmap,
+            upload_blob_using_threads(BUCKET_NAME,
+                                      bitmap,
                                       f"all_windows/window_{current_window}/bitmap_{current_window}")
-
-        # Get some SCHC values from the fragment.
-        rule_id = fragment_message.header.RULE_ID
-        dtag = fragment_message.header.DTAG
-        w = fragment_message.header.W
 
         # Get last and current Sigfox sequence number (SSN)
         last_sequence_number = 0
@@ -571,6 +579,9 @@ def wyschc_get():
         if fragment_message.expects_ack():
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
+            # This bitmap corresponds to the lowest-numered window with losses.
+            bitmap_ack = None
+            window_ack = None
             for i in range(current_window + 1):
                 bitmap_ack = read_blob(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
                 print(bitmap_ack)
@@ -578,87 +589,106 @@ def wyschc_get():
                 if '0' in bitmap_ack:
                     break
 
-            # If the ACK bitmap has a 0 at the end of a non-final window, a fragment has been lost.
-            if fragment_message.is_all_0() and '0' in bitmap_ack:
-                print("[ALL0] Sending ACK for lost fragments...")
-                print(f"bitmap with errors -> {bitmap_ack}")
-                # Create an ACK message and send it.
-                ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
-                response_json = send_ack(request_dict, ack)
-                print(f"Response content -> {response_json}")
-                return response_json, 200
-
-            # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
-            # This is to be modified, as ACK-on-Error does not need an ACK for every window.
-            # No need to send an ACK if the bitmap has all 1.
-            if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
-                print("[ALLX] Sending ACK after window...")
-
-                # Create an ACK message and send it.
-                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                # response_json = send_ack(request_dict, ack)
-                print("204, Response content -> ''")
-                # print("200, Response content -> {}".format(response_json))
-                # Response to continue, no ACK is sent Back.
-                return '', 204
-                # return response_json, 200
-
-            # If the fragment is an ALL-1
-            if fragment_message.is_all_1():
-                # response = {request_dict['device']: {'downlinkData': '080fffffffffffff'}}
-                # print("response -> {}".format(json.dumps(response)))
-                # return json.dumps(response), 200
-                # The bitmap in the last window follows the following regular expression: "1*0*1*"
-                # Since the ALL-1, if received, changes the least significant bit of the bitmap.
-                # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:
-                # 1110001 is a valid bitmap, 1101001 is not.
-                pattern = re.compile("1*0*1")
-
-                # If the bitmap matches the regex, check if the last two received fragments are consecutive.
-                if pattern.fullmatch(bitmap):
-                    # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
-                    if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
-
-                        last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                        upload_blob_using_threads(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                                  f"all_windows/window_{current_window}/"
-                                                  f"fragment_{current_window}_{last_index}")
-                        try:
-                            # _ = requests.post(url='http://localhost:5000/http_reassemble',
-                            #                   json={"last_index": last_index, "current_window": current_window},
-                            #                   timeout=0.0000000001)
-                            _ = requests.post(url='http://localhost:5000/http_reassemble',
-                                              json={"last_index": last_index, "current_window": current_window,
-                                                    "header_bytes": header_bytes}, timeout=0.0000000001)
-                        except requests.exceptions.ReadTimeout:
-                            pass
-
-                        # Send last ACK to end communication.
-                        print("[ALL1] Reassembled: Sending last ACK")
-                        bitmap = ''
-                        for k in range(profile_uplink.BITMAP_SIZE):
-                            bitmap += '0'
-                        last_ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
-                        response_json = send_ack(request_dict, last_ack)
-                        # return response_json, 200
-                        # response_json = send_ack(request_dict, last_ack)
-                        print(f"200, Response content -> {response_json}")
-                        return response_json, 200
-                    else:
-                        # Send NACK at the end of the window.
-                        print("[ALLX] Sending NACK for lost fragments...")
-                        ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
-                        response_json = send_ack(request_dict, ack)
-                        return response_json, 200
-
-                    # If they are not, there is a gap between two fragments: a fragment has been lost.
-                # The same happens if the bitmap doesn't match the regex.
-                else:
-                    # Send NACK at the end of the window.
-                    print("[ALLX] Sending NACK for lost fragments...")
-                    ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
+            # The final window is only accessible through All-1.
+            # If All-0, check non-final windows
+            if fragment_message.is_all_0():
+                # If the ACK bitmap has a 0 at a non-final window, a fragment has been lost.
+                if '0' in bitmap_ack:
+                    print("[ALL0] Lost fragments have been detected. Preparing ACK.")
+                    print(f"[ALL0] Bitmap with errors -> {bitmap_ack}")
+                    ack = ACK(profile=profile_downlink,
+                              rule_id=rule_id,
+                              dtag=dtag,
+                              w=zfill(format(window_ack, 'b'), m),
+                              c='0',
+                              bitmap=bitmap_ack)
                     response_json = send_ack(request_dict, ack)
+                    print(f"Response content -> {response_json}")
+                    print("[ALL0] ACK sent.")
                     return response_json, 200
+                # If all bitmaps are complete up to this point, no losses are detected.
+                else:
+                    print("[ALL0] No losses have been detected.")
+                    print("Response content -> ''")
+                    return '', 204
+
+            # If the fragment is All-1, the last window should be considered.
+            if fragment_message.is_all_1():
+                # First check for 0s in every bitmap.
+                if '0' in bitmap_ack:
+                    # If the bitmap is of a non-final window, send corresponding ACK.
+                    if current_window != window_ack:
+                        print("[ALL1] Lost fragments have been detected. Preparing ACK.")
+                        print(f"[ALL1] Bitmap with errors -> {bitmap_ack}")
+                        ack = ACK(profile=profile_downlink,
+                                  rule_id=rule_id,
+                                  dtag=dtag,
+                                  w=zfill(format(window_ack, 'b'), m),
+                                  c='0',
+                                  bitmap=bitmap_ack)
+                        response_json = send_ack(request_dict, ack)
+                        print(f"Response content -> {response_json}")
+                        print("[ALL1] ACK sent.")
+                        return response_json, 200
+
+                    # If the bitmap is of the final window, check the following regex.
+                    else:
+                        # The bitmap in the last window follows the following regular expression: "1*0*1*"
+                        # Since the ALL-1, if received, changes the least significant bit of the bitmap.
+                        # For a "complete" bitmap in the last window, there shouldn't be non-consecutive zeroes:
+                        # 1110001 is a valid bitmap, 1101001 is not.
+                        pattern = re.compile("1*0*1")
+
+                        # If the bitmap matches the regex, check if there are still lost fragments.
+                        if pattern.fullmatch(bitmap_ack):
+                            # If the last two received fragments are consecutive (sequence-number-wise),
+                            # accept the ALL-1 and start reassembling
+                            if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
+                                print("[ALL1] Integrity checking complete, launching reassembler.")
+                                last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                                upload_blob_using_threads(BUCKET_NAME,
+                                                          data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                                                          f"all_windows/window_{current_window}/"
+                                                          f"fragment_{current_window}_{last_index}")
+                                try:
+                                    _ = requests.post(url='http://localhost:5000/http_reassemble',
+                                                      json={"last_index": last_index, "current_window": current_window,
+                                                            "header_bytes": header_bytes}, timeout=0.1)
+                                except requests.exceptions.ReadTimeout:
+                                    pass
+
+                                # Send last ACK to end communication (on receiving an All-1, if no fragments are lost,
+                                # if it has received at least one tile, return an ACK for the highest numbered window we
+                                # currently have tiles for).
+                                print("[ALL1] Preparing last ACK")
+                                bitmap = ''
+                                for k in range(profile_uplink.BITMAP_SIZE):
+                                    bitmap += '0'
+                                last_ack = ACK(profile=profile_downlink,
+                                               rule_id=rule_id,
+                                               dtag=dtag,
+                                               w=zfill(format(window_ack, 'b'), m),
+                                               c='1',
+                                               bitmap=bitmap)
+                                response_json = send_ack(request_dict, last_ack)
+                                # return response_json, 200
+                                # response_json = send_ack(request_dict, last_ack)
+                                print(f"200, Response content -> {response_json}")
+                                print("[ALL1] Last ACK has been sent.")
+                                return response_json, 200
+                        # If the last two fragments are not consecutive, or the bitmap didn't match the regex,
+                        # send an ACK reporting losses.
+                        else:
+                            # Send NACK at the end of the window.
+                            print("[ALLX] Sending NACK for lost fragments...")
+                            ack = ACK(profile=profile_downlink,
+                                      rule_id=rule_id,
+                                      dtag=dtag,
+                                      w=zfill(format(window_ack, 'b'), m),
+                                      c='0',
+                                      bitmap=bitmap_ack)
+                            response_json = send_ack(request_dict, ack)
+                            return response_json, 200
 
         return '', 204
 
@@ -669,48 +699,48 @@ def wyschc_get():
 
 @app.route('/http_reassemble', methods=['GET', 'POST'])
 def http_reassemble():
-    if request.method == "POST":
 
+    if request.method == "POST":
+        print(">>>[RSMB] The reassembler has been launched.")
         # Get request JSON.
-        print("[REASSEMBLE] POST RECEIVED")
         request_dict = request.get_json()
-        print(f'Received HTTP message: {request_dict}')
+        print(f'>>>[RSMB] Received HTTP message: {request_dict}')
 
         current_window = int(request_dict["current_window"])
         last_index = int(request_dict["last_index"])
         header_bytes = int(request_dict["header_bytes"])
 
         # Initialize Cloud Storage variables.
-        # BUCKET_NAME = 'sigfoxschc'
-        # BUCKET_NAME = 'wyschc-niclabs'
         BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         n = profile_uplink.N
-        # Find the index of the first empty blob:
 
-        print("[REASSEMBLE] Reassembling...")
+        print(">>>[RSMB] Loading fragments")
 
         # Get all the fragments into an array in the format "fragment = [header, payload]"
         fragments = []
 
-        # TODO: This assumes that the last received message is in the last window.
+        # For each window, load every fragment into the fragments array
         for i in range(current_window + 1):
             for j in range(2 ** n - 1):
-                print(f"Loading fragment {j}")
+                print(f">>>[RSMB] Loading fragment {j}")
                 fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
-                print(fragment_file)
-                ultimate_header = fragment_file[:header_bytes]
-                ultimate_payload = fragment_file[header_bytes:]
-                ultimate_fragment = [ultimate_header.encode(), ultimate_payload.encode()]
-                fragments.append(ultimate_fragment)
+                print(f">>>[RSMB] Fragment data: {fragment_file}")
+                header = fragment_file[:header_bytes]
+                payload = fragment_file[header_bytes:]
+                fragment = [header.encode(), payload.encode()]
+                fragments.append(fragment)
                 if i == current_window and j == last_index:
                     break
 
         # Instantiate a Reassembler and start reassembling.
+        print(">>>[RSMB] Reassembling")
         reassembler = Reassembler(profile_uplink, fragments)
         payload = bytearray(reassembler.reassemble()).decode("utf-8")
+
+        print(">>>[RSMB] Uploading result")
         with open("PAYLOAD", "w") as file:
             file.write(payload)
         # Upload the full message.

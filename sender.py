@@ -62,6 +62,10 @@ def post(fragment_sent, retransmit=False):
         # If 204, the fragment was posted successfully
         elif http_code == 204:
             print("Response: 204 No Content")
+            if fragment_sent.is_all_0():
+                print("Faking timeout")
+                time.sleep(profile.SIGFOX_DL_TIMEOUT)
+                raise Timeout
             if not retransmit:
                 i += 1
 

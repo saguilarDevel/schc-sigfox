@@ -88,3 +88,5 @@ def initialize_blobs(bucket_name, profile):
                 for b in range(profile.BITMAP_SIZE):
                     bitmap += "0"
                 upload_blob(bucket_name, bitmap, f"all_windows/window_{i}/bitmap_{i}")
+
+        print("BLOBs created")
