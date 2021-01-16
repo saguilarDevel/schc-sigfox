@@ -1,3 +1,4 @@
+import os
 import threading
 
 from google.cloud import storage
@@ -91,3 +92,16 @@ def initialize_blobs(bucket_name, profile):
                 upload_blob(bucket_name, bitmap, f"all_windows/window_{i}/bitmap_{i}")
 
         print("BLOBs created")
+
+
+def cleanup(bucket_name, profile):
+    print("[CLN] Deleting timestamp blob")
+    delete_blob(bucket_name, "timestamp")
+    print("[CLN] Resetting bitmaps")
+    for w in range(2 ** profile.M - 1):
+        upload_blob(bucket_name, '0' * profile.WINDOW_SIZE, f"all_windows/window_{w}/bitmap_{w}")
+    print("[CLN] Deleting modified loss mask")
+    try:
+        os.remove("loss_mask_modified.txt")
+    except FileNotFoundError:
+        pass

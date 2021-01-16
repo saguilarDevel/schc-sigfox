@@ -11,6 +11,8 @@ class ACK:
     header = ''
     padding = ''
 
+    window_number = None
+
     def __init__(self, profile, rule_id, dtag, w, c, bitmap, padding=''):
         self.profile = profile
         self.rule_id = rule_id
@@ -25,6 +27,8 @@ class ACK:
         print(f"header {self.header}")
         while len(self.header + self.padding) < profile.DOWNLINK_MTU:
             self.padding += '0'
+
+        self.window_number = int(self.w, 2)
 
     def to_string(self):
         return self.header + self.padding
@@ -59,13 +63,6 @@ class ACK:
         ack_index_c = ack_index_w + profile.M
         ack_index_bitmap = ack_index_c + 1
         ack_index_padding = ack_index_bitmap + profile.BITMAP_SIZE
-
-        print(f"rule {ack[:ack_index_dtag]}")
-        print(f"dtag {ack[ack_index_dtag:ack_index_w]}")
-        print(f"w {ack[ack_index_w:ack_index_c]}")
-        print(f"c {ack[ack_index_c]}")
-        print(f"bitmap {ack[ack_index_bitmap:ack_index_padding]}")
-        print(f"padding {ack[ack_index_padding:]}")
 
         return ACK(profile,
                    ack[:ack_index_dtag],

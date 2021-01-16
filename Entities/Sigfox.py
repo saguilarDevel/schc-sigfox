@@ -22,7 +22,7 @@ class Sigfox(Protocol):
         self.RETRANSMISSION_TIMER_VALUE = 45  # (45) enough to let a downlink message to be sent if needed
         self.INACTIVITY_TIMER_VALUE = 60  # (60) for demo purposes
 
-        self.SIGFOX_DL_TIMEOUT = 10  # This is to be tested
+        self.SIGFOX_DL_TIMEOUT = 20  # This is to be tested
 
         self.L2_WORD_SIZE = 8   # The L2 word size used by Sigfox is 1 byte
 

@@ -68,6 +68,7 @@ def post(fragment_sent, retransmit=False):
                 raise Timeout
             if not retransmit:
                 i += 1
+            return
 
         # If 200, the fragment was posted and an ACK has been received.
         elif http_code == 200:
@@ -76,7 +77,6 @@ def post(fragment_sent, retransmit=False):
             ack = response.json()[device]["downlinkData"]
 
             # Parse ACK
-            ack = zfill(bin(int(ack, 16))[2:], profile_uplink.DOWNLINK_MTU)
             ack_object = ACK.parse_from_hex(profile_uplink, ack)
 
             if ack_object.is_receiver_abort():
@@ -89,6 +89,7 @@ def post(fragment_sent, retransmit=False):
 
             # Extract data from ACK
             ack_window = ack_object.w
+            ack_window_number = ack_object.window_number
             c = ack_object.c
             bitmap = ack_object.bitmap
             print(f"ACK: {ack}")
@@ -96,8 +97,10 @@ def post(fragment_sent, retransmit=False):
             print(f"ACK bitmap: {bitmap}")
             print(f"ACK C bit: {c}")
 
+            print(f"last window: {last_window}")
+
             # If the W field in the SCHC ACK corresponds to the last window of the SCHC Packet:
-            if ack_window == last_window:
+            if ack_window_number == last_window:
                 # If the C bit is set, the sender MAY exit successfully.
                 if c == '1':
                     print("Last ACK received, fragments reassembled successfully. End of transmission.")
@@ -108,7 +111,8 @@ def post(fragment_sent, retransmit=False):
                     # (we are in the last window), .is_all_1() should be true:
                     if fragment_sent.is_all_1():
                         # This is the last bitmap, it contains the data up to the All-1 fragment.
-                        last_bitmap = bitmap[:len(fragment_list) % profile_uplink.WINDOW_SIZE + 1]
+                        last_bitmap = bitmap[:len(fragment_list) % window_size]
+                        print(f"last bitmap {last_bitmap}")
 
                         # If the SCHC ACK shows no missing tile at the receiver, abort.
                         # (C = 0 but transmission complete)
@@ -122,18 +126,11 @@ def post(fragment_sent, retransmit=False):
                             for j in range(len(last_bitmap)):
                                 # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                                 if last_bitmap[j] == '0':
-                                    print(f"The {str(j)}th ({str((2 ** profile_uplink.N - 1) * ack_window + j)} / {str(len(fragment_list))}) fragment was lost! Sending again...")
+                                    print(f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
                                     # Try sending again the lost fragment.
-                                    fragment_to_be_resent = Fragment(profile_uplink, fragment_list[(2 ** profile_uplink.N - 1) * ack_window + j])
+                                    fragment_to_be_resent = Fragment(profile_uplink, fragment_list[window_size * ack_window + j])
                                     print(f"Lost fragment: {fragment_to_be_resent.string}")
                                     post(fragment_to_be_resent, retransmit=True)
-
-                                    # If the last of these SCHC fragments is not an All-1, send an ACK REQ with
-                                    # the W field of the last window. This is to be reviewed, as the Sigfox draft
-                                    # does not specify this.
-                                    # if j == len(bitmap) + 1 and not fragment_to_be_resent.is_all_1():
-                                    #   ackreq = generate_ack_req(fragment)
-                                    #   post(ackreq)
                     else:
                         print("ERROR: While being at the last window, the ACK-REQ was not an All-1."
                               "This is outside of the Sigfox scope.")
@@ -145,11 +142,13 @@ def post(fragment_sent, retransmit=False):
                 for j in range(len(bitmap)):
                     # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                     if bitmap[j] == '0':
-                        print(f"The {str(j)}th ({str((2 ** profile_uplink.N - 1) * ack_window + j)} / {str(len(fragment_list))}) fragment was lost! Sending again...")
+                        print(f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
                         # Try sending again the lost fragment.
-                        fragment_to_be_resent = Fragment(profile_uplink, fragment_list[(2 ** profile_uplink.N - 1) * ack_window + j])
+                        fragment_to_be_resent = Fragment(profile_uplink, fragment_list[window_size * ack_window_number + j])
                         print(f"Lost fragment: {fragment_to_be_resent.string}")
                         post(fragment_to_be_resent, retransmit=True)
+                i += 1
+                current_window += 1
 
     # If the timer expires
     except Timeout:
@@ -192,20 +191,21 @@ i = 0
 current_window = 0
 profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes=1)
 profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes=1)
+window_size = profile_uplink.WINDOW_SIZE
 
 # Fragment the file.
 fragmenter = Fragmenter(profile_uplink, message)
 fragment_list = fragmenter.fragment()
-last_window = len(fragment_list) // profile_uplink.WINDOW_SIZE
+last_window = len(fragment_list) // window_size
 
 # The fragment sender MUST initialize the Attempts counter to 0 for that Rule ID and DTag value pair
 # (a whole SCHC packet)
 attempts = 0
 fragment = None
 
-if len(fragment_list) > (2 ** profile_uplink.M) * profile_uplink.WINDOW_SIZE:
+if len(fragment_list) > (2 ** profile_uplink.M) * window_size:
     print(len(fragment_list))
-    print((2 ** profile_uplink.M) * profile_uplink.WINDOW_SIZE)
+    print((2 ** profile_uplink.M) * window_size)
     print("ERROR: The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be "
           "selected.")
     exit(1)

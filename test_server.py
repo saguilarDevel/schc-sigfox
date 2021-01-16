@@ -479,6 +479,7 @@ def wyschc_get():
         fragment_message = Fragment(profile, data)
 
         if fragment_message.is_sender_abort():
+            cleanup(BUCKET_NAME, profile)
             return 'Sender-Abort received', 204
 
         # Get data from this fragment.
@@ -492,7 +493,12 @@ def wyschc_get():
 
         # Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
         # lost, separated by windows.
-        with open("loss_mask.txt", "r") as fd:
+        fd = None
+        try:
+            fd = open("loss_mask_modified.txt", "r")
+        except FileNotFoundError:
+            fd = open("loss_mask.txt", "r")
+        finally:
             loss_mask = []
             for line in fd:
                 if not line.startswith("#"):
@@ -501,6 +507,7 @@ def wyschc_get():
                             loss_mask.append(int(char))
                         except ValueError:
                             pass
+            fd.close()
 
         print(f"Loss mask: {loss_mask}")
 
@@ -527,15 +534,14 @@ def wyschc_get():
             # If the inactivity timer has been reached, abort communication.
             if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
                 print("[RECV] Inactivity timer reached. Ending session.")
-                delete_blob(BUCKET_NAME, "timestamp")
                 receiver_abort = ReceiverAbort(profile, fragment_message.header)
-                print("Sending Sender Abort")
+                print("Sending Receiver Abort")
                 response_json = send_ack(request_dict, receiver_abort)
                 print(f"Response content -> {response_json}")
+                cleanup(BUCKET_NAME, profile)
                 return response_json, 200
 
-        # Upload fragment number and timestamp
-
+        # Upload timestamp
         upload_blob(BUCKET_NAME, time_received, "timestamp")
 
         # Check if the fragment is an All-1
@@ -544,7 +550,11 @@ def wyschc_get():
 
             # Check if fragment is to be lost (All-1 is the very last fragment)
             if loss_mask[-1] != 0:
+                # CHECK THIS: loss_mask [-1] is not always the last fragment............
                 loss_mask[-1] -= 1
+                with open("loss_mask_modified.txt", "w") as fd:
+                    for i in loss_mask:
+                        fd.write(str(i))
                 return 'fragment lost', 204
 
             # Update bitmap and upload it.
@@ -561,6 +571,9 @@ def wyschc_get():
             position = current_window * profile.WINDOW_SIZE + fragment_number
             if loss_mask[position] != 0:
                 loss_mask[position] -= 1
+                with open("loss_mask_modified.txt", "w") as fd:
+                    for i in loss_mask:
+                        fd.write(str(i))
                 return 'fragment lost', 204
 
             upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
@@ -686,7 +699,7 @@ def wyschc_get():
                                 # response_json = send_ack(request_dict, last_ack)
                                 print(f"200, Response content -> {response_json}")
                                 print("[ALL1] Last ACK has been sent.")
-                                delete_blob(BUCKET_NAME, "timestamp")
+                                cleanup(BUCKET_NAME, profile)
                                 return response_json, 200
                         # If the last two fragments are not consecutive, or the bitmap didn't match the regex,
                         # send an ACK reporting losses.

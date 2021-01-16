@@ -10,11 +10,11 @@ class ReceiverAbort(ACK):
         w = header.W
 
         header = Header(profile=profile,
-                             rule_id=rule_id,
-                             dtag=dtag,
-                             w=w,
-                             fcn='',
-                             c='1')
+                        rule_id=rule_id,
+                        dtag=dtag,
+                        w=w,
+                        fcn='',
+                        c='1')
 
         padding = ''
         # if the Header does not end at an L2 Word boundary,
@@ -23,6 +23,6 @@ class ReceiverAbort(ACK):
             padding += '1'
 
         # append exactly one more L2 Word with bits all set to ones.
-        padding += '1'*profile.L2_WORD_SIZE
+        padding += '1' * profile.L2_WORD_SIZE
 
         super().__init__(profile, rule_id, dtag, w, c='1', bitmap='', padding=padding)

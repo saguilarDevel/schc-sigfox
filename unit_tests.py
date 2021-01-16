@@ -84,12 +84,13 @@ class TestReceiverAbort(unittest.TestCase):
         self.assertEqual(abort.rule_id, fragment.header.RULE_ID)
         self.assertEqual(abort.dtag, fragment.header.DTAG)
         self.assertEqual(abort.w, fragment.header.W)
+        self.assertEqual(len(abort.to_string()), 64)
         self.assertTrue(issubclass(type(abort), ACK))
         self.assertTrue(abort.is_receiver_abort())
 
     def test_receive(self):
         profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
-        ack = "000011111111111110000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        ack = "0000111111111111100000000000000000000000000000000000000000000000"
         ack_index_dtag = profile.RULE_ID_SIZE
         ack_index_w = ack_index_dtag + profile.T
         ack_index_c = ack_index_w + profile.M
@@ -105,6 +106,17 @@ class TestReceiverAbort(unittest.TestCase):
                            padding=ack[ack_index_padding:])
 
         self.assertTrue(received_ack.is_receiver_abort())
+
+    def test_from_hex(self):
+        ack = ACK.parse_from_hex(Sigfox("UPLINK", "ACK ON ERROR", 1), "07ff800000000000")
+        self.assertEqual(ack.to_string(),
+                         "0000011111111111100000000000000000000000000000000000000000000000")
+        self.assertEqual(ack.rule_id, "00")
+        self.assertEqual(ack.dtag, "0")
+        self.assertEqual(ack.w, "00")
+        self.assertEqual(ack.c, "1")
+        self.assertTrue(ack.is_receiver_abort())
+
 
 
 if __name__ == '__main__':

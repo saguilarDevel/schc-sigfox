@@ -5,7 +5,7 @@
 # 2 -> lose the fragment, lose it's first retransmission
 # i > 0 -> lose the fragment i times
 
-0000000
+0010000
 0000000
 0000000
 0000000
