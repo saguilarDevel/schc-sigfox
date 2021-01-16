@@ -23,7 +23,7 @@ class SenderAbort(Fragment):
         fcn = "1" * profile.N
         self.header = Header(profile, rule_id, dtag, w, fcn)
 
-        while len(self.header.string + self.padding) < profile.MTU:
+        while len(self.header.string + self.padding) < profile.UPLINK_MTU:
             self.padding += '0'
 
         super().__init__(profile, [bitstring_to_bytes(rule_id + dtag + w + fcn), self.padding.encode()])

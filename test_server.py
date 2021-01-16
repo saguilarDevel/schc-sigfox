@@ -680,7 +680,7 @@ def wyschc_get():
                                                dtag=dtag,
                                                w=zfill(format(window_ack, 'b'), m),
                                                c='1',
-                                               bitmap=bitmap)
+                                               bitmap=bitmap_ack)
                                 response_json = send_ack(request_dict, last_ack)
                                 # return response_json, 200
                                 # response_json = send_ack(request_dict, last_ack)

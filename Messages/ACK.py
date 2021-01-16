@@ -22,6 +22,7 @@ class ACK:
 
         # Bitmap may or may not be carried
         self.header = self.rule_id + self.dtag + self.w + self.c + self.bitmap
+        print(f"header {self.header}")
         while len(self.header + self.padding) < profile.DOWNLINK_MTU:
             self.padding += '0'
 
@@ -59,10 +60,17 @@ class ACK:
         ack_index_bitmap = ack_index_c + 1
         ack_index_padding = ack_index_bitmap + profile.BITMAP_SIZE
 
+        print(f"rule {ack[:ack_index_dtag]}")
+        print(f"dtag {ack[ack_index_dtag:ack_index_w]}")
+        print(f"w {ack[ack_index_w:ack_index_c]}")
+        print(f"c {ack[ack_index_c]}")
+        print(f"bitmap {ack[ack_index_bitmap:ack_index_padding]}")
+        print(f"padding {ack[ack_index_padding:]}")
+
         return ACK(profile,
                    ack[:ack_index_dtag],
                    ack[ack_index_dtag:ack_index_w],
-                   ack[ack_index_w:ack_index_bitmap],
+                   ack[ack_index_w:ack_index_c],
                    ack[ack_index_c],
                    ack[ack_index_bitmap:ack_index_padding],
                    ack[ack_index_padding:])

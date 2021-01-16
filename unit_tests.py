@@ -5,7 +5,7 @@ from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
 from Messages.SenderAbort import SenderAbort
-from function import bitstring_to_bytes
+from function import bitstring_to_bytes, is_monochar
 
 
 class TestFragment(unittest.TestCase):
@@ -32,6 +32,20 @@ class TestFragment(unittest.TestCase):
         fragment = Fragment(profile, [header, payload])
 
         self.assertTrue(fragment.is_all_1())
+
+
+class TestAck(unittest.TestCase):
+    def test_from_hex(self):
+        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        h = "0f08000000000000"
+        ack = ACK.parse_from_hex(profile, h)
+        self.assertEqual(ack.to_string(), "0000111100001000000000000000000000000000000000000000000000000000")
+        self.assertEqual(ack.rule_id, "00")
+        self.assertEqual(ack.dtag, "0")
+        self.assertEqual(ack.w, "01")
+        self.assertEqual(ack.c, "1")
+        self.assertEqual(ack.bitmap, "1100001")
+        self.assertTrue(is_monochar(ack.padding) and ack.padding[0] == '0')
 
 
 class TestSenderAbort(unittest.TestCase):
