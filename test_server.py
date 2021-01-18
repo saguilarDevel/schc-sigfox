@@ -17,6 +17,8 @@ from Messages.Fragment import Fragment
 from Entities.Reassembler import Reassembler
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
+from Messages.ReceiverAbort import ReceiverAbort
+from Messages.SenderAbort import SenderAbort
 
 import config.config as config
 
@@ -221,21 +223,33 @@ def post_message():
 
     if request.method == 'POST':
         print("POST RECEIVED")
-        # BUCKET_NAME = config.BUCKET_NAME
+        # Get request JSON.
+        print("[SCHC-SIGFOX]: POST RECEIVED")
         request_dict = request.get_json()
         print('Received Sigfox message: {}'.format(request_dict))
+
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
-        device = request_dict['device']
-        print('Data received from device id:{}, data:{}'.format(device, request_dict['data']))
         # Parse fragment into "fragment = [header, payload]
-        header = bytes.fromhex(fragment[:2])
-        payload = bytearray.fromhex(fragment[2:])
+        header_bytes = None
+        header_first_hex = fragment[:1]
+        if (header_first_hex) == '0' or (header_first_hex) == '1':
+            header = bytes.fromhex(fragment[:2])
+            payload = bytearray.fromhex(fragment[2:])
+            header_bytes = 1
+        elif (header_first_hex) == '2':
+            header = bytearray.fromhex(fragment[:4])
+            payload = bytearray.fromhex(fragment[4:])
+            header_bytes = 2
+        else:
+            print("Wrong header in fragment")
+            return 'wrong header', 204
+        print('payload: {}'.format(payload))
         data = [header, payload]
         # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR")
-        profile_downlink = Sigfox("DOWNLINK", "NO ACK")
+        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
         buffer_size = profile_uplink.MTU
         n = profile_uplink.N
         m = profile_uplink.M
@@ -246,8 +260,25 @@ def post_message():
         dtag = fragment_message.header.DTAG
         w = fragment_message.header.W
         print('RULE_ID: {} W: {}, FCN: {}'.format(fragment_message.header.RULE_ID,fragment_message.header.W, fragment_message.header.FCN))
+        if fragment_message.is_sender_abort():
+            print('sender abort found')
+        else:
+            print("no sender abort message found")
         if 'ack' in request_dict:
             if request_dict['ack'] == 'true':
+                print("sending Receiver Abort message")
+                w = ''
+                while len(w) < profile_uplink.M:
+                    w += '1'
+                print("w: {}".format(w))
+                abortMessage = ReceiverAbort(profile_downlink, rule_id, dtag)
+                print(abortMessage.to_string())
+                response_json = send_ack(request_dict, abortMessage)
+                # receiverAbort = '0001111111111111111111111111111111111111111111111111111111111111'
+                # response = {request_dict['device']: {'downlinkData': receiverAbort}}
+                print("response -> {}".format(response_json))
+                return response_json, 200
+
                 print('w:{}'.format(w))
                 if w == '00':
                     # print('ACK already send for this window, move along')
@@ -610,7 +641,7 @@ def wyschc_get():
             # This is to be modified, as ACK-on-Error does not need an ACK for every window.
             # No need to send an ACK if the bitmap has all 1.
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
-                print("[ALLX] Sending ACK after window...")
+                print("[ALL0] No ACK sent after intermediate window...")
 
                 # Create an ACK message and send it.
                 # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')

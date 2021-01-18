@@ -1,12 +1,5 @@
 from Messages.Header import Header
-
-
-def zfill(string, width):
-    if len(string) < width:
-        return ("0" * (width - len(string))) + string
-    else:
-        return string
-
+from function import bitstring_to_bytes, zfill, is_monochar
 
 class Fragment:
     profile = None
@@ -58,3 +51,15 @@ class Fragment:
         for x in fcn:
             fcn_set.add(x)
         return len(fcn_set) == 1 and "0" in fcn_set
+
+    def is_sender_abort(self):
+        fcn = self.header.FCN
+        padding = self.payload.decode()
+        print('padding:{}'.format(padding))
+        print('fcn[0] == 1: {}'.format(fcn[0] == '1'))
+        print('is_monochar(fcn): {}'.format(is_monochar(fcn)))
+        print('padding[0]: {}'.format(padding[0]))
+        print('is_monochar(padding): {}'.format(is_monochar(padding)))
+        print('1 not in padding: {}'.format('1' in padding))
+        # return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)
+        return fcn[0] == '1' and is_monochar(fcn) and '1' not in padding
