@@ -11,4 +11,4 @@
 0000000
 
 # Se espera que se pierda sólo el tercer fragmento de la primera ventana
-# Este será retransmitido luego de que se envíe el All-1 y se reciba el ACK correspondiente antes de que expire el timer.
+# Este será retransmitido luego de que se envíe el All-0 y se reciba el ACK correspondiente antes de que expire el timer respectivo.

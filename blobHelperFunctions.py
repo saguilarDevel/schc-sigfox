@@ -33,8 +33,11 @@ def delete_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
-    blob.delete()
-    print(f"[BHF] Deleted blob {blob_name}")
+    if blob is not None:
+        blob.delete()
+        print(f"[BHF] Deleted blob {blob_name}")
+    else:
+        print(f"[BHF] {blob_name} doesn't exist.")
 
 
 def exists_blob(bucket_name, blob_name):
@@ -49,7 +52,7 @@ def create_folder(bucket_name, folder_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
-    print(f'Folder uploaded to {folder_name}.')
+    print(f'[BHF] Folder uploaded to {folder_name}.')
 
 
 def size_blob(bucket_name, blob_name):
@@ -57,15 +60,6 @@ def size_blob(bucket_name, blob_name):
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
     return blob.size if blob else 0
-
-
-def send_ack(request, ack):
-    device = request["device"]
-    print(f"ack string -> {ack.to_string()}")
-    response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
-    response_json = json.dumps(response_dict)
-    print(f"response_json -> {response_json}")
-    return response_json
 
 
 def initialize_blobs(bucket_name, profile):
@@ -92,16 +86,3 @@ def initialize_blobs(bucket_name, profile):
                 upload_blob(bucket_name, bitmap, f"all_windows/window_{i}/bitmap_{i}")
 
         print("BLOBs created")
-
-
-def cleanup(bucket_name, profile):
-    print("[CLN] Deleting timestamp blob")
-    delete_blob(bucket_name, "timestamp")
-    print("[CLN] Resetting bitmaps")
-    for w in range(2 ** profile.M - 1):
-        upload_blob(bucket_name, '0' * profile.WINDOW_SIZE, f"all_windows/window_{w}/bitmap_{w}")
-    print("[CLN] Deleting modified loss mask")
-    try:
-        os.remove("loss_mask_modified.txt")
-    except FileNotFoundError:
-        pass

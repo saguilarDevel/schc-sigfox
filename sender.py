@@ -1,4 +1,5 @@
 import json
+import sys
 import time
 
 import requests
@@ -42,7 +43,7 @@ def post(fragment_sent, retransmit=False):
         "ack": fragment_sent.expects_ack()
     }
 
-    print(f"[POST] Posting fragment {fragment_sent.hex} to {url}")
+    print(f"[POST] Posting fragment {fragment_sent.header.string} ({fragment_sent.hex}) to {url}")
 
     try:
         response = requests.post(url, data=json.dumps(payload_dict), headers=headers, timeout=request_timeout)
@@ -127,9 +128,11 @@ def post(fragment_sent, retransmit=False):
                             for j in range(len(last_bitmap)):
                                 # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                                 if last_bitmap[j] == '0':
-                                    print(f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
+                                    print(
+                                        f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
                                     # Try sending again the lost fragment.
-                                    fragment_to_be_resent = Fragment(profile_uplink, fragment_list[window_size * ack_window + j])
+                                    fragment_to_be_resent = Fragment(profile_uplink,
+                                                                     fragment_list[window_size * ack_window + j])
                                     print(f"Lost fragment: {fragment_to_be_resent.string}")
                                     post(fragment_to_be_resent, retransmit=True)
                     else:
@@ -143,9 +146,11 @@ def post(fragment_sent, retransmit=False):
                 for j in range(len(bitmap)):
                     # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                     if bitmap[j] == '0':
-                        print(f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
+                        print(
+                            f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
                         # Try sending again the lost fragment.
-                        fragment_to_be_resent = Fragment(profile_uplink, fragment_list[window_size * ack_window_number + j])
+                        fragment_to_be_resent = Fragment(profile_uplink,
+                                                         fragment_list[window_size * ack_window_number + j])
                         print(f"Lost fragment: {fragment_to_be_resent.string}")
                         post(fragment_to_be_resent, retransmit=True)
                 i += 1
@@ -190,8 +195,9 @@ current_size = 0
 percent = round(0, 2)
 i = 0
 current_window = 0
-profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes=1)
-profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes=1)
+header_bytes = 1 if total_size <= 300 else 2
+profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
 window_size = profile_uplink.WINDOW_SIZE
 
 # Fragment the file.
@@ -211,9 +217,12 @@ if len(fragment_list) > (2 ** profile_uplink.M) * window_size:
           "selected.")
     exit(1)
 
+if sys.argv[1] == 'clean':
+    _ = requests.post(url='http://localhost:5000/cleanup',
+                             json={"header_bytes": header_bytes})
+
 # Start sending fragments.
 while i < len(fragment_list):
-
     # A fragment has the format "fragment = [header, payload]".
     data = bytes(fragment_list[i][0] + fragment_list[i][1])
     current_size += len(fragment_list[i][1])

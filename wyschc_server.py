@@ -1,3 +1,4 @@
+import filecmp
 import random
 import re
 
@@ -88,7 +89,12 @@ def wyschc_get():
         fragment_message = Fragment(profile, data)
 
         if fragment_message.is_sender_abort():
-            cleanup(BUCKET_NAME, profile)
+            try:
+                _ = requests.post(url='http://localhost:5000/cleanup',
+                                  json={"header_bytes": header_bytes},
+                                  timeout=0.1)
+            except requests.exceptions.ReadTimeout:
+                pass
             return 'Sender-Abort received', 204
 
         # Get data from this fragment.
@@ -147,7 +153,12 @@ def wyschc_get():
                 print("Sending Receiver Abort")
                 response_json = send_ack(request_dict, receiver_abort)
                 print(f"Response content -> {response_json}")
-                cleanup(BUCKET_NAME, profile)
+                try:
+                    _ = requests.post(url='http://localhost:5000/cleanup',
+                                      json={"header_bytes": header_bytes},
+                                      timeout=0.1)
+                except requests.exceptions.ReadTimeout:
+                    pass
                 return response_json, 200
 
         # Upload timestamp
@@ -159,11 +170,11 @@ def wyschc_get():
 
             # Check if fragment is to be lost (All-1 is the very last fragment)
             if loss_mask[-1] != 0:
-                # CHECK THIS: loss_mask [-1] is not always the last fragment............
                 loss_mask[-1] -= 1
                 with open("loss_mask_modified.txt", "w") as fd:
                     for i in loss_mask:
                         fd.write(str(i))
+                print(f"[RECV] Fragment lost.")
                 return 'fragment lost', 204
 
             # Update bitmap and upload it.
@@ -180,9 +191,10 @@ def wyschc_get():
             position = current_window * profile.WINDOW_SIZE + fragment_number
             if loss_mask[position] != 0:
                 loss_mask[position] -= 1
-                with open("loss_mask_modified.txt", "w") as fd:
+                with open(config.LOSS_MASK_MODIFIED, "w") as fd:
                     for i in loss_mask:
                         fd.write(str(i))
+                print(f"[RECV] Fragment lost.")
                 return 'fragment lost', 204
 
             upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
@@ -213,7 +225,7 @@ def wyschc_get():
             # This bitmap corresponds to the lowest-numered window with losses.
             bitmap_ack = None
             window_ack = None
-            for i in range(current_window+1):
+            for i in range(current_window + 1):
                 bitmap_ack = read_blob(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
                 print(bitmap_ack)
                 window_ack = i
@@ -247,18 +259,18 @@ def wyschc_get():
             if fragment_message.is_all_1():
                 # First check for 0s in the bitmap. If the bitmap is of a non-final window, send corresponding ACK.
                 if '0' in bitmap_ack and current_window != window_ack:
-                        print("[ALL1] Lost fragments have been detected. Preparing ACK.")
-                        print(f"[ALL1] Bitmap with errors -> {bitmap_ack}")
-                        ack = ACK(profile=profile,
-                                  rule_id=rule_id,
-                                  dtag=dtag,
-                                  w=zfill(format(window_ack, 'b'), m),
-                                  c='0',
-                                  bitmap=bitmap_ack)
-                        response_json = send_ack(request_dict, ack)
-                        print(f"Response content -> {response_json}")
-                        print("[ALL1] ACK sent.")
-                        return response_json, 200
+                    print("[ALL1] Lost fragments have been detected. Preparing ACK.")
+                    print(f"[ALL1] Bitmap with errors -> {bitmap_ack}")
+                    ack = ACK(profile=profile,
+                              rule_id=rule_id,
+                              dtag=dtag,
+                              w=zfill(format(window_ack, 'b'), m),
+                              c='0',
+                              bitmap=bitmap_ack)
+                    response_json = send_ack(request_dict, ack)
+                    print(f"Response content -> {response_json}")
+                    print("[ALL1] ACK sent.")
+                    return response_json, 200
 
                 # If the bitmap is of the final window, check the following regex.
                 else:
@@ -303,11 +315,15 @@ def wyschc_get():
                                            c='1',
                                            bitmap=bitmap_ack)
                             response_json = send_ack(request_dict, last_ack)
-                            # return response_json, 200
-                            # response_json = send_ack(request_dict, last_ack)
                             print(f"200, Response content -> {response_json}")
                             print("[ALL1] Last ACK has been sent.")
-                            cleanup(BUCKET_NAME, profile)
+                            try:
+                                _ = requests.post(url='http://localhost:5000/cleanup',
+                                                  json={"header_bytes": header_bytes},
+                                                  timeout=0.1)
+                            except requests.exceptions.ReadTimeout:
+                                pass
+
                             return response_json, 200
                     # If the last two fragments are not consecutive, or the bitmap didn't match the regex,
                     # send an ACK reporting losses.
@@ -333,10 +349,10 @@ def wyschc_get():
 @app.route('/http_reassemble', methods=['GET', 'POST'])
 def http_reassemble():
     if request.method == "POST":
-        print(">>>[RSMB] The reassembler has been launched.")
+        print("[RSMB] The reassembler has been launched.")
         # Get request JSON.
         request_dict = request.get_json()
-        print(f'>>>[RSMB] Received HTTP message: {request_dict}')
+        print(f'[RSMB] Received HTTP message: {request_dict}')
 
         current_window = int(request_dict["current_window"])
         last_index = int(request_dict["last_index"])
@@ -349,7 +365,7 @@ def http_reassemble():
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         n = profile_uplink.N
 
-        print(">>>[RSMB] Loading fragments")
+        print("[RSMB] Loading fragments")
 
         # Get all the fragments into an array in the format "fragment = [header, payload]"
         fragments = []
@@ -357,9 +373,9 @@ def http_reassemble():
         # For each window, load every fragment into the fragments array
         for i in range(current_window + 1):
             for j in range(2 ** n - 1):
-                print(f">>>[RSMB] Loading fragment {j}")
+                print(f"[RSMB] Loading fragment {j}")
                 fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
-                print(f">>>[RSMB] Fragment data: {fragment_file}")
+                print(f"[RSMB] Fragment data: {fragment_file}")
                 header = fragment_file[:header_bytes]
                 payload = fragment_file[header_bytes:]
                 fragment = [header.encode(), payload.encode()]
@@ -368,17 +384,45 @@ def http_reassemble():
                     break
 
         # Instantiate a Reassembler and start reassembling.
-        print(">>>[RSMB] Reassembling")
+        print("[RSMB] Reassembling")
         reassembler = Reassembler(profile_uplink, fragments)
         payload = bytearray(reassembler.reassemble()).decode("utf-8")
 
-        print(">>>[RSMB] Uploading result")
+        print("[RSMB] Uploading result")
         with open(config.PAYLOAD, "w") as file:
             file.write(payload)
         # Upload the full message.
         upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
 
+        if filecmp.cmp(config.PAYLOAD, config.MESSAGE):
+            print("The reassembled file is equal to the original message.")
+        else:
+            print("The reassembled file is corrupt.")
+
         return '', 204
+
+
+@app.route('/cleanup', methods=['GET', 'POST'])
+def cleanup():
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
+    bucket_name = config.BUCKET_NAME
+    header_bytes = request.get_json()["header_bytes"]
+    profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+
+    print("[CLN] Deleting timestamp blob")
+    delete_blob(bucket_name, "timestamp")
+
+    print("[CLN] Resetting bitmaps")
+    for w in range(2 ** profile.M - 1):
+        upload_blob(bucket_name, '0' * profile.WINDOW_SIZE, f"all_windows/window_{w}/bitmap_{w}")
+
+    print("[CLN] Deleting modified loss mask")
+    try:
+        os.remove(config.LOSS_MASK_MODIFIED)
+    except FileNotFoundError:
+        pass
+
+    return '', 204
 
 
 if __name__ == "__main__":
