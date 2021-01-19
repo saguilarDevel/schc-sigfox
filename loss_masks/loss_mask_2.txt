@@ -1,0 +1,18 @@
+# Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
+# lost, separated by windows:
+# 0 -> don't lose the fragment
+# 1 -> lose the fragment but accepts retransmissions
+# 2 -> lose the fragment, lose it's first retransmission
+# i > 0 -> lose the fragment i times
+
+0010000
+0000001
+0100000
+0000010
+
+# Al enviar el All-1 el sender espera por un ACK (intentos = 1)
+# El ACK viene con información de la primera ventana. El Sender reenvía la tercera tile (intentos = 2). El sender envía un ACK REQ.
+# El receiver manda un un ACK con información de la segunda ventana. El sender reenvía la última tile (intentos = 3) y manda luego un ACK REQ
+# El receiver manda un ACK con info de la tercera ventana. EL sender reenvía la segunda tile (intentos = 4) y luego manda un ACK REQ.
+# El receiver manda un ACK con info de la cuarta ventana. El sender reenvía la penultima tile (intentos = 5) y luego manda un ACK REQ
+# El receiver manda un ACK dando a entender que todo está en orden. El sender reenvía un All-1. (intentos = 6) El receiver da por terminada la comunicación con éxito.

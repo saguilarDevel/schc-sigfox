@@ -1,26 +1,19 @@
-import re
 import random
+import re
+import time
 
 import requests
 from flask import Flask, request
-import os
-import json
 from flask import abort, g
-import time
-from google.cloud import storage
-
-from Messages.ReceiverAbort import ReceiverAbort
-from function import *
-from blobHelperFunctions import *
-from Entities.Fragmenter import Fragmenter
-from Entities.Sigfox import Sigfox
-from Messages.Fragment import Fragment
-
-from Entities.Reassembler import Reassembler
-from Messages.ACK import ACK
-from Messages.Fragment import Fragment
 
 import config.config as config
+from Entities.Reassembler import Reassembler
+from Entities.Sigfox import Sigfox
+from Messages.ACK import ACK
+from Messages.Fragment import Fragment
+from Messages.ReceiverAbort import ReceiverAbort
+from blobHelperFunctions import *
+from function import *
 
 app = Flask(__name__)
 
@@ -495,9 +488,9 @@ def wyschc_get():
         # lost, separated by windows.
         fd = None
         try:
-            fd = open("loss_mask_modified.txt", "r")
+            fd = open(config.LOSS_MASK_MODIFIED, "r")
         except FileNotFoundError:
-            fd = open("loss_mask.txt", "r")
+            fd = open(config.LOSS_MASK, "r")
         finally:
             loss_mask = []
             for line in fd:

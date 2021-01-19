@@ -5,9 +5,9 @@
 # 2 -> lose the fragment, lose it's first retransmission
 # i > 0 -> lose the fragment i times
 
-0010000
 0000000
 0000000
 0000000
 0000000
-0000000
+
+# Donde el mensaje se enviará sin contemplar pérdidas
