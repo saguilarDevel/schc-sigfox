@@ -5,7 +5,7 @@ from Entities.Fragmenter import Fragmenter
 from Entities.Sigfox import Sigfox
 from Messages.Fragment import Fragment
 
-filename = "example.txt"
+filename = "comm/example.txt"
 seqNumber = 1
 
 msg2_1 = {'deviceType': '01B29CC4', 'device': '1B29CC4', 'time': '1602249495', 'data': '063132333435363738393132',

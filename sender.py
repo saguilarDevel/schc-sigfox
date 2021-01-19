@@ -9,9 +9,10 @@ from Entities.Sigfox import Sigfox
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.SenderAbort import SenderAbort
+from config import config
 from function import zfill
 
-filename = "example.txt"
+filename = config.MESSAGE
 seqNumber = 1
 device = "4D5A87"
 
@@ -196,7 +197,7 @@ window_size = profile_uplink.WINDOW_SIZE
 # Fragment the file.
 fragmenter = Fragmenter(profile_uplink, message)
 fragment_list = fragmenter.fragment()
-last_window = len(fragment_list) // window_size
+last_window = (len(fragment_list) - 1) // window_size
 
 # The fragment sender MUST initialize the Attempts counter to 0 for that Rule ID and DTag value pair
 # (a whole SCHC packet)

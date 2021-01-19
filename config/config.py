@@ -13,3 +13,7 @@ CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 # Loss mask path
 LOSS_MASK = './loss_masks/loss_mask_0.txt'
 LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
+
+# Message to be fragmented
+MESSAGE = './comm/example_300.txt'
+PAYLOAD = './comm/PAYLOAD.txt'
