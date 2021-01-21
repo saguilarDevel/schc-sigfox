@@ -17,15 +17,19 @@ filename = config.MESSAGE
 seqNumber = 1
 device = "4D5A87"
 
+sent = 0
+received = 0
+retransmitted = 0
+
 
 def post(fragment_sent, retransmit=False):
-    global seqNumber, attempts, current_window, last_window, i
+    global seqNumber, attempts, current_window, last_window, i, sent, received, retransmitted
     url = "http://localhost:5000/wyschc_get"
     headers = {'content-type': 'application/json'}
     profile = fragment_sent.profile
 
-    if fragment_sent.is_all_0():
-        print("[POST] This is an All-0. Using All-0 SIGFOX_DL_TIMEOUT Timeout.")
+    if fragment_sent.is_all_0() and not retransmit:
+        print("[POST] This is an All-0. Using All-0 SIGFOX_DL_TIMEOUT.")
         request_timeout = profile.SIGFOX_DL_TIMEOUT
     elif fragment_sent.is_all_1():
         print("[POST] This is an All-1. Using RETRANSMISSION_TIMER_VALUE. Increasing ACK attempts.")
@@ -40,7 +44,7 @@ def post(fragment_sent, retransmit=False):
         "time": str(int(time.time())),
         "data": fragment_sent.hex,
         "seqNumber": str(seqNumber),
-        "ack": fragment_sent.expects_ack()
+        "ack": fragment_sent.expects_ack() and not retransmit
     }
 
     print(f"[POST] Posting fragment {fragment_sent.header.string} ({fragment_sent.hex}) to {url}")
@@ -53,6 +57,9 @@ def post(fragment_sent, retransmit=False):
             exit(1)
 
         seqNumber += 1
+        sent += 1
+        if retransmit:
+            retransmitted += 1
         print(f"[POST] Response: {response}")
         http_code = response.status_code
 
@@ -64,7 +71,7 @@ def post(fragment_sent, retransmit=False):
         # If 204, the fragment was posted successfully
         elif http_code == 204:
             print("Response: 204 No Content")
-            if fragment_sent.is_all_0():
+            if fragment_sent.is_all_0() and not retransmit:
                 print("Faking timeout")
                 time.sleep(profile.SIGFOX_DL_TIMEOUT)
                 raise Timeout
@@ -75,6 +82,7 @@ def post(fragment_sent, retransmit=False):
         # If 200, the fragment was posted and an ACK has been received.
         elif http_code == 200:
             print(f"Response: 200 OK, Text: {response.text}. Ressetting attempts counter to 0.")
+            received += 1
             attempts = 0
             ack = response.json()[device]["downlinkData"]
 
@@ -98,7 +106,6 @@ def post(fragment_sent, retransmit=False):
             print(f"ACK window: {str(ack_window)}")
             print(f"ACK bitmap: {bitmap}")
             print(f"ACK C bit: {c}")
-
             print(f"last window: {last_window}")
 
             # If the W field in the SCHC ACK corresponds to the last window of the SCHC Packet:
@@ -106,6 +113,8 @@ def post(fragment_sent, retransmit=False):
                 # If the C bit is set, the sender MAY exit successfully.
                 if c == '1':
                     print("Last ACK received, fragments reassembled successfully. End of transmission.")
+                    print(f"TOTAL UPLINK: {sent} ({retransmitted} retransmisiones)")
+                    print(f"TOTAL DOWNLINK: {received}")
                     exit(0)
                 # Otherwise,
                 else:
@@ -135,6 +144,10 @@ def post(fragment_sent, retransmit=False):
                                                                      fragment_list[window_size * ack_window + j])
                                     print(f"Lost fragment: {fragment_to_be_resent.string}")
                                     post(fragment_to_be_resent, retransmit=True)
+
+                            # Send All-1 again to end communication.
+                            post(fragment_sent)
+
                     else:
                         print("ERROR: While being at the last window, the ACK-REQ was not an All-1."
                               "This is outside of the Sigfox scope.")
@@ -153,8 +166,12 @@ def post(fragment_sent, retransmit=False):
                                                          fragment_list[window_size * ack_window_number + j])
                         print(f"Lost fragment: {fragment_to_be_resent.string}")
                         post(fragment_to_be_resent, retransmit=True)
-                i += 1
-                current_window += 1
+                if fragment_sent.is_all_1():
+                    # Send All-1 again to end communication.
+                    post(fragment_sent)
+                elif fragment_sent.is_all_0():
+                    i += 1
+                    current_window += 1
 
     # If the timer expires
     except Timeout:
@@ -200,6 +217,10 @@ profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
 window_size = profile_uplink.WINDOW_SIZE
 
+if sys.argv[1] and sys.argv[1] == 'clean':
+    _ = requests.post(url='http://localhost:5000/cleanup',
+                      json={"header_bytes": header_bytes})
+
 # Fragment the file.
 fragmenter = Fragmenter(profile_uplink, message)
 fragment_list = fragmenter.fragment()
@@ -216,10 +237,6 @@ if len(fragment_list) > (2 ** profile_uplink.M) * window_size:
     print("ERROR: The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be "
           "selected.")
     exit(1)
-
-if sys.argv[1] == 'clean':
-    _ = requests.post(url='http://localhost:5000/cleanup',
-                             json={"header_bytes": header_bytes})
 
 # Start sending fragments.
 while i < len(fragment_list):
@@ -239,3 +256,4 @@ while i < len(fragment_list):
     # On All-0 fragments, this function will wait for SIGFOX_DL_TIMER to expire
     # On All-1 fragments, this function will enter retransmission phase.
     post(fragment)
+

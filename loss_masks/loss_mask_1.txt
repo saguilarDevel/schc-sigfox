@@ -12,3 +12,6 @@
 
 # Se espera que se pierda sólo el tercer fragmento de la primera ventana
 # Este será retransmitido luego de que se envíe el All-0 y se reciba el ACK correspondiente antes de que expire el timer respectivo.
+# Se espera lo siguiente:
+# TOTAL UPLINK: 29 (1 retransmisiones)
+# TOTAL DOWNLINK: 2

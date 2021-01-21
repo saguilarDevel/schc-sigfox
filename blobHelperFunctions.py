@@ -6,7 +6,7 @@ import json
 
 
 def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
-    print("Uploading with threads...")
+    print("[BHF] Uploading with threads...")
     thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
     thread.start()
 
@@ -19,7 +19,7 @@ def upload_blob(bucket_name, blob_text, destination_blob_name):
     if type(blob_text) == bytes or type(blob_text) == bytearray:
         blob_text = blob_text.encode()
     blob.upload_from_string(str(blob_text))
-    print(f'File uploaded to {destination_blob_name}.')
+    print(f'[BHF] File uploaded to {destination_blob_name}.')
 
 
 def read_blob(bucket_name, blob_name):
@@ -64,7 +64,7 @@ def size_blob(bucket_name, blob_name):
 
 def initialize_blobs(bucket_name, profile):
     if not exists_blob(bucket_name, "all_windows/"):
-        print("INITIALIZING... (be patient)")
+        print("[BHF] Initializing... (be patient)")
         create_folder(bucket_name, "all_windows/")
 
         # For each window in the SCHC Profile, create its blob.
@@ -76,13 +76,6 @@ def initialize_blobs(bucket_name, profile):
                 upload_blob(bucket_name, "", f"all_windows/window_{i}/fragment_{i}_{j}")
 
             # Create the blob for each bitmap.
-            if not exists_blob(bucket_name, f"all_windows/window_{i}/bitmap_{i}" or size_blob(bucket_name,
-                                                                                              f"all_windows/"
-                                                                                              f"window_{i}/"
-                                                                                              f"bitmap_{i}") == 0):
-                bitmap = ""
-                for b in range(profile.BITMAP_SIZE):
-                    bitmap += "0"
-                upload_blob(bucket_name, bitmap, f"all_windows/window_{i}/bitmap_{i}")
+            upload_blob(bucket_name, "0"*profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
 
-        print("BLOBs created")
+        print("[BHF] BLOBs created")

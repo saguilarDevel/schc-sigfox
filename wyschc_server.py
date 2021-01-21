@@ -42,6 +42,7 @@ def wyschc_get():
         # Get data and Sigfox Sequence Number.
         raw_data = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
+        ack_req = request_dict["ack"]
 
         # Initialize Cloud Storage variables.
         BUCKET_NAME = config.BUCKET_NAME
@@ -70,11 +71,6 @@ def wyschc_get():
 
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
         initialize_blobs(BUCKET_NAME, profile)
-
-        # Initialize empty window
-        window = []
-        for i in range(2 ** n - 1):
-            window.append([b"", b""])
 
         # Compute the fragment compressed number (FCN) from the Profile
         fcn_dict = {}
@@ -137,33 +133,6 @@ def wyschc_get():
                     print("[LOSS] The fragment was lost.")
                     return 'fragment lost', 204
 
-        # Inactivity timer validation
-        time_received = int(request_dict["time"])
-
-        if exists_blob(BUCKET_NAME, "timestamp"):
-            # Check time validation.
-            last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
-            print(f"[RECV] Previous timestamp: {last_time_received}")
-            print(f"[RECV] This timestamp: {time_received}")
-
-            # If the inactivity timer has been reached, abort communication.
-            if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
-                print("[RECV] Inactivity timer reached. Ending session.")
-                receiver_abort = ReceiverAbort(profile, fragment_message.header)
-                print("Sending Receiver Abort")
-                response_json = send_ack(request_dict, receiver_abort)
-                print(f"Response content -> {response_json}")
-                try:
-                    _ = requests.post(url='http://localhost:5000/cleanup',
-                                      json={"header_bytes": header_bytes},
-                                      timeout=0.1)
-                except requests.exceptions.ReadTimeout:
-                    pass
-                return response_json, 200
-
-        # Upload timestamp
-        upload_blob(BUCKET_NAME, time_received, "timestamp")
-
         # Check if the fragment is an All-1
         if is_monochar(fcn) and fcn[0] == '1':
             print("[RECV] This is an All-1.")
@@ -177,8 +146,36 @@ def wyschc_get():
                 print(f"[RECV] Fragment lost.")
                 return 'fragment lost', 204
 
+            # Inactivity timer validation
+            time_received = int(request_dict["time"])
+
+            if exists_blob(BUCKET_NAME, "timestamp"):
+                # Check time validation.
+                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+                print(f"[RECV] Previous timestamp: {last_time_received}")
+                print(f"[RECV] This timestamp: {time_received}")
+
+                # If the inactivity timer has been reached, abort communication.
+                if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
+                    print("[RECV] Inactivity timer reached. Ending session.")
+                    receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                    print("Sending Receiver Abort")
+                    response_json = send_ack(request_dict, receiver_abort)
+                    print(f"Response content -> {response_json}")
+                    try:
+                        _ = requests.post(url='http://localhost:5000/cleanup',
+                                          json={"header_bytes": header_bytes},
+                                          timeout=0.1)
+                    except requests.exceptions.ReadTimeout:
+                        pass
+                    return response_json, 200
+
+            # Update timestamp
+            upload_blob(BUCKET_NAME, time_received, "timestamp")
+
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
+            print(f"Bitmap is now {bitmap}")
             upload_blob_using_threads(BUCKET_NAME,
                                       bitmap,
                                       f"all_windows/window_{current_window}/bitmap_{current_window}")
@@ -197,6 +194,39 @@ def wyschc_get():
                 print(f"[RECV] Fragment lost.")
                 return 'fragment lost', 204
 
+            # Inactivity timer validation
+            time_received = int(request_dict["time"])
+
+            if exists_blob(BUCKET_NAME, "timestamp"):
+                # Check time validation.
+                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+                print(f"[RECV] Previous timestamp: {last_time_received}")
+                print(f"[RECV] This timestamp: {time_received}")
+
+                # If the inactivity timer has been reached, abort communication.
+                if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
+                    print("[RECV] Inactivity timer reached. Ending session.")
+                    receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                    print("Sending Receiver Abort")
+                    response_json = send_ack(request_dict, receiver_abort)
+                    print(f"Response content -> {response_json}")
+                    try:
+                        _ = requests.post(url='http://localhost:5000/cleanup',
+                                          json={"header_bytes": header_bytes},
+                                          timeout=0.1)
+                    except requests.exceptions.ReadTimeout:
+                        pass
+                    return response_json, 200
+
+            # Update timestamp
+            upload_blob(BUCKET_NAME, time_received, "timestamp")
+
+            # Update Sigfox sequence number JSON
+            sequence_numbers = json.loads(read_blob(BUCKET_NAME, "SSN"))
+            sequence_numbers[position] = request_dict["seqNumber"]
+            print(sequence_numbers)
+            upload_blob(BUCKET_NAME, json.dumps(sequence_numbers), "SSN")
+
             upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
 
             # Print some data for the user.
@@ -206,20 +236,15 @@ def wyschc_get():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
+            print(f"Bitmap is now {bitmap}")
             upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
             # Upload the fragment data.
             upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
                                       f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
-        # Get last and current Sigfox sequence number (SSN)
-        last_sequence_number = 0
-        if exists_blob(BUCKET_NAME, "SSN"):
-            last_sequence_number = read_blob(BUCKET_NAME, "SSN")
-        upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
-
-        # If the fragment is at the end of a window (ALL-0 or ALL-1) it expects an ACK.
-        if fragment_message.expects_ack():
+        # If the fragment requests an ACK...
+        if ack_req:
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
             # This bitmap corresponds to the lowest-numered window with losses.
@@ -257,8 +282,9 @@ def wyschc_get():
 
             # If the fragment is All-1, the last window should be considered.
             if fragment_message.is_all_1():
+
                 # First check for 0s in the bitmap. If the bitmap is of a non-final window, send corresponding ACK.
-                if '0' in bitmap_ack and current_window != window_ack:
+                if current_window != window_ack and '0' in bitmap_ack:
                     print("[ALL1] Lost fragments have been detected. Preparing ACK.")
                     print(f"[ALL1] Bitmap with errors -> {bitmap_ack}")
                     ack = ACK(profile=profile,
@@ -283,20 +309,65 @@ def wyschc_get():
 
                     # If the bitmap matches the regex, check if there are still lost fragments.
                     if pattern.fullmatch(bitmap_ack) is not None:
-                        # If the last two received fragments are consecutive (sequence-number-wise),
-                        # accept the ALL-1 and start reassembling
+                        # The idea is the following:
+                        # Assume a fragment has been lost, but the regex has been matched.
+                        # For example, we want a bitmap 1111111 but due to a loss we have 1111101.
+                        # This incomplete bitmap matches the regex.
+                        # We should note that here the SSN of the All-1 and the penultimate fragment received
+                        # are not consecutive.
+                        # Retransmitting the lost fragment and resending the All-1 solves that problem.
+                        # There is another problematic case: we want a bitmap 1111111 but due to losses we have 1111001.
+                        # If the second of those two lost fragments is retransmitted, the new bitmap, 1111011, does not
+                        # match the regex. If, instead, the first of those fragments is retransmitted, the new bitmap
+                        # 1111101 does match the regex. As the sender should retransmit these messages sequentially,
+                        # the SSN of the resent All-1 and the penultimate fragment are still not consecutive.
+                        # The only way for these two SSNs to be consecutive in these cases
+                        # is that the penultimate fragment fills the bitmap in the 6th bit,
+                        # and the last fragment is the All-1.
+                        # This reasoning is still valid when the last window does not contain WINDOW_SIZE fragments.
+                        # These particular cases validate the use for this regex matching.
+                        # Remember that 1111011 is NOT a valid bitmap.
+                        # In conclusion, AFTER the regex matching,
+                        # we should check if the SSNs of the two last received fragments are consecutive.
+                        # The second to last fragment has the highest SSN registered in the JSON.
+                        # TODO: What happens when the All-0 prior to the last window is lost and is retransmitted with the All-1?
+                        # We should consider only the SSNs of the last window. If there is a retransmission in a window
+                        # prior to the last, the reasoning fails since the All-1 is always consecutive to a
+                        # retransmitted fragment of a non-final window.
+                        # If the All-1 is the only fragment of the last window (bitmap 0000001), and bitmap check of
+                        # prior windows has passed, check the consecutiveness of the last All-0 and the All-1.
+
+                        sequence_numbers = json.loads(read_blob(BUCKET_NAME, "SSN"))
+
+                        # This array has the SSNs of the last window.
+                        # last_window_ssn = list(sequence_numbers.values())[current_window * profile.WINDOW_SIZE + 1:]
+
+                        # If this array is empty, no messages have been received in the last window. Check if the
+                        # last All-0 and the All-1 are consecutive. If they are not, there are lost fragments. If they
+                        # are, the All-0 may have been retransmitted.
+                        # print(last_window_ssn)
+
+                        # The last sequence number should be the highest of these values.
+                        last_sequence_number = max(list(map(int, list(sequence_numbers.values()))))
+
+                        # TODO: If the All-0 has the highest of these values, it may have been retransmitted using the All-1
+
+                        print(f"All-1 sequence number {sigfox_sequence_number}")
+                        print(f"Last sequence number {last_sequence_number}")
+
                         if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                             print("[ALL1] Integrity checking complete, launching reassembler.")
                             # All-1 does not define a fragment number, so its fragment number must be the next
-                            # of the last registered fragment number.
-                            last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                            # of the higest registered fragment number.
+                            last_index = max(list(map(int, list(sequence_numbers.keys())))) + 1
                             upload_blob_using_threads(BUCKET_NAME,
                                                       data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                                       f"all_windows/window_{current_window}/"
                                                       f"fragment_{current_window}_{last_index}")
                             try:
                                 _ = requests.post(url='http://localhost:5000/http_reassemble',
-                                                  json={"last_index": last_index, "current_window": current_window,
+                                                  json={"last_index": last_index,
+                                                        "current_window": current_window,
                                                         "header_bytes": header_bytes}, timeout=0.1)
                             except requests.exceptions.ReadTimeout:
                                 pass
@@ -317,12 +388,6 @@ def wyschc_get():
                             response_json = send_ack(request_dict, last_ack)
                             print(f"200, Response content -> {response_json}")
                             print("[ALL1] Last ACK has been sent.")
-                            try:
-                                _ = requests.post(url='http://localhost:5000/cleanup',
-                                                  json={"header_bytes": header_bytes},
-                                                  timeout=0.1)
-                            except requests.exceptions.ReadTimeout:
-                                pass
 
                             return response_json, 200
                     # If the last two fragments are not consecutive, or the bitmap didn't match the regex,
@@ -399,6 +464,13 @@ def http_reassemble():
         else:
             print("The reassembled file is corrupt.")
 
+        try:
+            _ = requests.post(url='http://localhost:5000/cleanup',
+                              json={"header_bytes": header_bytes},
+                              timeout=0.1)
+        except requests.exceptions.ReadTimeout:
+            pass
+
         return '', 204
 
 
@@ -412,15 +484,18 @@ def cleanup():
     print("[CLN] Deleting timestamp blob")
     delete_blob(bucket_name, "timestamp")
 
-    print("[CLN] Resetting bitmaps")
-    for w in range(2 ** profile.M - 1):
-        upload_blob(bucket_name, '0' * profile.WINDOW_SIZE, f"all_windows/window_{w}/bitmap_{w}")
-
     print("[CLN] Deleting modified loss mask")
     try:
         os.remove(config.LOSS_MASK_MODIFIED)
     except FileNotFoundError:
         pass
+
+    print("[CLN] Resetting SSN")
+    upload_blob(bucket_name, "{}", "SSN")
+
+    print("[CLN] Initializing fragments...")
+    delete_blob(bucket_name, "all_windows/")
+    initialize_blobs(bucket_name, profile)
 
     return '', 204
 

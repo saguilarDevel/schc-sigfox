@@ -11,3 +11,6 @@
 0000000
 
 # Donde el mensaje se enviará sin contemplar pérdidas
+# Se espera lo siguiente:
+# TOTAL UPLINK: 28
+# TOTAL DOWNLINK: 1
