@@ -7,6 +7,7 @@ import os
 import json
 from flask import abort, g
 import time
+from datetime import datetime
 from google.cloud import storage
 from function import *
 from blobHelperFunctions import *
@@ -33,7 +34,7 @@ CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
 # Filename must be a json file starting with a /
-filename = '/fragments_stats_v4.8.json'
+filename = '/fragments_stats_v5.14.json'
 filename_dir = os.path.dirname(__file__)
 save_path = os.path.join(filename_dir, 'stats', 'files', 'server')
 
@@ -53,7 +54,7 @@ def save_current_fragment(fragment):
             data = json.load(json_file)
         print("[Save File]: File Found")
     except Exception as e:
-        print("[Save File]: Creating file because  {}".format(e))
+        print("[Save File]: Creating file because {}".format(e))
         file = open(save_path + filename, 'a+')
         seqNumber = fragment['seqNumber']
         data[seqNumber] = fragment
@@ -78,8 +79,32 @@ def save_current_fragment(fragment):
 def before_request():
     g.start = time.time()
     g.current_fragment = {}
+    print("datetime: {}".format(datetime.now()))
     if request.endpoint is None:
         print("[before_request]: No request endpoint")
+    elif request.endpoint == 'test_link':
+        print('[before_request]: ' + request.endpoint)
+        if request.method == 'POST':
+            request_dict = request.get_json()
+            g.current_fragment['timestamp'] = '{}'.format(datetime.now())
+            print('[before_request]: Received Sigfox message: {}'.format(request_dict))
+            # Get data and Sigfox Sequence Number.
+            fragment = request_dict["data"]
+            sigfox_sequence_number = request_dict["seqNumber"]
+            device = request_dict['device']
+            # data = ''.join("{:08b}".format(str(byte)) for byte in bytes(fragment))
+            data = bytearray.fromhex(fragment).decode()
+            print('fragment: {}'.format(fragment))
+            print('data: {}'.format(data))
+            print('[before_request]: Data received from device id:{}, data:{}, sigfox_sequence_number:{}'.format(device,
+                                                                 request_dict['data'], sigfox_sequence_number))
+            g.current_fragment['s-downlink_enable'] = request_dict['ack']
+            g.current_fragment['s-sending_start'] = g.start
+            g.current_fragment['s-data'] = data
+            g.current_fragment['seqNumber'] = sigfox_sequence_number
+            g.current_fragment['s-fragment_size'] = len(data)
+            print('[before_request]: {}'.format(g.current_fragment))
+
     elif request.endpoint == 'wyschc_get':
         print('[before_request]: ' + request.endpoint)
         if request.method == 'POST':
@@ -174,12 +199,57 @@ def after_request(response):
         # ack
         # send_time
 
+    elif request.endpoint == 'test_link':
+        g.current_fragment['s-sending_end'] = time.time()
+        g.current_fragment['s-send_time'] = diff
+        g.current_fragment['s-ack'] = ''
+        g.current_fragment['s-ack_send'] = False
+        if response.status_code == 200:
+            print("[after_request]: response.status_code == 200")
+            response_dict = json.loads(response.get_data())
+            print("[after_request]: response_dict: {}".format(response_dict))
+            for device in response_dict:
+                print("[after_request]: {}".format(response_dict[device]['downlinkData']))
+                g.current_fragment['s-ack'] = response_dict[device]['downlinkData']
+                g.current_fragment['s-ack_send'] = True
+        print('[after_request]: current fragment:{}'.format(g.current_fragment))
+        save_current_fragment(g.current_fragment)
+
     return response
 
 
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
+
+
+@app.route('/test_link', methods=['POST'])
+def test_link():
+    """Responds to any HTTP request.
+    Args:
+        request (flask.Request): HTTP request object.
+    Returns:
+        The response text or any set of values that can be turned into a
+        Response object using
+        `make_response <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>`.
+    """
+    import json
+    request_json = request.get_json()
+
+    # if request.args and 'device' in request.args:
+    #    return request.args.get('message')
+    if request_json and 'device' in request_json and 'data' in request_json:
+        device = request_json['device']
+        print('Data received from device id:{}, data:{}'.format(device, request_json['data']))
+        if 'ack' in request_json:
+            if request_json['ack'] == 'true':
+                response = {request_json['device']: {'downlinkData': '07f7ffffffffffff'}}
+                print("response -> {}".format(response))
+                return json.dumps(response), 200
+        return '', 204
+    else:
+        return f'Not a correct format message', 404
+
 
 
 @app.route('/test', methods=['POST'])
@@ -202,7 +272,6 @@ def test():
         print('Data received from device id:{}, data:{}'.format(device, request_json['data']))
         if 'ack' in request_json:
             if request_json['ack'] == 'true':
-
                 response = {request_json['device']: {'downlinkData': '07f7ffffffffffff'}}
                 print("response -> {}".format(response))
                 return json.dumps(response), 200

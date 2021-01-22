@@ -39,3 +39,35 @@ ACK Success: [ Rule ID | Dtag |   W  | C-1 | (P-0) ]
 ACK Failure: [ Rule ID | Dtag |   W  | C-0 | Bitmap | (P-0) ]
 Recv Abort : [ Rule ID | Dtag |  W-1 | C-1 | (P-1) ]
 ```
+### Uplink ACK-on-Error Single-byte SCHC Header Message Examples
+#### SCHC Receiver Abort message example:
+
+The SCHC Receiver Abort message is 64 bits long.
+
+```text
+SCHC Receiver Abort
+0001111111111111111111111111111111111111111111111111111111111111
+```
+
+* Rule ID: 000
+* Dtag: not present
+* W: 11
+* C: 1 
+* Padding: (58 bits) 1111111111111111111111111111111111111111111111111111111111
+
+#### SCHC Sender Abort message example:
+
+The SCHC Sender Abort message is 96 bits long.
+
+```text
+SCHC Sender Abort
+000001110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+```
+
+* Rule ID: 000
+* Dtag: not present
+* W: 00 - (current window)
+* FCN: 111 
+* Padding: (88 bits) 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+
