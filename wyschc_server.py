@@ -176,9 +176,13 @@ def wyschc_get():
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
             print(f"Bitmap is now {bitmap}")
-            upload_blob_using_threads(BUCKET_NAME,
-                                      bitmap,
-                                      f"all_windows/window_{current_window}/bitmap_{current_window}")
+            upload_blob(BUCKET_NAME,
+                        bitmap,
+                        f"all_windows/window_{current_window}/bitmap_{current_window}")
+            # Upload the fragment data.
+            upload_blob(BUCKET_NAME,
+                        data[0].decode("utf-8") + data[1].decode("utf-8"),
+                        f"all_windows/window_{current_window}/fragment_{current_window}_{profile.WINDOW_SIZE - 1}")
 
         # Else, it is a normal fragment.
         else:
@@ -240,8 +244,9 @@ def wyschc_get():
             upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
             # Upload the fragment data.
-            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
-                                      f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
+            upload_blob(BUCKET_NAME,
+                        data[0].decode("utf-8") + data[1].decode("utf-8"),
+                        f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # If the fragment requests an ACK...
         if ack_req:
