@@ -1,56 +1,12 @@
-import filecmp
-import random
 import re
-
 import requests
-from flask import Flask, request
-from flask import abort
-
-# import config.config as config
-# from Entities.Reassembler import Reassembler
-# from Entities.Sigfox import Sigfox
-# from Messages.ACK import ACK
-# from Messages.Fragment import Fragment
-# from Messages.ReceiverAbort import ReceiverAbort
-# from blobHelperFunctions import *
-
-
-# Configuration variables from config.py
-# Change the variables name to your files, then remove track from git
-# git rm --cached config/config.py
-
-# Cloud Storage Bucket Name
-BUCKET_NAME = 'wyschc-niclabs'
-#
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
-
-# File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
-
-# Loss mask path
-LOSS_MASK = './loss_masks/loss_mask_0.txt'
-LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
-
-# Message to be fragmented
-MESSAGE = './comm/example_300.txt'
-PAYLOAD = './comm/PAYLOAD.txt'
-
-# Blob helper functions
-import os
-import threading
-
-from google.cloud import storage
 import json
+from google.cloud import storage
 
-
-def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
-    print("[BHF] Uploading with threads...")
-    thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
-    thread.start()
+# ====== CLOUD STORAGE FUNCTIONS ======
 
 
 def upload_blob(bucket_name, blob_text, destination_blob_name):
-    """Uploads a file to the bucket."""
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
@@ -67,17 +23,6 @@ def read_blob(bucket_name, blob_name):
     return blob.download_as_string().decode('utf-8') if blob else None
 
 
-def delete_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    if blob is not None:
-        blob.delete()
-        print(f"[BHF] Deleted blob {blob_name}")
-    else:
-        print(f"[BHF] {blob_name} doesn't exist.")
-
-
 def exists_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
@@ -91,13 +36,6 @@ def create_folder(bucket_name, folder_name):
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
     print(f'[BHF] Folder uploaded to {folder_name}.')
-
-
-def size_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    return blob.size if blob else 0
 
 
 def initialize_blobs(bucket_name, profile):
@@ -119,7 +57,9 @@ def initialize_blobs(bucket_name, profile):
         print("[BHF] BLOBs created")
 
 
-#  FUNCTIONS
+# ====== HELPER FUNCTIONS ======
+
+
 def zfill(string, width):
     if len(string) < width:
         return ("0" * (width - len(string))) + string
@@ -127,18 +67,8 @@ def zfill(string, width):
         return string
 
 
-def insert_index(ls, pos, elmt):
-    while len(ls) < pos:
-        ls.append([])
-    ls.insert(pos, elmt)
-
-
 def replace_bit(string, position, value):
     return '%s%s%s' % (string[:position], value, string[position + 1:])
-
-
-def find(string, character):
-    return [i for i, ltr in enumerate(string) if ltr == character]
 
 
 def bitstring_to_bytes(s):
@@ -158,7 +88,9 @@ def send_ack(request, ack):
     return response_json
 
 
-# ACK
+# ====== CLASSES ======
+
+
 class ACK:
     profile = None
     rule_id = None
@@ -250,7 +182,6 @@ class Protocol:
     DOWNLINK_MTU = 0
 
 
-# Sigfox
 class Sigfox(Protocol):
     direction = None
     mode = None
@@ -397,8 +328,8 @@ class Header:
         if len(self.string) != self.profile.HEADER_LENGTH:
             print('The header has not been initialized correctly.')
 
-class ReceiverAbort(ACK):
 
+class ReceiverAbort(ACK):
     def __init__(self, profile, header):
         rule_id = header.RULE_ID
         dtag = header.DTAG
@@ -421,7 +352,8 @@ class ReceiverAbort(ACK):
         padding += '1' * profile.L2_WORD_SIZE
 
         super().__init__(profile, rule_id, dtag, w, c='1', bitmap='', padding=padding)
-# Fragment needs for Header and function
+
+
 class Fragment:
     profile = None
     header_length = 0
@@ -482,45 +414,20 @@ class Fragment:
         padding = self.payload.decode()
         return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)
 
-# Reassembler needs for fragment
-class Reassembler:
-    profile = None
-    schc_fragments = []
-    rule_set = set()
-    dtag_set = set()
-    window_set = set()
-    fcn_set = set()
 
-    def __init__(self, profile, schc_fragments):
-        self.profile = profile
-
-        for fragment in schc_fragments:
-            if fragment != b'':
-                self.schc_fragments.append(Fragment(self.profile, fragment))
-
-        for fragment in self.schc_fragments:
-            self.rule_set.add(fragment.header.RULE_ID)
-            self.dtag_set.add(fragment.header.DTAG)
-            self.window_set.add(fragment.header.W)
-            self.fcn_set.add(fragment.header.FCN)
-
-    def reassemble(self):
-        fragments = self.schc_fragments
-        payload_list = []
-
-        for fragment in fragments:
-            payload_list.append(fragment.payload)
-
-        return b"".join(payload_list)
+# ====== GLOBAL VARIABLES ======
 
 
-# --------------------------------------------------------------#
+BUCKET_NAME = 'wyschc-niclabs'
+SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_post"
+REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassembler"
+CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
 
-app = Flask(__name__)
+
+# ====== MAIN ======
 
 
-@app.route('/wyschc_get', methods=['GET', 'POST'])
-def wyschc_get():
+def schc_receiver(request):
     """HTTP Cloud Function.
     Args:
         request (flask.Request): The request object.
@@ -530,9 +437,6 @@ def wyschc_get():
         Response object using `make_response`
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
     """
-    # File where we will store authentication credentials after acquiring them.
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
-    # Wait for an HTTP POST request.
     if request.method == 'POST':
 
         # Get request JSON.
@@ -545,17 +449,10 @@ def wyschc_get():
         sigfox_sequence_number = request_dict["seqNumber"]
         ack_req = request_dict["ack"]
 
-        # Initialize Cloud Storage variables.
-        # BUCKET_NAME = config.BUCKET_NAME
-
         header_first_hex = raw_data[:1]
         if header_first_hex == '0' or header_first_hex == '1':
-            header = bytes.fromhex(raw_data[:2])
-            payload = bytearray.fromhex(raw_data[2:])
             header_bytes = 1
         elif header_first_hex == '2':
-            header = bytearray.fromhex(raw_data[:4])
-            payload = bytearray.fromhex(raw_data[4:])
             header_bytes = 2
         else:
             print("Wrong header in raw_data")
@@ -587,7 +484,7 @@ def wyschc_get():
 
         if fragment_message.is_sender_abort():
             try:
-                _ = requests.post(url='http://localhost:5000/cleanup',
+                _ = requests.post(url=CLEANUP_URL,
                                   json={"header_bytes": header_bytes},
                                   timeout=0.1)
             except requests.exceptions.ReadTimeout:
@@ -603,49 +500,9 @@ def wyschc_get():
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
-        # Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
-        # lost, separated by windows.
-        fd = None
-        try:
-            fd = open(LOSS_MASK_MODIFIED, "r")
-        except FileNotFoundError:
-            fd = open(LOSS_MASK, "r")
-        finally:
-            loss_mask = []
-            for line in fd:
-                if not line.startswith("#"):
-                    for char in line:
-                        try:
-                            loss_mask.append(int(char))
-                        except ValueError:
-                            pass
-            fd.close()
-
-        print(f"Loss mask: {loss_mask}")
-
-        # Controlling random losses.
-        if 'enable_losses' in request_dict and not (fragment_message.is_all_0() or fragment_message.is_all_1()):
-            if request_dict['enable_losses']:
-                loss_rate = request_dict["loss_rate"]
-                # loss_rate = 10
-                coin = random.random()
-                print(f'loss rate: {loss_rate}, random toss:{coin * 100}')
-                if coin * 100 < loss_rate:
-                    print("[LOSS] The fragment was lost.")
-                    return 'fragment lost', 204
-
         # Check if the fragment is an All-1
         if is_monochar(fcn) and fcn[0] == '1':
             print("[RECV] This is an All-1.")
-
-            # Check if fragment is to be lost (All-1 is the very last fragment)
-            if loss_mask[-1] != 0:
-                loss_mask[-1] -= 1
-                with open("loss_mask_modified.txt", "w") as fd:
-                    for i in loss_mask:
-                        fd.write(str(i))
-                print(f"[RECV] Fragment lost.")
-                return 'fragment lost', 204
 
             # Inactivity timer validation
             time_received = int(request_dict["time"])
@@ -664,7 +521,7 @@ def wyschc_get():
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
                     try:
-                        _ = requests.post(url='http://localhost:5000/cleanup',
+                        _ = requests.post(url=CLEANUP_URL,
                                           json={"header_bytes": header_bytes},
                                           timeout=0.1)
                     except requests.exceptions.ReadTimeout:
@@ -689,15 +546,7 @@ def wyschc_get():
         else:
             fragment_number = fcn_dict[fragment_message.header.FCN]
 
-            # Check if fragment is to be lost
             position = current_window * profile.WINDOW_SIZE + fragment_number
-            if loss_mask[position] != 0:
-                loss_mask[position] -= 1
-                with open(LOSS_MASK_MODIFIED, "w") as fd:
-                    for i in loss_mask:
-                        fd.write(str(i))
-                print(f"[RECV] Fragment lost.")
-                return 'fragment lost', 204
 
             # Inactivity timer validation
             time_received = int(request_dict["time"])
@@ -716,7 +565,7 @@ def wyschc_get():
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
                     try:
-                        _ = requests.post(url='http://localhost:5000/cleanup',
+                        _ = requests.post(url=CLEANUP_URL,
                                           json={"header_bytes": header_bytes},
                                           timeout=0.1)
                     except requests.exceptions.ReadTimeout:
@@ -836,7 +685,6 @@ def wyschc_get():
                         # In conclusion, AFTER the regex matching,
                         # we should check if the SSNs of the two last received fragments are consecutive.
                         # The second to last fragment has the highest SSN registered in the JSON.
-                        # TODO: What happens when the All-0 prior to the last window is lost and is retransmitted with the All-1?
                         # We should consider only the SSNs of the last window. If there is a retransmission in a window
                         # prior to the last, the reasoning fails since the All-1 is always consecutive to a
                         # retransmitted fragment of a non-final window.
@@ -856,8 +704,6 @@ def wyschc_get():
                         # The last sequence number should be the highest of these values.
                         last_sequence_number = max(list(map(int, list(sequence_numbers.values()))))
 
-                        # TODO: If the All-0 has the highest of these values, it may have been retransmitted using the All-1
-
                         print(f"All-1 sequence number {sigfox_sequence_number}")
                         print(f"Last sequence number {last_sequence_number}")
 
@@ -866,12 +712,12 @@ def wyschc_get():
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
                             last_index = max(list(map(int, list(sequence_numbers.keys())))) + 1
-                            upload_blob_using_threads(BUCKET_NAME,
-                                                      data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                                      f"all_windows/window_{current_window}/"
-                                                      f"fragment_{current_window}_{last_index}")
+                            upload_blob(BUCKET_NAME,
+                                        data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                                        f"all_windows/window_{current_window}/"
+                                        f"fragment_{current_window}_{last_index}")
                             try:
-                                _ = requests.post(url='http://localhost:5000/http_reassemble',
+                                _ = requests.post(url=REASSEMBLER_URL,
                                                   json={"last_index": last_index,
                                                         "current_window": current_window,
                                                         "header_bytes": header_bytes}, timeout=0.1)
@@ -915,96 +761,3 @@ def wyschc_get():
     else:
         print('Invalid HTTP Method to invoke Cloud Function. Only POST supported')
         return abort(405)
-
-
-@app.route('/http_reassemble', methods=['GET', 'POST'])
-def http_reassemble():
-    if request.method == "POST":
-        print("[RSMB] The reassembler has been launched.")
-        # Get request JSON.
-        request_dict = request.get_json()
-        print(f'[RSMB] Received HTTP message: {request_dict}')
-
-        current_window = int(request_dict["current_window"])
-        last_index = int(request_dict["last_index"])
-        header_bytes = int(request_dict["header_bytes"])
-
-        # Initialize Cloud Storage variables.
-        #BUCKET_NAME = BUCKET_NAME
-
-        # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        n = profile_uplink.N
-
-        print("[RSMB] Loading fragments")
-
-        # Get all the fragments into an array in the format "fragment = [header, payload]"
-        fragments = []
-
-        # For each window, load every fragment into the fragments array
-        for i in range(current_window + 1):
-            for j in range(2 ** n - 1):
-                print(f"[RSMB] Loading fragment {j}")
-                fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
-                print(f"[RSMB] Fragment data: {fragment_file}")
-                header = fragment_file[:header_bytes]
-                payload = fragment_file[header_bytes:]
-                fragment = [header.encode(), payload.encode()]
-                fragments.append(fragment)
-                if i == current_window and j == last_index:
-                    break
-
-        # Instantiate a Reassembler and start reassembling.
-        print("[RSMB] Reassembling")
-        reassembler = Reassembler(profile_uplink, fragments)
-        payload = bytearray(reassembler.reassemble()).decode("utf-8")
-
-        print("[RSMB] Uploading result")
-        with open(PAYLOAD, "w") as file:
-            file.write(payload)
-        # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
-
-        if filecmp.cmp(PAYLOAD, MESSAGE):
-            print("The reassembled file is equal to the original message.")
-        else:
-            print("The reassembled file is corrupt.")
-
-        try:
-            _ = requests.post(url='http://localhost:5000/cleanup',
-                              json={"header_bytes": header_bytes},
-                              timeout=0.1)
-        except requests.exceptions.ReadTimeout:
-            pass
-
-        return '', 204
-
-
-@app.route('/cleanup', methods=['GET', 'POST'])
-def cleanup():
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
-    bucket_name = BUCKET_NAME
-    header_bytes = request.get_json()["header_bytes"]
-    profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-
-    print("[CLN] Deleting timestamp blob")
-    delete_blob(bucket_name, "timestamp")
-
-    print("[CLN] Deleting modified loss mask")
-    try:
-        os.remove(LOSS_MASK_MODIFIED)
-    except FileNotFoundError:
-        pass
-
-    print("[CLN] Resetting SSN")
-    upload_blob(bucket_name, "{}", "SSN")
-
-    print("[CLN] Initializing fragments...")
-    delete_blob(bucket_name, "all_windows/")
-    initialize_blobs(bucket_name, profile)
-
-    return '', 204
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')

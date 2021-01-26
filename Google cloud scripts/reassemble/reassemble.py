@@ -1,52 +1,12 @@
-import filecmp
-
 import requests
-from flask import request
-
-# import config.config as config
-# from Entities.Reassembler import Reassembler
-# from Entities.Sigfox import Sigfox
-# from Messages.ACK import ACK
-# from Messages.Fragment import Fragment
-# from Messages.ReceiverAbort import ReceiverAbort
-# from blobHelperFunctions import *
-
-
-# Configuration variables from config.py
-# Change the variables name to your files, then remove track from git
-# git rm --cached config/config.py
-
-# Cloud Storage Bucket Name
-BUCKET_NAME = 'wyschc-niclabs'
-#
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
-
-# File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
-
-# Loss mask path
-LOSS_MASK = './loss_masks/loss_mask_0.txt'
-LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
-
-# Message to be fragmented
-MESSAGE = './comm/example_300.txt'
-PAYLOAD = './comm/PAYLOAD.txt'
-
-# Blob helper functions
-import threading
-
-from google.cloud import storage
 import json
+from google.cloud import storage
 
 
-def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
-    print("[BHF] Uploading with threads...")
-    thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
-    thread.start()
+# ====== CLOUD STORAGE FUNCTIONS ======
 
 
 def upload_blob(bucket_name, blob_text, destination_blob_name):
-    """Uploads a file to the bucket."""
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
@@ -63,59 +23,9 @@ def read_blob(bucket_name, blob_name):
     return blob.download_as_string().decode('utf-8') if blob else None
 
 
-def delete_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    if blob is not None:
-        blob.delete()
-        print(f"[BHF] Deleted blob {blob_name}")
-    else:
-        print(f"[BHF] {blob_name} doesn't exist.")
+# ====== HELPER FUNCTIONS ======
 
 
-def exists_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    return blob.exists()
-
-
-def create_folder(bucket_name, folder_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(folder_name)
-    blob.upload_from_string("")
-    print(f'[BHF] Folder uploaded to {folder_name}.')
-
-
-def size_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    return blob.size if blob else 0
-
-
-def initialize_blobs(bucket_name, profile):
-    if not exists_blob(bucket_name, "all_windows/"):
-        print("[BHF] Initializing... (be patient)")
-        create_folder(bucket_name, "all_windows/")
-
-        # For each window in the SCHC Profile, create its blob.
-        for i in range(2 ** profile.M):
-            create_folder(bucket_name, f"all_windows/window_{i}/")
-
-            # For each fragment in the SCHC Profile, create its blob.
-            for j in range(2 ** profile.N - 1):
-                upload_blob(bucket_name, "", f"all_windows/window_{i}/fragment_{i}_{j}")
-
-            # Create the blob for each bitmap.
-            upload_blob(bucket_name, "0" * profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
-
-        print("[BHF] BLOBs created")
-
-
-#  FUNCTIONS
 def zfill(string, width):
     if len(string) < width:
         return ("0" * (width - len(string))) + string
@@ -154,77 +64,7 @@ def send_ack(request, ack):
     return response_json
 
 
-# ACK
-class ACK:
-    profile = None
-    rule_id = None
-    dtag = None
-    w = None
-    bitmap = None
-    c = None
-    header = ''
-    padding = ''
-
-    window_number = None
-
-    def __init__(self, profile, rule_id, dtag, w, c, bitmap, padding=''):
-        self.profile = profile
-        self.rule_id = rule_id
-        self.dtag = dtag
-        self.w = w
-        self.c = c
-        self.bitmap = bitmap
-        self.padding = padding
-
-        # Bitmap may or may not be carried
-        self.header = self.rule_id + self.dtag + self.w + self.c + self.bitmap
-        print(f"header {self.header}")
-        while len(self.header + self.padding) < profile.DOWNLINK_MTU:
-            self.padding += '0'
-
-        self.window_number = int(self.w, 2)
-
-    def to_string(self):
-        return self.header + self.padding
-
-    def to_bytes(self):
-        return bitstring_to_bytes(self.header + self.padding)
-
-    def length(self):
-        return len(self.header + self.padding)
-
-    def is_receiver_abort(self):
-        ack_string = self.to_string()
-        l2_word_size = self.profile.L2_WORD_SIZE
-        header = ack_string[:len(self.rule_id + self.dtag + self.w + self.c)]
-        padding = ack_string[len(self.rule_id + self.dtag + self.w + self.c):ack_string.rfind('1') + 1]
-        padding_start = padding[:-l2_word_size]
-        padding_end = padding[-l2_word_size:]
-
-        if padding_end == "1" * l2_word_size:
-            if padding_start != '' and len(header) % l2_word_size != 0:
-                return is_monochar(padding_start) and padding_start[0] == '1'
-            else:
-                return len(header) % l2_word_size == 0
-        else:
-            return False
-
-    @staticmethod
-    def parse_from_hex(profile, h):
-        ack = zfill(bin(int(h, 16))[2:], profile.DOWNLINK_MTU)
-        ack_index_dtag = profile.RULE_ID_SIZE
-        ack_index_w = ack_index_dtag + profile.T
-        ack_index_c = ack_index_w + profile.M
-        ack_index_bitmap = ack_index_c + 1
-        ack_index_padding = ack_index_bitmap + profile.BITMAP_SIZE
-
-        return ACK(profile,
-                   ack[:ack_index_dtag],
-                   ack[ack_index_dtag:ack_index_w],
-                   ack[ack_index_w:ack_index_c],
-                   ack[ack_index_c],
-                   ack[ack_index_bitmap:ack_index_padding],
-                   ack[ack_index_padding:])
+# ====== CLASSES ======
 
 
 class Protocol:
@@ -246,7 +86,6 @@ class Protocol:
     DOWNLINK_MTU = 0
 
 
-# Sigfox
 class Sigfox(Protocol):
     direction = None
     mode = None
@@ -393,31 +232,7 @@ class Header:
         if len(self.string) != self.profile.HEADER_LENGTH:
             print('The header has not been initialized correctly.')
 
-class ReceiverAbort(ACK):
 
-    def __init__(self, profile, header):
-        rule_id = header.RULE_ID
-        dtag = header.DTAG
-        w = header.W
-
-        header = Header(profile=profile,
-                        rule_id=rule_id,
-                        dtag=dtag,
-                        w=w,
-                        fcn='',
-                        c='1')
-
-        padding = ''
-        # if the Header does not end at an L2 Word boundary,
-        # append bits set to 1 as needed to reach the next L2 Word boundary.
-        while len(header.string + padding) % profile.L2_WORD_SIZE != 0:
-            padding += '1'
-
-        # append exactly one more L2 Word with bits all set to ones.
-        padding += '1' * profile.L2_WORD_SIZE
-
-        super().__init__(profile, rule_id, dtag, w, c='1', bitmap='', padding=padding)
-# Fragment needs for Header and function
 class Fragment:
     profile = None
     header_length = 0
@@ -478,7 +293,7 @@ class Fragment:
         padding = self.payload.decode()
         return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)
 
-# Reassembler needs for fragment
+
 class Reassembler:
     profile = None
     schc_fragments = []
@@ -510,7 +325,19 @@ class Reassembler:
         return b"".join(payload_list)
 
 
-def http_reassemble():
+# ====== GLOBAL VARIABLES ======
+
+
+BUCKET_NAME = 'wyschc-niclabs'
+SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_post"
+REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassembler"
+CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
+
+
+# ====== MAIN ======
+
+
+def http_reassemble(request):
     if request.method == "POST":
         print("[RSMB] The reassembler has been launched.")
         # Get request JSON.
@@ -520,9 +347,6 @@ def http_reassemble():
         current_window = int(request_dict["current_window"])
         last_index = int(request_dict["last_index"])
         header_bytes = int(request_dict["header_bytes"])
-
-        # Initialize Cloud Storage variables.
-        #BUCKET_NAME = BUCKET_NAME
 
         # Initialize SCHC variables.
         profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
@@ -552,18 +376,11 @@ def http_reassemble():
         payload = bytearray(reassembler.reassemble()).decode("utf-8")
 
         print("[RSMB] Uploading result")
-        with open(PAYLOAD, "w") as file:
-            file.write(payload)
         # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
-
-        if filecmp.cmp(PAYLOAD, MESSAGE):
-            print("The reassembled file is equal to the original message.")
-        else:
-            print("The reassembled file is corrupt.")
+        upload_blob(BUCKET_NAME, payload, "PAYLOAD")
 
         try:
-            _ = requests.post(url='http://localhost:5000/cleanup',
+            _ = requests.post(url=CLEANUP_URL,
                               json={"header_bytes": header_bytes},
                               timeout=0.1)
         except requests.exceptions.ReadTimeout:

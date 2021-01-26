@@ -1,37 +1,8 @@
-import os
-from flask import request
-
-# Configuration variables from config.py
-# Change the variables name to your files, then remove track from git
-# git rm --cached config/config.py
-
-# Cloud Storage Bucket Name
 from google.cloud import storage
 
-BUCKET_NAME = 'wyschc-niclabs'
-#
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 
-# File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+# ====== CLOUD STORAGE FUNCTIONS ======
 
-# Loss mask path
-LOSS_MASK = './loss_masks/loss_mask_0.txt'
-LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
-
-# Message to be fragmented
-MESSAGE = './comm/example_300.txt'
-PAYLOAD = './comm/PAYLOAD.txt'
-
-def delete_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    if blob is not None:
-        blob.delete()
-        print(f"[BHF] Deleted blob {blob_name}")
-    else:
-        print(f"[BHF] {blob_name} doesn't exist.")
 
 def upload_blob(bucket_name, blob_text, destination_blob_name):
     """Uploads a file to the bucket."""
@@ -43,11 +14,24 @@ def upload_blob(bucket_name, blob_text, destination_blob_name):
     blob.upload_from_string(str(blob_text))
     print(f'[BHF] File uploaded to {destination_blob_name}.')
 
+
+def delete_blob(bucket_name, blob_name):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.get_blob(blob_name)
+    if blob is not None:
+        blob.delete()
+        print(f"[BHF] Deleted blob {blob_name}")
+    else:
+        print(f"[BHF] {blob_name} doesn't exist.")
+
+
 def exists_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
     return blob.exists()
+
 
 def create_folder(bucket_name, folder_name):
     storage_client = storage.Client()
@@ -55,6 +39,7 @@ def create_folder(bucket_name, folder_name):
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
     print(f'[BHF] Folder uploaded to {folder_name}.')
+
 
 def initialize_blobs(bucket_name, profile):
     if not exists_blob(bucket_name, "all_windows/"):
@@ -74,6 +59,10 @@ def initialize_blobs(bucket_name, profile):
 
         print("[BHF] BLOBs created")
 
+
+# ====== CLASSES ======
+
+
 class Protocol:
     NAME = None
     RULE_ID_SIZE = 0
@@ -91,6 +80,7 @@ class Protocol:
     INACTIVITY_TIMER_VALUE = None
     UPLINK_MTU = 0
     DOWNLINK_MTU = 0
+
 
 class Sigfox(Protocol):
     direction = None
@@ -179,26 +169,28 @@ class Sigfox(Protocol):
             else:
                 pass
 
-def cleanup():
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CLIENT_SECRETS_FILE
-    bucket_name = BUCKET_NAME
+
+# ====== GLOBAL VARIABLES ======
+
+
+BUCKET_NAME = 'wyschc-niclabs'
+
+
+# ====== MAIN ======
+
+
+def cleanup(request):
     header_bytes = request.get_json()["header_bytes"]
     profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 
     print("[CLN] Deleting timestamp blob")
-    delete_blob(bucket_name, "timestamp")
-
-    print("[CLN] Deleting modified loss mask")
-    try:
-        os.remove(LOSS_MASK_MODIFIED)
-    except FileNotFoundError:
-        pass
+    delete_blob(BUCKET_NAME, "timestamp")
 
     print("[CLN] Resetting SSN")
-    upload_blob(bucket_name, "{}", "SSN")
+    upload_blob(BUCKET_NAME, "{}", "SSN")
 
     print("[CLN] Initializing fragments...")
-    delete_blob(bucket_name, "all_windows/")
-    initialize_blobs(bucket_name, profile)
+    delete_blob(BUCKET_NAME, "all_windows/")
+    initialize_blobs(BUCKET_NAME, profile)
 
     return '', 204
