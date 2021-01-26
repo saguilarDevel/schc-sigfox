@@ -2,22 +2,24 @@
 
 ## Uplink ACK-on-Error Single-byte SCHC Header
 
-300 bytes packet
-Tile size: 11 bytes
-Number of tiles: 28
-WINDOW_SIZE: 7 tiles
-Number of windows: 4 windows (00,01,10,11) 
-M:2 
-N:3
-bitmap size: 7 bits
-Rule ID: 000
-C bit: 
+The setting of Uplink ACK-on-Error Single-byte SCHC Header are:
+
+* 300 bytes packet
+* Tile size: 11 bytes
+* Number of tiles: 28
+* WINDOW_SIZE: 7 tiles
+* Number of windows: 4 windows (00,01,10,11) 
+* M:2 
+* N:3
+* bitmap size: 7 bits
+* Rule ID: 000
+* C bit: 1 bit
 
 ### ACK messages
 
-SCHC-over-sigfox standard ACKs
+#### SCHC-over-sigfox standard ACKs
 
-In the ACK success the W field is corresponds to the last window and the C bit is set to 1.
+In the ACK success format, the W field corresponds to the last received window and the C bit is set to 1.
 In schc-over-sigfox DTAG is not present. 0 padding is added to complete the 64 bit Sigfox downlink frame size. 
 
 ```text
@@ -26,7 +28,7 @@ ACK Success:
    000     01    1     58 padding bits
 ```
 
-In the failure ACK the W field corresponds to the number of the smallest window with errors and the C bit is set to 0. 0 padding is added to complete the 64 bit downlinlk frame size.
+In the failure ACK format the W field corresponds to the number of the smallest window with errors and the C bit is set to 0. 0 padding is added to complete the 64 bit downlinlk frame size.
 ```text
 ACK Failure:
 [ Rule ID | W | C-0 | Bitmap | (P-0) ]
@@ -35,9 +37,10 @@ ACK Failure:
 
 ### Extended ACK
 
-The Sigfox Donwlink frame is of a fixed size (64 bits), so padding must always be added to the SCHC standard ACK format. However, if more windows are centralized in a single ACK, less donwlink and uplink messages are required, as a single ACK may centralize the complete information of all windows. 
+The Sigfox Donwlink frame is of a fixed size (64 bits), so padding must be added to the standard SCHC ACK format.
+However, if the information about lost fragments of more windows are centralized in a single ACK, less donwlink messages are required, as a single ACK may centralize the complete information of the lost fragments of all windows. 
 
-In Uplink ACK-on-Error Single-byte SCHC Header mode, a single ACK can acknowledged the 4 available windows (allowed by the size of M) while carrying, for example, a 300-byte SCHC Packet.
+In Uplink ACK-on-Error Single-byte SCHC Header mode the size of M allows the use of 4 windows and a single ACK can acknowledged that 4 available windows, while carrying, for example, a 300-byte SCHC Packet.
 
 The standard schc-over-sigfox failure ACK format is composed of a RuleID common for all the SCHC Packet. Then, each window is identify by its own set of values, such as the window number (W), the C bit and the bitmap. The success ACK format does not has any bitmap, therefore the extended ACK may have or not a bitmap when reporting a success reception of a given window.
 
@@ -46,13 +49,11 @@ Following are two proposal examples of extended ACK Formats.
 #### Example Extended ACK format 1
 
 In the extended ACK format 1, each window is identify by the combination of these two values: the window number and the C bit. 
-For each window, when the C bit is set to 1, the bitmap is not present, meaning no fragments where lost in that window. 
+For each window, when the C bit is set to 1, the bitmap is not present, meaning that no fragments where lost in that window. 
 In case the C bit is set to 0, the 7-bit bitmap is added.
 
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with error in all transmission windows. 
+The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with error in all transmission windows.
 Note that a 300-byte SCHC Packet requires 4 transmission windows and 28 SCHC fragments. 
-In this example, instead of 4 downlink SCHC ACK, only 1 extended SCHC ACK is generated, reducing at lest 3 downlink messages (one for each window with errors except for the last one). 
-The last window will always generate an ACK.
 
 ```text
 Extended ACK format 1: 
@@ -238,11 +239,12 @@ Extended ACK Format 2:
 
 
 ### Transmission example comparison of 300-byte SCHC Packet with and without extended ACK
-
+The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with error in all transmission windows. 
+Moreover, an example using the standard ACK format is presented for the same 300-byte SCHC Packet transmission.
 
 #### Transmission of a 300-byte SCHC Packet with Extended ACK
-
-
+In this example, instead of 4 downlink SCHC ACK, only 1 extended SCHC ACK is generated, reducing at lest 3 downlink messages (one for each window with errors except for the last one), when compared with the example using the standard ACK format. 
+The last window will always generate an ACK.
 
 ```text
         Sender                      Receiver
@@ -287,7 +289,12 @@ DL Enable |-----W=3, FCN=7, Seq=34---->|
         (End)
 ```
 
+To request the ACK after retransmissions an All-1 message (Seq = 34) is sent.
+
 #### Transmission of a 300-byte SCHC Packet without Extended ACK
+
+The following is an example of a 300-byte SCHC Packet using the standard ACK format. 
+Since there are fragment losses in all windows, and ACK is generated after the All-0 for intermediate windows.
 
 ```text
         Sender                      Receiver
@@ -335,102 +342,15 @@ DL Enable |-----W=3, FCN=7, Seq=38---->|
         (End)
 ```
 
-Without extended ACK, after the All-0 message an ACK should be send, therefore
-using extended ACK reduces one downlink message when error are present in 2
+Without the extended ACK format, after the All-0 message an ACK should be send, therefore
+using the extended ACK format reduces, for example, one downlink message when error are present in 2
 windows.
 
-When errors are found in all windows, using extended ACK will reduce the 
-number of ACKs in number of windows - 1. 
-For example, for 3 windows, errors in all windows, without extended ACK, there will be 2 All-0 messages
-generating ACKs. 
-With extended ACK, only the last ACK is generated with the All-1 message. 
-Therefore, the number of ACKs (before retransmission) is reduced in the number of windows (3) - 1 = 2 ACKs.
+When errors are found in all windows, using extended ACK will reduce the number of ACKs. 
+The ACK reduction can be calculated as the number of windows required for a SCHC Packet minus 1. 
+For example, if the SCHC Packet requires 3 windows, and errors are found in all windows, without the extended ACK format there will be 2 All-0 messages that will generate an ACK.
+With the extended ACK format, only the last ACK is generated, after the All-1 message is received. 
+Therefore, the number of ACKs (not considering losses in retranmission) is reduced by the number of windows (3) - 1 = 2 ACKs.
+As the packet size increases and the number of windows increases to 4, the reduction of ACKs increases to 3. 
+SCHC Packet sizes that requires less than one window (less than 77 bytes) will see no benefit from using the Extended ACK format, as an ACK is always required after the last SCHC fragment (All-1 message).
 
-
-### ACK examples
-
-Less than 77 bytes, only one window
-
-SCHC standard ACK
-```text
-ACK Failure:
-[ Rule ID | W | C-0 | Bitmap | (P-0) ]
-    000    00    0   1111101    51 padding bits  
-```
-
-
-Packet sizes between 78 bytes and 154 bytes, two windows
-
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101   41 padding bits
-    0000001111011010111110100000000000000000000000000000000000000000
-```
-
-
-Packet sizes between 155 bytes and 231 bytes, three windows
-
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101  10    0   1111110    31 padding bits
-    0000001111011010111110110011111100000000000000000000000000000000  
-
-```
-
-Packet sizes between 232 bytes and 300 bytes, four windows
-
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101  10    0   1111110   11   0   1111011   21 padding bits
-    000    00    0   1111011  01    0   1111101  10    0   1111110   11   0   1111011
-    0000001111011010111110110011111101101111011000000000000000000000
-```
-
-
-### Examples use cases with variable length (before padding)
-
-300 bytes packet
-Tile size: 11 bytes
-Number of tiles: 28
-WINDOW_SIZE: 7 tiles
-Number of windows: 4 windows (00,01,10,11)
-bitmap size: 7 bits
-Rule ID: 000
-C bit: 
-
-Errors in one window
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011    51 padding bits
-    0000001111011000000000000000000000000000000000000000000000000000
-```
-Errors in two windows
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101   41 padding bits
-    0000001111011010111110100000000000000000000000000000000000000000
-```
-Errors in three windows
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101  10    0   1111110    31 padding bits
-    0000001111011010111110110011111100000000000000000000000000000000  
-
-```
-Error in four windows
-```text
-ACK Failure: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101  10    0   1111110   11   0   1111011   21 padding bits
-    000    00    0   1111011  01    0   1111101  10    0   1111110   11   0   1111011
-    0000001111011010111110110011111101101111011000000000000000000000
-```
-
-Note that, the windows are numbered from the lowest window number 
-with errors to the last.
