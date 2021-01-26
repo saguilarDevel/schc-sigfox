@@ -11,15 +11,16 @@ from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.SenderAbort import SenderAbort
 from config import config
-from function import zfill
 
 filename = config.MESSAGE
 seqNumber = 1
-device = "4D5A87"
+device = "DEVICE"
 
 sent = 0
 received = 0
 retransmitted = 0
+
+
 
 
 def post(fragment_sent, retransmit=False):

@@ -1,70 +1,79 @@
-import requests
-import json
-from google.cloud import storage
-
-
-# ====== CLOUD STORAGE FUNCTIONS ======
-
-
-def upload_blob(bucket_name, blob_text, destination_blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
-    if type(blob_text) == bytes or type(blob_text) == bytearray:
-        blob_text = blob_text.encode()
-    blob.upload_from_string(str(blob_text))
-    print(f'[BHF] File uploaded to {destination_blob_name}.')
-
-
-def read_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    return blob.download_as_string().decode('utf-8') if blob else None
-
-
-# ====== HELPER FUNCTIONS ======
-
-
-def zfill(string, width):
-    if len(string) < width:
-        return ("0" * (width - len(string))) + string
-    else:
-        return string
-
-
-def insert_index(ls, pos, elmt):
-    while len(ls) < pos:
-        ls.append([])
-    ls.insert(pos, elmt)
-
-
-def replace_bit(string, position, value):
-    return '%s%s%s' % (string[:position], value, string[position + 1:])
-
-
-def find(string, character):
-    return [i for i, ltr in enumerate(string) if ltr == character]
-
-
-def bitstring_to_bytes(s):
-    return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
-
-
-def is_monochar(s):
-    return len(set(s)) == 1
-
-
-def send_ack(request, ack):
-    device = request["device"]
-    print(f"ack string -> {ack.to_string()}")
-    response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
-    response_json = json.dumps(response_dict)
-    print(f"response_json -> {response_json}")
-    return response_json
+from function import bitstring_to_bytes, is_monochar, zfill
 
 
 # ====== CLASSES ======
+
+
+class ACK:
+    profile = None
+    rule_id = None
+    dtag = None
+    w = None
+    bitmap = None
+    c = None
+    header = ''
+    padding = ''
+
+    window_number = None
+
+    def __init__(self, profile, rule_id, dtag, w, c, bitmap, padding=''):
+        self.profile = profile
+        self.rule_id = rule_id
+        self.dtag = dtag
+        self.w = w
+        self.c = c
+        self.bitmap = bitmap
+        self.padding = padding
+
+        # Bitmap may or may not be carried
+        self.header = self.rule_id + self.dtag + self.w + self.c + self.bitmap
+        print(f"header {self.header}")
+        while len(self.header + self.padding) < profile.DOWNLINK_MTU:
+            self.padding += '0'
+
+        self.window_number = int(self.w, 2)
+
+    def to_string(self):
+        return self.header + self.padding
+
+    def to_bytes(self):
+        return bitstring_to_bytes(self.header + self.padding)
+
+    def length(self):
+        return len(self.header + self.padding)
+
+    def is_receiver_abort(self):
+        ack_string = self.to_string()
+        l2_word_size = self.profile.L2_WORD_SIZE
+        header = ack_string[:len(self.rule_id + self.dtag + self.w + self.c)]
+        padding = ack_string[len(self.rule_id + self.dtag + self.w + self.c):ack_string.rfind('1') + 1]
+        padding_start = padding[:-l2_word_size]
+        padding_end = padding[-l2_word_size:]
+
+        if padding_end == "1" * l2_word_size:
+            if padding_start != '' and len(header) % l2_word_size != 0:
+                return is_monochar(padding_start) and padding_start[0] == '1'
+            else:
+                return len(header) % l2_word_size == 0
+        else:
+            return False
+
+    @staticmethod
+    def parse_from_hex(profile, h):
+        ack = zfill(bin(int(h, 16))[2:], profile.DOWNLINK_MTU)
+        ack_index_dtag = profile.RULE_ID_SIZE
+        ack_index_w = ack_index_dtag + profile.T
+        ack_index_c = ack_index_w + profile.M
+        ack_index_bitmap = ack_index_c + 1
+        ack_index_padding = ack_index_bitmap + profile.BITMAP_SIZE
+
+        return ACK(profile,
+                   ack[:ack_index_dtag],
+                   ack[ack_index_dtag:ack_index_w],
+                   ack[ack_index_w:ack_index_c],
+                   ack[ack_index_c],
+                   ack[ack_index_bitmap:ack_index_padding],
+                   ack[ack_index_padding:])
 
 
 class Protocol:
@@ -233,6 +242,31 @@ class Header:
             print('The header has not been initialized correctly.')
 
 
+class ReceiverAbort(ACK):
+    def __init__(self, profile, header):
+        rule_id = header.RULE_ID
+        dtag = header.DTAG
+        w = header.W
+
+        header = Header(profile=profile,
+                        rule_id=rule_id,
+                        dtag=dtag,
+                        w=w,
+                        fcn='',
+                        c='1')
+
+        padding = ''
+        # if the Header does not end at an L2 Word boundary,
+        # append bits set to 1 as needed to reach the next L2 Word boundary.
+        while len(header.string + padding) % profile.L2_WORD_SIZE != 0:
+            padding += '1'
+
+        # append exactly one more L2 Word with bits all set to ones.
+        padding += '1' * profile.L2_WORD_SIZE
+
+        super().__init__(profile, rule_id, dtag, w, c='1', bitmap='', padding=padding)
+
+
 class Fragment:
     profile = None
     header_length = 0
@@ -323,67 +357,3 @@ class Reassembler:
             payload_list.append(fragment.payload)
 
         return b"".join(payload_list)
-
-
-# ====== GLOBAL VARIABLES ======
-
-
-BUCKET_NAME = 'wyschc-niclabs'
-SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_post"
-REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassembler"
-CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
-
-
-# ====== MAIN ======
-
-
-def http_reassemble(request):
-    if request.method == "POST":
-        print("[RSMB] The reassembler has been launched.")
-        # Get request JSON.
-        request_dict = request.get_json()
-        print(f'[RSMB] Received HTTP message: {request_dict}')
-
-        current_window = int(request_dict["current_window"])
-        last_index = int(request_dict["last_index"])
-        header_bytes = int(request_dict["header_bytes"])
-
-        # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        n = profile_uplink.N
-
-        print("[RSMB] Loading fragments")
-
-        # Get all the fragments into an array in the format "fragment = [header, payload]"
-        fragments = []
-
-        # For each window, load every fragment into the fragments array
-        for i in range(current_window + 1):
-            for j in range(2 ** n - 1):
-                print(f"[RSMB] Loading fragment {j}")
-                fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
-                print(f"[RSMB] Fragment data: {fragment_file}")
-                header = fragment_file[:header_bytes]
-                payload = fragment_file[header_bytes:]
-                fragment = [header.encode(), payload.encode()]
-                fragments.append(fragment)
-                if i == current_window and j == last_index:
-                    break
-
-        # Instantiate a Reassembler and start reassembling.
-        print("[RSMB] Reassembling")
-        reassembler = Reassembler(profile_uplink, fragments)
-        payload = bytearray(reassembler.reassemble()).decode("utf-8")
-
-        print("[RSMB] Uploading result")
-        # Upload the full message.
-        upload_blob(BUCKET_NAME, payload, "PAYLOAD")
-
-        try:
-            _ = requests.post(url=CLEANUP_URL,
-                              json={"header_bytes": header_bytes},
-                              timeout=0.1)
-        except requests.exceptions.ReadTimeout:
-            pass
-
-        return '', 204
