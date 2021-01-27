@@ -289,6 +289,58 @@ DL enable |-----W=1, FCN=7 (111), Seq=17---->|
         (End)
 ```
 
+#### Cases where the All-0 or All-1 are lost
+
+##### The last window only has the All-1
+
+
+```text
+                 Sender                            Receiver
+          |-----W=0, FCN=6 (110), Seq=1----->|
+          |-----W=0, FCN=5 (101), Seq=2----->|
+          |-----W=0, FCN=4 (100), Seq=3----->|
+          |-----W=0, FCN=3 (011), Seq=4----->|
+          |-----W=0, FCN=2 (010), Seq=5----->|
+          |-----W=0, FCN=1 (001), Seq=6----->|
+DL enable |-----W=0, FCN=0 (000), Seq=7----->| 
+     (no ACK)
+DL enable |-----W=1, FCN=7 (111), Seq=8----->| 
+          |<--------- ACK, W=1, C=1 ---------| 
+        (End)
+```
+The sequence number between the last 2 messages is consecutive. 
+
+##### Only the All-1 in last window is received
+
+```text
+                 Sender                            Receiver
+          |-----W=0, FCN=6 (110), Seq=1----->|
+          |-----W=0, FCN=5 (101), Seq=2----->|
+          |-----W=0, FCN=4 (100), Seq=3----->|
+          |-----W=0, FCN=3 (011), Seq=4----->|
+          |-----W=0, FCN=2 (010), Seq=5----->|
+          |-----W=0, FCN=1 (001), Seq=6----->|
+DL enable |-----W=0, FCN=0 (000), Seq=7--X-->| Bitmap: 1111110
+     (no ACK)
+          |-----W=1, FCN=6 (110), Seq=8--X-->|
+          |-----W=1, FCN=5 (101), Seq=9--x-->|
+          |-----W=1, FCN=4 (011), Seq=10-X-->|
+DL enable |-----W=1, FCN=7 (111), Seq=11---->| 
+          |<--------- ACK, W=0, C=0 ---------| Bitmap:1111110
+          |-----W=0, FCN=5 (101), Seq=13---->|
+          |-----W=0, FCN=3 (011), Seq=14---->|
+DL enable |-----W=0, FCN=0 (000), Seq=15---->| 
+          |<--------- ACK, W=1, C=0 ---------| Bitmap:0000001
+          |-----W=1, FCN=6 (110), Seq=17---->|
+          |-----W=1, FCN=4 (011), Seq=18---->| All fragments received
+DL enable |-----W=1, FCN=7 (111), Seq=19---->|
+          |<--------- ACK, W=1, C=1 ---------| C=1
+        (End)
+```
+
+
+
+
 #### Case ACK is lost:
 
 SCHC over sigfox does not implement the SCHC ACK REQ message, 
@@ -368,4 +420,6 @@ DL Enable |-----W=0, FCN=0, Seq=7----->|
           |<-------  RECV ABORT -------| under-resourced
        (Error)
 ```
+
+
 
