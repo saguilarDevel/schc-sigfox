@@ -219,11 +219,12 @@ window_size = profile_uplink.WINDOW_SIZE
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, help="For 'local' or 'cloud' testing.")
 parser.add_argument('--clean', action='store_true', help="If set, cleans the Cloud Storage bucket before execution.")
+parser.add_argument('--cleanonly', action='store_true', help="If sets, cleans the bucket and exits immediately.")
 args = parser.parse_args()
 
 if args.mode == 'cloud':
     SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_receiver"
-    REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassembler"
+    REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassemble"
     CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
 
 elif args.mode == 'local':
@@ -231,9 +232,11 @@ elif args.mode == 'local':
     REASSEMBLER_URL = "https://localhost:5000/reassembler"
     CLEANUP_URL = "https://localhost:5000/cleanup"
 
-if args.clean:
+if args.clean or args.cleanonly:
     _ = requests.post(url=CLEANUP_URL,
                       json={"header_bytes": header_bytes})
+    if args.cleanonly:
+        exit(0)
 
 # Fragment the file.
 fragmenter = Fragmenter(profile_uplink, message)
