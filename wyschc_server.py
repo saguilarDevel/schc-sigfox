@@ -17,9 +17,8 @@ from function import *
 
 app = Flask(__name__)
 
-
-@app.route('/wyschc_get', methods=['GET', 'POST'])
-def wyschc_get():
+@app.route('/schc_post', methods=['GET', 'POST'])
+def schc_post():
     """HTTP Cloud Function.
     Args:
         request (flask.Request): The request object.
@@ -29,6 +28,10 @@ def wyschc_get():
         Response object using `make_response`
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
     """
+
+    REASSEMBLER_URL = "https://localhost:5000/reassembler"
+    CLEANUP_URL = "https://localhost:5000/cleanup"
+
     # File where we will store authentication credentials after acquiring them.
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
     # Wait for an HTTP POST request.
@@ -86,7 +89,7 @@ def wyschc_get():
 
         if fragment_message.is_sender_abort():
             try:
-                _ = requests.post(url='http://localhost:5000/cleanup',
+                _ = requests.post(url=CLEANUP_URL,
                                   json={"header_bytes": header_bytes},
                                   timeout=0.1)
             except requests.exceptions.ReadTimeout:
@@ -163,7 +166,7 @@ def wyschc_get():
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
                     try:
-                        _ = requests.post(url='http://localhost:5000/cleanup',
+                        _ = requests.post(url=CLEANUP_URL,
                                           json={"header_bytes": header_bytes},
                                           timeout=0.1)
                     except requests.exceptions.ReadTimeout:
@@ -215,7 +218,7 @@ def wyschc_get():
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
                     try:
-                        _ = requests.post(url='http://localhost:5000/cleanup',
+                        _ = requests.post(url=CLEANUP_URL,
                                           json={"header_bytes": header_bytes},
                                           timeout=0.1)
                     except requests.exceptions.ReadTimeout:
@@ -370,7 +373,7 @@ def wyschc_get():
                                                       f"all_windows/window_{current_window}/"
                                                       f"fragment_{current_window}_{last_index}")
                             try:
-                                _ = requests.post(url='http://localhost:5000/http_reassemble',
+                                _ = requests.post(url=REASSEMBLER_URL,
                                                   json={"last_index": last_index,
                                                         "current_window": current_window,
                                                         "header_bytes": header_bytes}, timeout=0.1)
@@ -416,8 +419,11 @@ def wyschc_get():
         return abort(405)
 
 
-@app.route('/http_reassemble', methods=['GET', 'POST'])
-def http_reassemble():
+@app.route('/reassemble', methods=['GET', 'POST'])
+def reassemble():
+
+    CLEANUP_URL = "https://localhost:5000/cleanup"
+
     if request.method == "POST":
         print("[RSMB] The reassembler has been launched.")
         # Get request JSON.
@@ -470,7 +476,7 @@ def http_reassemble():
             print("The reassembled file is corrupt.")
 
         try:
-            _ = requests.post(url='http://localhost:5000/cleanup',
+            _ = requests.post(url=CLEANUP_URL,
                               json={"header_bytes": header_bytes},
                               timeout=0.1)
         except requests.exceptions.ReadTimeout:

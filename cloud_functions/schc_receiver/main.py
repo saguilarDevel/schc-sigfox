@@ -11,7 +11,7 @@ from localpackage.functions import zfill, is_monochar, send_ack, replace_bit
 
 
 BUCKET_NAME = 'wyschc-niclabs'
-SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_post"
+SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_receiver"
 REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassembler"
 CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
 

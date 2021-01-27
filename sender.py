@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 import time
@@ -21,11 +22,8 @@ received = 0
 retransmitted = 0
 
 
-
-
 def post(fragment_sent, retransmit=False):
     global seqNumber, attempts, current_window, last_window, i, sent, received, retransmitted
-    url = "http://localhost:5000/wyschc_get"
     headers = {'content-type': 'application/json'}
     profile = fragment_sent.profile
 
@@ -48,10 +46,10 @@ def post(fragment_sent, retransmit=False):
         "ack": fragment_sent.expects_ack() and not retransmit
     }
 
-    print(f"[POST] Posting fragment {fragment_sent.header.string} ({fragment_sent.hex}) to {url}")
+    print(f"[POST] Posting fragment {fragment_sent.header.string} ({fragment_sent.hex}) to {SCHC_POST_URL}")
 
     try:
-        response = requests.post(url, data=json.dumps(payload_dict), headers=headers, timeout=request_timeout)
+        response = requests.post(SCHC_POST_URL, data=json.dumps(payload_dict), headers=headers, timeout=request_timeout)
 
         if fragment_sent.is_sender_abort():
             print("Sent Sender-Abort. Goodbye")
@@ -218,8 +216,23 @@ profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
 window_size = profile_uplink.WINDOW_SIZE
 
-if sys.argv[1] and sys.argv[1] == 'clean':
-    _ = requests.post(url='http://localhost:5000/cleanup',
+parser = argparse.ArgumentParser()
+parser.add_argument('--mode', type=str, help="For 'local' or 'cloud' testing.")
+parser.add_argument('--clean', action='store_true', help="If set, cleans the Cloud Storage bucket before execution.")
+args = parser.parse_args()
+
+if args.mode == 'cloud':
+    SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_receiver"
+    REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassembler"
+    CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
+
+elif args.mode == 'local':
+    SCHC_POST_URL = "https://localhost:5000/schc_receiver"
+    REASSEMBLER_URL = "https://localhost:5000/reassembler"
+    CLEANUP_URL = "https://localhost:5000/cleanup"
+
+if args.clean:
+    _ = requests.post(url=CLEANUP_URL,
                       json={"header_bytes": header_bytes})
 
 # Fragment the file.
@@ -257,4 +270,3 @@ while i < len(fragment_list):
     # On All-0 fragments, this function will wait for SIGFOX_DL_TIMER to expire
     # On All-1 fragments, this function will enter retransmission phase.
     post(fragment)
-
