@@ -2,7 +2,7 @@
 
 ## Uplink ACK-on-Error Single-byte SCHC Header
 
-The setting of Uplink ACK-on-Error Single-byte SCHC Header are:
+The settings of Uplink ACK-on-Error Single-byte SCHC Header are:
 
 * 300 bytes packet
 * Tile size: 11 bytes
