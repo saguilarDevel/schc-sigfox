@@ -9,6 +9,6 @@ pymakr.conf
 stats/LoPy/
 stats_file.json
 .vscode
-/stats/files/
-
-stats/
+/stats/files/LoPy
+/stats/files/server
+config/

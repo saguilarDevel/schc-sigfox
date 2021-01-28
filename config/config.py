@@ -4,8 +4,20 @@
 
 # Cloud Storage Bucket Name
 BUCKET_NAME = 'sigfoxschc'
+BUCKET_NAME = 'wyschc-niclabs'
 #
 CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
+CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 
 # File where we will store authentication credentials after acquiring them.
+CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+
+# Loss mask path
+LOSS_MASK = './loss_masks/loss_mask_0.txt'
+LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
+
+# Message to be fragmented
+MESSAGE = './comm/example_300.txt'
+PAYLOAD = './comm/PAYLOAD.txt'
+
 CREDENTIALS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'

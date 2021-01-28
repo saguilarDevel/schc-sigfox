@@ -5,7 +5,7 @@ import json
 
 
 def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
-    print("Uploading with threads...")
+    print("[BHF] Uploading with threads...")
     thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
     thread.start()
 
@@ -18,7 +18,7 @@ def upload_blob(bucket_name, blob_text, destination_blob_name):
     if type(blob_text) == bytes or type(blob_text) == bytearray:
         blob_text = blob_text.encode()
     blob.upload_from_string(str(blob_text))
-    print('File uploaded to {}.'.format(destination_blob_name))
+    print(f'[BHF] File uploaded to {destination_blob_name}.')
 
 
 def read_blob(bucket_name, blob_name):
@@ -32,7 +32,11 @@ def delete_blob(bucket_name, blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
-    blob.delete()
+    if blob is not None:
+        blob.delete()
+        print(f"[BHF] Deleted blob {blob_name}")
+    else:
+        print(f"[BHF] {blob_name} doesn't exist.")
 
 
 def exists_blob(bucket_name, blob_name):
@@ -47,7 +51,7 @@ def create_folder(bucket_name, folder_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(folder_name)
     blob.upload_from_string("")
-    print('Folder uploaded to {}.'.format(folder_name))
+    print(f'[BHF] Folder uploaded to {folder_name}.')
 
 
 def size_blob(bucket_name, blob_name):
@@ -56,6 +60,24 @@ def size_blob(bucket_name, blob_name):
     blob = bucket.get_blob(blob_name)
     return blob.size if blob else 0
 
+
+def initialize_blobs(bucket_name, profile):
+    if not exists_blob(bucket_name, "all_windows/"):
+        print("[BHF] Initializing... (be patient)")
+        create_folder(bucket_name, "all_windows/")
+
+        # For each window in the SCHC Profile, create its blob.
+        for i in range(2 ** profile.M):
+            create_folder(bucket_name, f"all_windows/window_{i}/")
+
+            # For each fragment in the SCHC Profile, create its blob.
+            for j in range(2 ** profile.N - 1):
+                upload_blob(bucket_name, "", f"all_windows/window_{i}/fragment_{i}_{j}")
+
+            # Create the blob for each bitmap.
+            upload_blob(bucket_name, "0"*profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
+
+        print("[BHF] BLOBs created")
 
 def send_ack(request, ack):
     device = request["device"]
