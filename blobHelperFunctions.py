@@ -78,11 +78,3 @@ def initialize_blobs(bucket_name, profile):
             upload_blob(bucket_name, "0"*profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
 
         print("[BHF] BLOBs created")
-
-def send_ack(request, ack):
-    device = request["device"]
-    print("ack string -> {}".format(ack.to_string()))
-    response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
-    response_json = json.dumps(response_dict)
-    print("response_json -> {}".format(response_json))
-    return response_json

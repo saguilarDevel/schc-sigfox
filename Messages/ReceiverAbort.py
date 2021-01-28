@@ -15,8 +15,9 @@ class ReceiverAbort(ACK):
                         w=w,
                         fcn='',
                         c='1')
-
+        self.header = header
         padding = ''
+        self.padding = padding
         # if the Header does not end at an L2 Word boundary,
         # append bits set to 1 as needed to reach the next L2 Word boundary.
         while len(header.string + padding) % profile.L2_WORD_SIZE != 0:
@@ -25,18 +26,19 @@ class ReceiverAbort(ACK):
         # append exactly one more L2 Word with bits all set to ones.
         padding += '1' * profile.L2_WORD_SIZE
 
-        super().__init__(profile, rule_id, dtag, w, c='1', bitmap='', padding=padding)
-
         #must check this method
         # sigfox ACK must be of downlink MTU size
-        while len(self.header.string + self.padding) < profile.MTU:
-            self.padding += '1'
+        while len(header.string + padding) < profile.DOWNLINK_MTU:
+            padding += '1'
+
+        super().__init__(profile, rule_id, dtag, w, c='1', bitmap='', padding=padding)
+
 
     def to_string(self):
-        return self.header.string + self.padding
+        return self.header + self.padding
 
     def to_bytes(self):
-        return bitstring_to_bytes(self.header.string + self.padding)
+        return bitstring_to_bytes(self.header + self.padding)
 
     def length(self):
         return len(self.header + self.padding)

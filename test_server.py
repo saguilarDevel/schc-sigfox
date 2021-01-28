@@ -19,7 +19,6 @@ from Entities.Reassembler import Reassembler
 from Entities.Sigfox import Sigfox
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
-from Messages.ReceiverAbort import ReceiverAbort
 from blobHelperFunctions import *
 from function import *
 from Messages.ReceiverAbort import ReceiverAbort
