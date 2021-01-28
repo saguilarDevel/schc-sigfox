@@ -102,21 +102,21 @@ Below is an example of the extended ACK format for a 150-byte SCHC Packet with e
 Note that the bitmap is added for windows 3 and 4, but with a bitmap of 0, as no fragment from that windows was received.
 
 ```text
-Extended ACK format: 
+Extended ACK format 1: 
 [ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
     000    00    0   1111011  01    0   1111101  10    0   0000000  11    0   0000000  41 padding bits
 ```
 
 When all SCHC fragments are correctly received, the Extended ACK format will have the C bit equal to 1 in the first 2 windows.
 ```text
-Extended ACK format: 
+Extended ACK format 1: 
 [ Rule ID | W | C-1 | W | C-1 | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
     000    00    1   01    1   10    0   0000000  11    0   0000000  35 padding bits
 ```
 
 Other option is to confirm that the SCHC Packet has been received completely by setting to 1 the C bit of all windows. 
 ```text
-Extended ACK format: 
+Extended ACK format 1: 
 [ Rule ID | W | C-1 | W | C-1 | W | C-1 | W | C-1 | (P-0)]
     000    00    1   01    1   10    0   11    0    49 padding bits
 ```

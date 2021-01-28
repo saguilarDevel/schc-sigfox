@@ -71,3 +71,17 @@ SCHC Sender Abort
 * Padding: (88 bits) 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
 
+
+## Uplink ACK-on-Error Mode: Two-byte SCHC Header
+
+The RECOMMENDED Fragmentation Header size is 16 bits, and it is composed as follows:
+* RuleID size: 8 bits
+* DTag size (T) is: 0 bits
+* Window index (W) size (M): 3 bits
+* Fragment Compressed Number (FCN) size (N): 5 bits.
+* MAX_ACK_REQUESTS: 5
+* WINDOW_SIZE: 31 (with a maximum value of FCN=0b11110)
+* Tile size: 10 bytes
+* Retransmission Timer: Application-dependent
+* Inactivity Timer: Application-dependent
+* RCS size: 0 bits (Not used)
