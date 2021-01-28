@@ -11,3 +11,4 @@ stats_file.json
 .vscode
 /stats/files/LoPy
 /stats/files/server
+config/

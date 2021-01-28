@@ -1,0 +1,23 @@
+# Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
+# lost, separated by windows:
+# 0 -> don't lose the fragment
+# 1 -> lose the fragment but accepts retransmissions
+# 2 -> lose the fragment, lose it's first retransmission
+# i > 0 -> lose the fragment i times
+
+0010000
+0000001
+0100000
+0000010
+
+# Se espera que se pierda un tile de cada ventana.
+# Al enviar el All-0 de la ventana 00 se espera por el ACK. Luego de recibir el ACK se envía la tercera tile. Se prosigue con la ventana siguiente.
+# Al enviar el All-0 de la ventana 01 se espera por el ACK. Como el ALL-0 se pierde, no llega ACK y el timer expira. Se prosigue con la ventana siguiente.
+# Al enviar el All-0 de la ventana 02 se espera por el ACK. El ACK reporta pérdidas de la ventana 01. Se transmite exitosamente el ALL-0 de dicha ventana.
+# Se continúa con la transmisión de la ventana 03. Una vez enviado el ALL-1 se espera por el ACK. El ACK reporta las pérdidas de la ventana 02. Se transmiten exitosamente dichas tiles.
+# Se transmite nuevamente el ALL-1. Se espera por el ACK que reportará las pérdidas de la ventana 03. Una vez recibido se retransmite exitosamente el tile faltante.
+# Ya finalizando, se envía el ALL-1 y se finaliza la transmisión.
+
+# Se espera lo siguiente:
+# TOTAL UPLINK: 32 (4 retransmisiones)
+# TOTAL DOWNLINK: 5

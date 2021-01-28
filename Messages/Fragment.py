@@ -11,6 +11,7 @@ class Fragment:
 
     header = None
     payload = None
+    string = ''
 
     def __init__(self, profile, fragment):
         self.profile = profile
@@ -31,35 +32,32 @@ class Fragment:
         c = ""
 
         self.header = Header(self.profile, rule_id, dtag, window, fcn, c)
-
         self.payload = payload
+        self.bytes = self.header.bytes + self.payload
+        self.string = self.bytes.decode()
+        self.hex = self.bytes.hex()
 
     def test(self):
-        print("Header: " + self.header.string)
-        print("Payload: " + str(self.payload))
+        print(f"Header: {self.header.string}")
+        print(f"Payload: {str(self.payload)}")
+        print(f"String: {self.string}")
+        print(f"Bytes: {self.bytes}")
+        print(f"Hex: {self.hex}")
 
     def is_all_1(self):
         fcn = self.header.FCN
-        fcn_set = set()
-        for x in fcn:
-            fcn_set.add(x)
-        return len(fcn_set) == 1 and "1" in fcn_set
+        payload = self.payload.decode()
+        return fcn[0] == '1' and is_monochar(fcn) and not (payload[0] == '0' and is_monochar(payload))
 
     def is_all_0(self):
         fcn = self.header.FCN
-        fcn_set = set()
-        for x in fcn:
-            fcn_set.add(x)
-        return len(fcn_set) == 1 and "0" in fcn_set
+        return fcn[0] == '0' and is_monochar(fcn)
+
+    def expects_ack(self):
+        return self.is_all_0() or self.is_all_1()
 
     def is_sender_abort(self):
         fcn = self.header.FCN
         padding = self.payload.decode()
-        print('padding:{}'.format(padding))
-        print('fcn[0] == 1: {}'.format(fcn[0] == '1'))
-        print('is_monochar(fcn): {}'.format(is_monochar(fcn)))
-        print('padding[0]: {}'.format(padding[0]))
-        print('is_monochar(padding): {}'.format(is_monochar(padding)))
-        print('1 not in padding: {}'.format('1' in padding))
-        # return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)
         return fcn[0] == '1' and is_monochar(fcn) and '1' not in padding
+        # return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)

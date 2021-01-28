@@ -1,5 +1,7 @@
-#  FUNCTIONS
 import json
+
+
+# ====== HELPER FUNCTIONS ======
 
 
 def zfill(string, width):
@@ -9,18 +11,8 @@ def zfill(string, width):
         return string
 
 
-def insert_index(ls, pos, elmt):
-    while len(ls) < pos:
-        ls.append([])
-    ls.insert(pos, elmt)
-
-
 def replace_bit(string, position, value):
     return '%s%s%s' % (string[:position], value, string[position + 1:])
-
-
-def find(string, character):
-    return [i for i, ltr in enumerate(string) if ltr == character]
 
 
 def bitstring_to_bytes(s):

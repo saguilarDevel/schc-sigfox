@@ -1,17 +1,10 @@
-import threading
-
 from google.cloud import storage
-import json
 
 
-def upload_blob_using_threads(bucket_name, blob_text, destination_blob_name):
-    print("[BHF] Uploading with threads...")
-    thread = threading.Thread(target=upload_blob, args=(bucket_name, blob_text, destination_blob_name))
-    thread.start()
+# ====== CLOUD STORAGE FUNCTIONS ======
 
 
 def upload_blob(bucket_name, blob_text, destination_blob_name):
-    """Uploads a file to the bucket."""
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
@@ -26,17 +19,6 @@ def read_blob(bucket_name, blob_name):
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
     return blob.download_as_string().decode('utf-8') if blob else None
-
-
-def delete_blob(bucket_name, blob_name):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    if blob is not None:
-        blob.delete()
-        print(f"[BHF] Deleted blob {blob_name}")
-    else:
-        print(f"[BHF] {blob_name} doesn't exist.")
 
 
 def exists_blob(bucket_name, blob_name):
@@ -54,11 +36,15 @@ def create_folder(bucket_name, folder_name):
     print(f'[BHF] Folder uploaded to {folder_name}.')
 
 
-def size_blob(bucket_name, blob_name):
+def delete_blob(bucket_name, blob_name):
     storage_client = storage.Client()
-    bucket = storage_client.get_bucket(bucket_name)
+    bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
-    return blob.size if blob else 0
+    if blob is not None:
+        blob.delete()
+        print(f"[BHF] Deleted blob {blob_name}")
+    else:
+        print(f"[BHF] {blob_name} doesn't exist.")
 
 
 def initialize_blobs(bucket_name, profile):
@@ -75,14 +61,6 @@ def initialize_blobs(bucket_name, profile):
                 upload_blob(bucket_name, "", f"all_windows/window_{i}/fragment_{i}_{j}")
 
             # Create the blob for each bitmap.
-            upload_blob(bucket_name, "0"*profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
+            upload_blob(bucket_name, "0" * profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
 
         print("[BHF] BLOBs created")
-
-def send_ack(request, ack):
-    device = request["device"]
-    print("ack string -> {}".format(ack.to_string()))
-    response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
-    response_json = json.dumps(response_dict)
-    print("response_json -> {}".format(response_json))
-    return response_json
