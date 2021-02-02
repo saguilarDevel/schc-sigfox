@@ -656,6 +656,13 @@ def wyschc_get():
                 current_window) + "th window.")
             print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
 
+            # Controlled Errors check
+            losses_mask = read_blob(BUCKET_NAME, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+            if (losses_mask[fragment_number]) != '0':
+                losses_mask = replace_bit(losses_mask, fragment_number, str(int(losses_mask[fragment_number])-1))
+                upload_blob(BUCKET_NAME, losses_mask, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+                print("[LOSS] The fragment was lost.")
+                return 'fragment lost', 204
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
