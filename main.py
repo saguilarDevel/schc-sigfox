@@ -107,7 +107,7 @@ def hello_get(request):
         # Convert to a Fragment class for easier manipulation.
         fragment_message = Fragment(profile_uplink, data)
 
-        if 'enable_losses' in request_dict and not(fragment_message.is_all_0() or fragment_message.is_all_1()):
+        if 'enable_losses' in request_dict:
             if request_dict['enable_losses']:
                 loss_rate = request_dict["loss_rate"]
                 # loss_rate = 10
@@ -115,6 +115,13 @@ def hello_get(request):
                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                 if coin * 100 < loss_rate:
                     print("[LOSS] The fragment was lost.")
+                    if fragment_message.is_all_1():
+                        last_sequence_number = read_blob(BUCKET_NAME, "SSN")
+                        print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
+                        if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
+                            # We do that to save the last SSN value for future use (when the next All-1 Arrives)
+                            # In a Real Loss Scenario we will not know the SSN...
+                            upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
                     return 'fragment lost', 204
 
         # Get current window for this fragment.
@@ -148,12 +155,12 @@ def hello_get(request):
             print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
 
             #Controlled Errors check
-            losses_mask = read_blob(BUCKET_NAME, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
-            if (losses_mask[fragment_number]) != '0':
-                losses_mask = replace_bit(losses_mask, fragment_number, str(int(losses_mask[fragment_number])-1))
-                upload_blob(BUCKET_NAME, losses_mask, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
-                print("[LOSS] The fragment was lost.")
-                return 'fragment lost', 204
+            # losses_mask = read_blob(BUCKET_NAME, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+            # if (losses_mask[fragment_number]) != '0':
+            #     losses_mask = replace_bit(losses_mask, fragment_number, str(int(losses_mask[fragment_number])-1))
+            #     upload_blob(BUCKET_NAME, losses_mask, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+            #     print("[LOSS] The fragment was lost.")
+            #     return 'fragment lost', 204
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
@@ -166,6 +173,9 @@ def hello_get(request):
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
             print("[RECV] This seems to be the final fragment.")
+            # Upload current timestamp.
+            time_received = int(request_dict["time"])
+            upload_blob(BUCKET_NAME, time_received, "timestamp")
             print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_1(), fragment_message.is_all_0()))
             # print("RULE_ID: {}, W:{}, FCN:{}".format(fragment.header.RULE_ID, fragment.header.W, fragment.header.FCN))
             # Update bitmap and upload it.
@@ -196,6 +206,13 @@ def hello_get(request):
 
             # If the ACK bitmap has a 0 at the end of a non-final window, a fragment has been lost.
             if fragment_message.is_all_0() and '0' in bitmap_ack:
+                if 'enable_dl_losses' in request_dict:
+                    if request_dict['enable_dl_losses']:
+                        coin = random.random()
+                        print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                        if coin * 100 < loss_rate:
+                            print("[LOSS-ALL0] The Downlink NACK was lost.")
+                            return 'Downlink lost', 204
                 print("[ALL0] Sending ACK for lost fragments...")
                 print("bitmap with errors -> {}".format(bitmap_ack))
                 # Create an ACK message and send it.
@@ -230,8 +247,16 @@ def hello_get(request):
                 # 1110001 is a valid bitmap, 1101001 is not.
 
                 pattern2 = re.compile("0*1")
-                if pattern2.fullmatch(bitmap):
-                    # Downlink Errors
+                if pattern2.fullmatch(bitmap_ack):
+                    if 'enable_dl_losses' in request_dict:
+                        if request_dict['enable_dl_losses']:
+                            coin = random.random()
+                            print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                            if coin * 100 < loss_rate:
+                                print("[LOSS-ALL1] The Downlink ACK was lost.")
+                                return 'Downlink lost', 204
+                    print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
+                    # Downlink Controlled Errors
                     dl_errors = int(read_blob(BUCKET_NAME, "dl_errors"))
                     if dl_errors == 0:
                         last_index = 0
@@ -271,11 +296,18 @@ def hello_get(request):
                 pattern = re.compile("1*0*1")
 
                 # If the bitmap matches the regex, check if the last two received fragments are consecutive.
-                if pattern.fullmatch(bitmap):
-
+                if pattern.fullmatch(bitmap_ack):
+                    print("SSN is {} and last SSN is {}".format(sigfox_sequence_number,last_sequence_number))
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
+                    if 'enable_dl_losses' in request_dict:
+                        if request_dict['enable_dl_losses']:
+                            coin = random.random()
+                            print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                            if coin * 100 < loss_rate:
+                                print("[LOSS-ALL1] The Downlink ACK was lost.")
+                                return 'Downlink lost', 204
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
-                        # Downlink Errors
+                        # Downlink Controlled Errors
                         dl_errors = int(read_blob(BUCKET_NAME, "dl_errors"))
                         if dl_errors == 0:
                             last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
@@ -311,7 +343,14 @@ def hello_get(request):
                             return '', 204
                     else:
                         # Send NACK at the end of the window.
-                        print("[ALLX] Sending NACK for lost fragments...")
+                        if 'enable_dl_losses' in request_dict:
+                            if request_dict['enable_dl_losses']:
+                                coin = random.random()
+                                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                                if coin * 100 < loss_rate:
+                                    print("[LOSS-ALL1] The Downlink NACK was lost.")
+                                    return 'Downlink lost', 204
+                        print("[ALLX] Sending NACK for lost fragments because of SSN...")
                         ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                         response_json = send_ack(request_dict, ack)
                         return response_json, 200
@@ -320,6 +359,13 @@ def hello_get(request):
                 # The same happens if the bitmap doesn't match the regex.
                 else:
                     # Send NACK at the end of the window.
+                    if 'enable_dl_losses' in request_dict:
+                        if request_dict['enable_dl_losses']:
+                            coin = random.random()
+                            print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
+                            if coin * 100 < loss_rate:
+                                print("[LOSS-ALL1] The Downlink NACK was lost.")
+                                return 'Downlink lost', 204
                     print("[ALLX] Sending NACK for lost fragments...")
                     ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                     response_json = send_ack(request_dict, ack)
@@ -441,5 +487,4 @@ def clean(request):
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
         if exists_blob(BUCKET_NAME, "Reassembled_message"):
             delete_blob(BUCKET_NAME, "Reassembled_message")
-
         return '', 204

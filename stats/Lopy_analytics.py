@@ -41,8 +41,15 @@ print("mean:{}".format(df_nowait['send_time'].mean(axis=0, skipna=True)))
 print("std:{}".format(df_nowait['send_time'].std(axis=0, skipna=True)))
 
 df_wait = df1_transposed[df1_transposed['downlink_enable'].isin([True])]
+print("Regular Fragments")
+print(df_nowait['send_time'])
+print("count:{}".format(df_nowait['send_time'].count()))
+print("sum:{}".format(df_nowait['send_time'].sum(axis=0, skipna=True)))
+print("mean:{}".format(df_nowait['send_time'].mean(axis=0, skipna=True)))
+print("std:{}".format(df_nowait['send_time'].std(axis=0, skipna=True)))
 
-if tx_json['total_number_of_fragments'] < 30:
+
+if len(df_wait[df_wait['RULE_ID'] == "00"]) != 0:
     df_all0 = df_wait[df_wait['FCN'].isin(['000'])]
     df_all1 = df_wait[df_wait['FCN'].isin(['111'])]
 else:
