@@ -223,9 +223,9 @@ parser.add_argument('--cleanonly', action='store_true', help="If sets, cleans th
 args = parser.parse_args()
 
 if args.mode == 'cloud':
-    SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_receiver"
-    REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassemble"
-    CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
+    SCHC_POST_URL = config.SCHC_POST_URL
+    REASSEMBLER_URL = config.REASSEMBLER_URL
+    CLEANUP_URL = config.CLEANUP_URL
 
 elif args.mode == 'local':
     SCHC_POST_URL = "https://localhost:5000/schc_receiver"

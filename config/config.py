@@ -3,12 +3,10 @@
 # git rm --cached config/config.py
 
 # Cloud Storage Bucket Name
-BUCKET_NAME = 'wyschc-niclabs'
-#
-CLIENT_SECRETS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+BUCKET_NAME = 'wyschc-2021'
 
 # File where we will store authentication credentials after acquiring them.
-CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
+CLIENT_SECRETS_FILE = './credentials/wyschc-303621-57ad8d989a41.json'
 
 # Loss mask path
 LOSS_MASK = './loss_masks/loss_mask_0.txt'
@@ -17,3 +15,8 @@ LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
 # Message to be fragmented
 MESSAGE = './comm/example_300.txt'
 PAYLOAD = './comm/PAYLOAD.txt'
+
+# GCP Cloud Functions URL
+SCHC_POST_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/schc_receiver"
+REASSEMBLER_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/reassemble"
+CLEANUP_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/cleanup"
