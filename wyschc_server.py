@@ -369,11 +369,11 @@ def schc_receiver():
                             print("[ALL1] Integrity checking complete, launching reassembler.")
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
-                            last_index = max(list(map(int, list(sequence_numbers.keys())))) + 1
-                            upload_blob_using_threads(BUCKET_NAME,
-                                                      data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                                      f"all_windows/window_{current_window}/"
-                                                      f"fragment_{current_window}_{last_index}")
+                            last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
+                            upload_blob(BUCKET_NAME,
+                                        data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                                        f"all_windows/window_{current_window}/"
+                                        f"fragment_{current_window}_{last_index}")
                             try:
                                 _ = requests.post(url=REASSEMBLER_URL,
                                                   json={"last_index": last_index,
@@ -423,7 +423,6 @@ def schc_receiver():
 
 @app.route('/reassemble', methods=['GET', 'POST'])
 def reassemble():
-
     CLEANUP_URL = "http://localhost:5000/cleanup"
 
     if request.method == "POST":
@@ -441,7 +440,7 @@ def reassemble():
 
         # Initialize SCHC variables.
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        n = profile.N
+        window_size = profile.WINDOW_SIZE
 
         print("[RSMB] Loading fragments")
 
@@ -450,7 +449,7 @@ def reassemble():
 
         # For each window, load every fragment into the fragments array
         for i in range(current_window + 1):
-            for j in range(2 ** n - 1):
+            for j in range(window_size):
                 print(f"[RSMB] Loading fragment {j}")
                 fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
                 print(f"[RSMB] Fragment data: {fragment_file}")
