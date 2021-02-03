@@ -22,7 +22,7 @@ The FCN field indicates the size of the data packet.
 The first fragment is marked with FCN = X-1, where X is the number of fragments the message is splitted.
 All fragments are marked with decreasing FCN values.
 Last packet fragment is marked with the FCN = All-1 (1111).
-#### Case No losses
+#### Case 1: No losses
 
 All fragments are send and received successfully.
 ```text
@@ -42,7 +42,7 @@ For example, if the first fragment is numbered with FCN=6, the receiver can
 expect 6 messages more (with FCN going from 5 downward, and the last with a
 FCN equal to 15).
 
-#### Case losses on any fragment except the first.
+#### Case 2: losses on any fragment except the first.
 
 
 
@@ -57,7 +57,7 @@ FCN equal to 15).
           |-------FCN=15, Seq=7------->| Missing Fragment
         (End)
 ```
-#### Case The first fragment is lost
+#### Case 3: The first fragment is lost
 
 If some fragments are lost before the first SCHC fragment arrives, the Receiver
 may not be able to know. One solution is by using the Sequence number. 
@@ -113,7 +113,7 @@ Other option may be to include a Reassamble Check Sequence (RCS) as proposed in 
 The single-byte SCHC header ACK-on-Error mode allows packet sizes up to
 300 bytes. The SCHC fragments may be delivered asynchronously and opportunistically. 
 
-#### Case No losses
+#### Case 1: No losses
 
 The downlink must be enable in the sender to allow a message from the receiver. 
 The DL Enable in the figures shows where the sender should enable the downlink, and 
@@ -140,7 +140,7 @@ DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
 In the LoPy, if an ACK is not received, the socket performs a timeout with an error 
 number 115 [Errno 115] ENETDOWN.
 
-#### Case Fragments lost in first window:
+#### Case 2: Fragments lost in first window
 
 In this case, fragments are lost in the first window (W=0). 
 After the first All-0 message arrives, the Receiver
@@ -148,7 +148,7 @@ leverage the opportunity and sends an ACK with the corresponding bitmap and C=0.
 
 After the missing fragment from the first window (W=0) are resend, the sender without
 opening a reception window, continues to the following window.
-The All-1 fragment is send, the downlink is enable and the ACK received with a C=1.
+The All-1 fragment is sent, the downlink is enabled and the ACK received with a C=1.
 
 ```text
         Sender                      Receiver
@@ -174,15 +174,15 @@ DL Enable |-----W=1, FCN=7, Seq=13---->| All fragments received
 
 
 
-#### Case Fragments All-0 lost in first window (W=0):
+#### Case 3: Fragment All-0 lost in first window (W=0)
 
 The All-0 of the first window (W=0) is lost, therefore 
 the Receiver waits for next All-X message to generate 
-the corresponding ACK, notifying the absence of the All-0 of window 0.
+the ACK of window 0, with a bitmap notifying the absence of the All-0 of window 0.
 
 The senders resends the missing All-0 messages (with any other missing 
 fragment from window 0). Note that this behaviour can take place in any
-intermeadiate window if the All-0 message is lost.
+intermediate window if the All-0 message is lost.
 
 ```text
         Sender                      Receiver
@@ -291,7 +291,7 @@ DL enable |-----W=1, FCN=7 (111), Seq=17---->|
 
 #### Cases where the All-0 or All-1 are lost
 
-##### The last window only has the All-1
+#### Case 4: The last window only has the All-1
 
 
 ```text
@@ -310,7 +310,7 @@ DL enable |-----W=1, FCN=7 (111), Seq=8----->|
 ```
 The sequence number between the last 2 messages is consecutive. 
 
-##### Only the All-1 in last window is received
+#### Case 5: Only the All-1 in last window is received and the All-0 is lost in first window
 
 ```text
                  Sender                            Receiver
@@ -327,21 +327,21 @@ DL enable |-----W=0, FCN=0 (000), Seq=7--X-->| Bitmap: 1111110
           |-----W=1, FCN=4 (011), Seq=10-X-->|
 DL enable |-----W=1, FCN=7 (111), Seq=11---->| 
           |<--------- ACK, W=0, C=0 ---------| Bitmap:1111110
-          |-----W=0, FCN=5 (101), Seq=13---->|
-          |-----W=0, FCN=3 (011), Seq=14---->|
-DL enable |-----W=0, FCN=0 (000), Seq=15---->| 
-          |<--------- ACK, W=1, C=0 ---------| Bitmap:0000001
-          |-----W=1, FCN=6 (110), Seq=17---->|
-          |-----W=1, FCN=4 (011), Seq=18---->| All fragments received
-DL enable |-----W=1, FCN=7 (111), Seq=19---->|
+          |-----W=0, FCN=0 (000), Seq=15---->| 
+DL enable |-----W=1, FCN=7 (111), Seq=16---->|
+          |<--------- ACK, W=1, C=0 ---------| Bitmap:0000001 *
+          |-----W=1, FCN=6 (110), Seq=18---->|
+          |-----W=1, FCN=5 (101), Seq=19---->|
+          |-----W=1, FCN=4 (011), Seq=20---->| All fragments received
+DL enable |-----W=1, FCN=7 (111), Seq=21---->|
           |<--------- ACK, W=1, C=1 ---------| C=1
         (End)
 ```
+(*) There can be problems detecting the losts of fragments in the last window.
 
 
 
-
-#### Case ACK is lost:
+#### Case 6: ACK is lost
 
 SCHC over sigfox does not implement the SCHC ACK REQ message, 
 instead it uses the SCHC All-1 message to request an ACK, when required.
@@ -369,7 +369,7 @@ The number of times an ACK will be requested is determined by the
  MAX_ACK_REQUESTS. The recommended value in SCHC over sigfox is 5.
  
  
- #### Case SCHC Sender-Abort:
+ #### Case 7: SCHC Sender-Abort
 
 The sender may need to send a sender abort to abort current communication.
 This may happen, for example, if the All-1 has been sent MAX_ACK_REQUESTS times.
@@ -403,7 +403,7 @@ DL Enable |----Sender-Abort, Seq=19--->| exit with error condition
         (End)
 ```
 
-### Case receiver Abort
+### Case 8: SCHC Receiver Abort
 
 The reciever may need to send a receiver abort to abort current communication.
 This message can only be send after a DL enable.

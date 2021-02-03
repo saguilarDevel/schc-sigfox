@@ -59,5 +59,5 @@ class Fragment:
     def is_sender_abort(self):
         fcn = self.header.FCN
         padding = self.payload.decode()
-        return fcn[0] == '1' and is_monochar(fcn) and '1' not in padding
-        # return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)
+        # return fcn[0] == '1' and is_monochar(fcn) and '1' not in padding
+        return fcn[0] == '1' and is_monochar(fcn) and padding[0] == '0' and is_monochar(padding)

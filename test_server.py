@@ -33,9 +33,17 @@ app = Flask(__name__)
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
 
 # Filename must be a json file starting with a /
-filename = '/fragments_stats_v5.14.json'
+filename = '/fragments_stats_v7.0.json'
 filename_dir = os.path.dirname(__file__)
 save_path = os.path.join(filename_dir, 'stats', 'files', 'server')
+
+
+def cleanup(BUCKET_NAME, profile):
+    try:
+        _ = requests.post(url='http://localhost:5000/clean',
+                          json={"header_bytes": int(profile.HEADER_LENGTH / 8)}, timeout=1)
+    except requests.exceptions.ReadTimeout:
+        pass
 
 def save_current_fragment(fragment):
     global filename_dir
@@ -174,6 +182,10 @@ def after_request(response):
             if 'fragment lost' in str(response.get_data()):
                 print('[after_request]: ups.. fragment lost')
                 g.current_fragment['s-lost'] = True
+            if 'Sender-Abort received' in str(response.get_data()):
+                print('[after_request]: Sender-Abort received, 204')
+                g.current_fragment['s-sender-abort'] = True
+                
 
         if response.status_code == 200:
             print("[after_request]: response.status_code == 200")
@@ -475,20 +487,32 @@ def clean():
     if request.method == 'POST':
 
         # Get request JSON.
-        print("[Clean]: POST RECEIVED")
-        BUCKET_NAME = config.BUCKET_NAME
-        request_dict = request.get_json()
-        print('[Clean]: Received Request message: {}'.format(request_dict))
-        header_bytes = int(request_dict["header_bytes"])
-        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        bitmap = ''
-        for i in range(2 ** profile.N - 1):
-            bitmap += '0'
-        for i in range(2 ** profile.M):
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
-        print("[Clean]: Clean completed")
+        # print("[Clean]: POST RECEIVED")
+        # BUCKET_NAME = config.BUCKET_NAME
+        # request_dict = request.get_json()
+        # print('[Clean]: Received Request message: {}'.format(request_dict))
+        # header_bytes = int(request_dict["header_bytes"])
+        # profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        # bitmap = ''
+        # for i in range(2 ** profile.N - 1):
+        #     bitmap += '0'
+        # for i in range(2 ** profile.M):
+        #     upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+        #     upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
+        # print("[Clean]: Clean completed")
 
+        header_bytes = request.get_json()["header_bytes"]
+        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+
+        print("[CLN] Deleting timestamp blob")
+        delete_blob(config.BUCKET_NAME, "timestamp")
+
+        print("[CLN] Resetting SSN")
+        upload_blob(config.BUCKET_NAME, "{}", "SSN")
+
+        print("[CLN] Initializing fragments...")
+        delete_blob(config.BUCKET_NAME, "all_windows/")
+        initialize_blobs(config.BUCKET_NAME, profile)
         return '', 204
 
 @app.route('/losses_mask', methods=['GET', 'POST'])
@@ -580,7 +604,7 @@ def wyschc_get():
         fcn_dict = {}
         for j in range(2 ** n - 1):
             fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], 3)] = j
-
+        print("{}".format(fcn_dict))
         # Parse raw_data into "data = [header, payload]
         # Convert to a Fragment class for easier manipulation.
         header = bytes.fromhex(raw_data[:2])
@@ -607,6 +631,7 @@ def wyschc_get():
         try:
             fd = open(config.LOSS_MASK_MODIFIED, "r")
         except FileNotFoundError:
+            print('opening: {}'.format(config.LOSS_MASK))
             fd = open(config.LOSS_MASK, "r")
         finally:
             loss_mask = []
@@ -643,7 +668,7 @@ def wyschc_get():
 
             # If the inactivity timer has been reached, abort communication.
             if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
-                print("[RECV] Inactivity timer reached. Ending session.")
+                print("[RECV] Inactivity timer reached. Ending session. {}".format(time_received - last_time_received))
                 receiver_abort = ReceiverAbort(profile, fragment_message.header)
                 print("Sending Receiver Abort")
                 response_json = send_ack(request_dict, receiver_abort)
@@ -662,7 +687,7 @@ def wyschc_get():
             if loss_mask[-1] != 0:
                 # CHECK THIS: loss_mask [-1] is not always the last fragment............
                 loss_mask[-1] -= 1
-                with open("loss_mask_modified.txt", "w") as fd:
+                with open(config.LOSS_MASK_MODIFIED, "w") as fd:
                     for i in loss_mask:
                         fd.write(str(i))
                 return 'fragment lost', 204
@@ -681,9 +706,10 @@ def wyschc_get():
             position = current_window * profile.WINDOW_SIZE + fragment_number
             if loss_mask[position] != 0:
                 loss_mask[position] -= 1
-                with open("loss_mask_modified.txt", "w") as fd:
+                with open(config.LOSS_MASK_MODIFIED, "w") as fd:
                     for i in loss_mask:
                         fd.write(str(i))
+                print(f"Loss mask after loss: {loss_mask}")
                 return 'fragment lost', 204
 
             upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
@@ -692,6 +718,16 @@ def wyschc_get():
             print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment "
                   f"of the {str(current_window)}th window.")
             print(f"[RECV] Sigfox sequence number: {str(sigfox_sequence_number)}")
+
+            # Controlled Errors check
+            # losses_mask = read_blob(BUCKET_NAME,
+            #                         "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+            # if (losses_mask[fragment_number]) != '0':
+            #     losses_mask = replace_bit(losses_mask, fragment_number, str(int(losses_mask[fragment_number]) - 1))
+            #     upload_blob(BUCKET_NAME, losses_mask,
+            #                 "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
+            #     print("[LOSS] The fragment was lost.")
+            #     return 'fragment lost', 204
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
@@ -808,7 +844,9 @@ def wyschc_get():
                             # response_json = send_ack(request_dict, last_ack)
                             print(f"200, Response content -> {response_json}")
                             print("[ALL1] Last ACK has been sent.")
-                            cleanup(BUCKET_NAME, profile)
+                            # should not clean here, last ACK is sent, but if it gets lost, then you need to resend
+                            # if clean, there is nothing to resend.
+                            #cleanup(BUCKET_NAME, profile)
                             return response_json, 200
                     # If the last two fragments are not consecutive, or the bitmap didn't match the regex,
                     # send an ACK reporting losses.
@@ -881,12 +919,14 @@ def http_reassemble():
         with open(config.PAYLOAD, "w") as file:
             file.write(payload)
         # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload.decode("utf-8"), "PAYLOAD")
-        try:
-            _ = requests.post(url='http://localhost:5000/clean',
-                              json={"header_bytes": header_bytes}, timeout=1)
-        except requests.exceptions.ReadTimeout:
-            pass
+        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
+        # try:
+        #     print("Waiting INACTIVITY_TIMER_VALUE: {} seg for cleaning".format(profile_uplink.INACTIVITY_TIMER_VALUE))
+        #     time.sleep(profile_uplink.INACTIVITY_TIMER_VALUE)
+        #     _ = requests.post(url='http://localhost:5000/clean',
+        #                       json={"header_bytes": header_bytes}, timeout=1)
+        # except requests.exceptions.ReadTimeout:
+        #     pass
         return '', 204
 
 
