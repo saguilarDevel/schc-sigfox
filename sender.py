@@ -42,7 +42,7 @@ def post(fragment_sent, retransmit=False):
         "time": str(int(time.time())),
         "data": fragment_sent.to_hex(),
         "seqNumber": str(seqNumber),
-        "ack": fragment_sent.expects_ack() and not retransmit
+        "ack": "true" if fragment_sent.expects_ack() and not retransmit else "false"
     }
 
     print(f"[POST] Posting fragment {fragment_sent.HEADER.to_string()} ({fragment_sent.to_hex()}) to {SCHC_POST_URL}")

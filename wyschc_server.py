@@ -254,7 +254,7 @@ def schc_receiver():
                         f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # If the fragment requests an ACK...
-        if ack_req:
+        if ack_req == "true":
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
             # This bitmap corresponds to the lowest-numered window with losses.
