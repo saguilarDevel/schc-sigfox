@@ -17,8 +17,9 @@ from function import *
 
 app = Flask(__name__)
 
-@app.route('/schc_post', methods=['GET', 'POST'])
-def schc_post():
+
+@app.route('/schc_receiver', methods=['GET', 'POST'])
+def schc_receiver():
     """HTTP Cloud Function.
     Args:
         request (flask.Request): The request object.
@@ -29,8 +30,8 @@ def schc_post():
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
     """
 
-    REASSEMBLER_URL = "https://localhost:5000/reassembler"
-    CLEANUP_URL = "https://localhost:5000/cleanup"
+    REASSEMBLER_URL = "http://localhost:5000/reassembler"
+    CLEANUP_URL = "http://localhost:5000/cleanup"
 
     # File where we will store authentication credentials after acquiring them.
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
@@ -97,10 +98,10 @@ def schc_post():
             return 'Sender-Abort received', 204
 
         # Get data from this fragment.
-        fcn = fragment_message.header.FCN
-        rule_id = fragment_message.header.RULE_ID
-        dtag = fragment_message.header.DTAG
-        current_window = int(fragment_message.header.W, 2)
+        fcn = fragment_message.HEADER.FCN
+        rule_id = fragment_message.HEADER.RULE_ID
+        dtag = fragment_message.HEADER.DTAG
+        current_window = int(fragment_message.HEADER.W, 2)
 
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
@@ -161,7 +162,7 @@ def schc_post():
                 # If the inactivity timer has been reached, abort communication.
                 if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
                     print("[RECV] Inactivity timer reached. Ending session.")
-                    receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                    receiver_abort = ReceiverAbort(profile, fragment_message.HEADER)
                     print("Sending Receiver Abort")
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
@@ -189,7 +190,7 @@ def schc_post():
 
         # Else, it is a normal fragment.
         else:
-            fragment_number = fcn_dict[fragment_message.header.FCN]
+            fragment_number = fcn_dict[fragment_message.HEADER.FCN]
 
             # Check if fragment is to be lost
             position = current_window * profile.WINDOW_SIZE + fragment_number
@@ -213,7 +214,7 @@ def schc_post():
                 # If the inactivity timer has been reached, abort communication.
                 if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
                     print("[RECV] Inactivity timer reached. Ending session.")
-                    receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                    receiver_abort = ReceiverAbort(profile, fragment_message.HEADER)
                     print("Sending Receiver Abort")
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
@@ -422,7 +423,7 @@ def schc_post():
 @app.route('/reassemble', methods=['GET', 'POST'])
 def reassemble():
 
-    CLEANUP_URL = "https://localhost:5000/cleanup"
+    CLEANUP_URL = "http://localhost:5000/cleanup"
 
     if request.method == "POST":
         print("[RSMB] The reassembler has been launched.")
@@ -438,8 +439,8 @@ def reassemble():
         BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        n = profile_uplink.N
+        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        n = profile.N
 
         print("[RSMB] Loading fragments")
 
@@ -461,7 +462,7 @@ def reassemble():
 
         # Instantiate a Reassembler and start reassembling.
         print("[RSMB] Reassembling")
-        reassembler = Reassembler(profile_uplink, fragments)
+        reassembler = Reassembler(profile, fragments)
         payload = bytearray(reassembler.reassemble()).decode("utf-8")
 
         print("[RSMB] Uploading result")

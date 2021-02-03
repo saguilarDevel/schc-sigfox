@@ -6,8 +6,8 @@ from localpackage.classes import Sigfox, Reassembler
 # ====== GLOBAL VARIABLES ======
 
 
-BUCKET_NAME = 'wyschc-niclabs'
-CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
+BUCKET_NAME = 'wyschc-2021'
+CLEANUP_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/cleanup"
 
 
 # ====== MAIN ======
