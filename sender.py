@@ -1,6 +1,5 @@
 import argparse
 import json
-import sys
 import time
 
 import requests
@@ -25,7 +24,7 @@ retransmitted = 0
 def post(fragment_sent, retransmit=False):
     global seqNumber, attempts, current_window, last_window, i, sent, received, retransmitted
     headers = {'content-type': 'application/json'}
-    profile = fragment_sent.profile
+    profile = fragment_sent.PROFILE
 
     if fragment_sent.is_all_0() and not retransmit:
         print("[POST] This is an All-0. Using All-0 SIGFOX_DL_TIMEOUT.")
@@ -41,12 +40,12 @@ def post(fragment_sent, retransmit=False):
         "deviceType": "WYSCHC",
         "device": device,
         "time": str(int(time.time())),
-        "data": fragment_sent.hex,
+        "data": fragment_sent.to_hex(),
         "seqNumber": str(seqNumber),
         "ack": fragment_sent.expects_ack() and not retransmit
     }
 
-    print(f"[POST] Posting fragment {fragment_sent.header.string} ({fragment_sent.hex}) to {SCHC_POST_URL}")
+    print(f"[POST] Posting fragment {fragment_sent.HEADER.to_string()} ({fragment_sent.to_hex()}) to {SCHC_POST_URL}")
 
     try:
         response = requests.post(SCHC_POST_URL, data=json.dumps(payload_dict), headers=headers, timeout=request_timeout)
@@ -86,7 +85,7 @@ def post(fragment_sent, retransmit=False):
             ack = response.json()[device]["downlinkData"]
 
             # Parse ACK
-            ack_object = ACK.parse_from_hex(profile_uplink, ack)
+            ack_object = ACK.parse_from_hex(profile, ack)
 
             if ack_object.is_receiver_abort():
                 print("ERROR: Receiver Abort received. Aborting communication.")
@@ -97,10 +96,10 @@ def post(fragment_sent, retransmit=False):
                 exit(1)
 
             # Extract data from ACK
-            ack_window = ack_object.w
-            ack_window_number = ack_object.window_number
-            c = ack_object.c
-            bitmap = ack_object.bitmap
+            ack_window = ack_object.HEADER.W
+            ack_window_number = ack_object.HEADER.WINDOW_NUMBER
+            c = ack_object.HEADER.C
+            bitmap = ack_object.BITMAP
             print(f"ACK: {ack}")
             print(f"ACK window: {str(ack_window)}")
             print(f"ACK bitmap: {bitmap}")
@@ -128,7 +127,7 @@ def post(fragment_sent, retransmit=False):
                         # (C = 0 but transmission complete)
                         if last_bitmap[0] == '1' and all(last_bitmap):
                             print("ERROR: SCHC ACK shows no missing tile at the receiver.")
-                            post(SenderAbort(fragment_sent.profile, fragment_sent.header))
+                            post(SenderAbort(fragment_sent.PROFILE, fragment_sent.HEADER))
 
                         # Otherwise (fragments are lost),
                         else:
@@ -139,9 +138,9 @@ def post(fragment_sent, retransmit=False):
                                     print(
                                         f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
                                     # Try sending again the lost fragment.
-                                    fragment_to_be_resent = Fragment(profile_uplink,
+                                    fragment_to_be_resent = Fragment(profile,
                                                                      fragment_list[window_size * ack_window + j])
-                                    print(f"Lost fragment: {fragment_to_be_resent.string}")
+                                    print(f"Lost fragment: {fragment_to_be_resent.to_string()}")
                                     post(fragment_to_be_resent, retransmit=True)
 
                             # Send All-1 again to end communication.
@@ -161,9 +160,9 @@ def post(fragment_sent, retransmit=False):
                         print(
                             f"The {j}th ({window_size * ack_window_number + j} / {len(fragment_list)}) fragment was lost! Sending again...")
                         # Try sending again the lost fragment.
-                        fragment_to_be_resent = Fragment(profile_uplink,
+                        fragment_to_be_resent = Fragment(profile,
                                                          fragment_list[window_size * ack_window_number + j])
-                        print(f"Lost fragment: {fragment_to_be_resent.string}")
+                        print(f"Lost fragment: {fragment_to_be_resent.to_string()}")
                         post(fragment_to_be_resent, retransmit=True)
                 if fragment_sent.is_all_1():
                     # Send All-1 again to end communication.
@@ -177,13 +176,13 @@ def post(fragment_sent, retransmit=False):
         # If an ACK was expected
         if fragment_sent.is_all_1():
             # If the attempts counter is strictly less than MAX_ACK_REQUESTS, try again
-            if attempts < profile_uplink.MAX_ACK_REQUESTS:
+            if attempts < profile.MAX_ACK_REQUESTS:
                 print("SCHC Timeout reached while waiting for an ACK. Sending the ACK Request again...")
                 post(fragment_sent)
             # Else, exit with an error.
             else:
                 print("ERROR: MAX_ACK_REQUESTS reached. Sending Sender-Abort.")
-                header = fragment_sent.header
+                header = fragment_sent.HEADER
                 abort = SenderAbort(profile, header)
                 post(abort)
 
@@ -212,9 +211,8 @@ percent = round(0, 2)
 i = 0
 current_window = 0
 header_bytes = 1 if total_size <= 300 else 2
-profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
-window_size = profile_uplink.WINDOW_SIZE
+profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+window_size = profile.WINDOW_SIZE
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, help="For 'local' or 'cloud' testing.")
@@ -228,9 +226,9 @@ if args.mode == 'cloud':
     CLEANUP_URL = config.CLEANUP_URL
 
 elif args.mode == 'local':
-    SCHC_POST_URL = "https://localhost:5000/schc_receiver"
-    REASSEMBLER_URL = "https://localhost:5000/reassembler"
-    CLEANUP_URL = "https://localhost:5000/cleanup"
+    SCHC_POST_URL = "http://localhost:5000/schc_receiver"
+    REASSEMBLER_URL = "http://localhost:5000/reassemble"
+    CLEANUP_URL = "http://localhost:5000/cleanup"
 
 if args.clean or args.cleanonly:
     _ = requests.post(url=CLEANUP_URL,
@@ -239,7 +237,7 @@ if args.clean or args.cleanonly:
         exit(0)
 
 # Fragment the file.
-fragmenter = Fragmenter(profile_uplink, message)
+fragmenter = Fragmenter(profile, message)
 fragment_list = fragmenter.fragment()
 last_window = (len(fragment_list) - 1) // window_size
 
@@ -248,9 +246,9 @@ last_window = (len(fragment_list) - 1) // window_size
 attempts = 0
 fragment = None
 
-if len(fragment_list) > (2 ** profile_uplink.M) * window_size:
+if len(fragment_list) > (2 ** profile.M) * window_size:
     print(len(fragment_list))
-    print((2 ** profile_uplink.M) * window_size)
+    print((2 ** profile.M) * window_size)
     print("ERROR: The SCHC packet cannot be fragmented in 2 ** M * WINDOW_SIZE fragments or less. A Rule ID cannot be "
           "selected.")
     exit(1)
@@ -265,7 +263,7 @@ while i < len(fragment_list):
     # Convert to a Fragment class for easier manipulation.
     resent = None
     timeout = False
-    fragment = Fragment(profile_uplink, fragment_list[i])
+    fragment = Fragment(profile, fragment_list[i])
 
     # Send the data.
     print("Sending...")
