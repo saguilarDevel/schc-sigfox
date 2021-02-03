@@ -199,7 +199,8 @@ DL Enable |-----W=0, FCN=0, Seq=7--X-->|
           |-----W=1, FCN=4, Seq=10---->|
 DL Enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment W=0, FCN=0, Seq=7
           |<------ ACK, W=0, C=0 ------| Bitmap:1111110
-DL Enable |-----W=0, FCN=0, Seq=12---->| All fragments received
+          |-----W=0, FCN=0, Seq=13---->| All fragments received
+DL Enable |-----W=1, FCN=7, Seq=14---->|          
           |<------ ACK, W=1, C=1 ------| C=1
         (End)
 ```
@@ -225,19 +226,21 @@ DL Enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment W=0 => FCN= 5, 3 and 0
           |<------ ACK, W=0, C=0 ------| Bitmap:1010110
           |-----W=0, FCN=5, Seq=12---->|
           |-----W=0, FCN=3, Seq=13---->|
-DL Enable |-----W=0, FCN=0, Seq=14---->| All fragments received
+          |-----W=0, FCN=0, Seq=14---->| All fragments received
+DL Enable |-----W=1, FCN=7, Seq=15---->|          
           |<------ ACK, W=1, C=1 ------| C=1
         (End)
 ```
 
 In this case, there are losses in both the first (W=0) and second (W=1) window.
-The retransmission cycles (after the All-1 is send, not in intermediate windows)
-should always finish with an All-0 (if this message was lost) or with an All-1.
+The retransmission cycles (after the All-1 is sent, not in intermediate windows)
+should always finish with an with an All-1, if the All-0 is lost, the All-1 is sent after, as it serves as an ACK Request message.
 This is required for the sender to open a reception window so the receiver
 can send an ACK. 
 Else there is no way for the Receiver to send an ACK,
 if All-1 message is lost, then an ACK timeout happen 
 and an ACK is resend.
+
 ```text
                  Sender                            Receiver
           |-----W=0, FCN=6 (110), Seq=1----->|
@@ -253,38 +256,14 @@ DL enable |-----W=0, FCN=0 (000), Seq=7--X-->|
           |-----W=1, FCN=4 (011), Seq=10-X-->|
 DL enable |-----W=1, FCN=7 (111), Seq=11---->| Missing Fragment W=0 => FCN= 5, 3 and 0
           |<--------- ACK, W=0, C=0 ---------| Bitmap:1010110
-          |-----W=0, FCN=5 (101), Seq=12---->|
-          |-----W=0, FCN=3 (011), Seq=13---->|
-DL enable |-----W=0, FCN=0 (000), Seq=14---->| Missing Fragment W=1 => FCN= 6 and 4
+          |-----W=0, FCN=5 (101), Seq=13---->|
+          |-----W=0, FCN=3 (011), Seq=14---->|
+          |-----W=0, FCN=0 (000), Seq=15---->| 
+DL enable |-----W=1, FCN=7 (111), Seq=16---->| Missing Fragment W=1 => FCN= 6 and 4
           |<--------- ACK, W=1, C=0 ---------| Bitmap:0100001
-          |-----W=1, FCN=6 (110), Seq=15---->|
-          |-----W=1, FCN=4 (011), Seq=16---->| All fragments received
-DL enable |-----W=1, FCN=7 (111), Seq=17---->|
-          |<--------- ACK, W=1, C=1 ---------| C=1
-        (End)
-```
-
-Similar case as above, but with less fragments in the second window (W=1)
-
-```text
-                 Sender                            Receiver
-          |-----W=0, FCN=6 (110), Seq=1----->|
-          |-----W=0, FCN=5 (101), Seq=2--X-->|
-          |-----W=0, FCN=4 (100), Seq=3----->|
-          |-----W=0, FCN=3 (011), Seq=4--X-->|
-          |-----W=0, FCN=2 (010), Seq=5----->|
-          |-----W=0, FCN=1 (001), Seq=6----->|
-DL enable |-----W=0, FCN=0 (000), Seq=7--X-->|
-       (no ACK)
-          |-----W=1, FCN=6 (110), Seq=8--X-->|
-DL enable |-----W=1, FCN=7 (111), Seq=9----->| Missing Fragment W=0 => FCN= 5, 3 and 0
-          |<--------- ACK, W=0, C=0 ---------| Bitmap:1010110
-          |-----W=0, FCN=5 (101), Seq=10---->|
-          |-----W=0, FCN=3 (011), Seq=11---->|
-DL enable |-----W=0, FCN=0 (000), Seq=12---->| Missing Fragment W=1 => FCN= 6 and 4
-          |<--------- ACK, W=1, C=0 ---------| Bitmap:0000001
-          |-----W=1, FCN=6 (110), Seq=15---->| All fragments received
-DL enable |-----W=1, FCN=7 (111), Seq=17---->|
+          |-----W=1, FCN=6 (110), Seq=18---->|
+          |-----W=1, FCN=4 (011), Seq=19---->| All fragments received
+DL enable |-----W=1, FCN=7 (111), Seq=20---->|
           |<--------- ACK, W=1, C=1 ---------| C=1
         (End)
 ```
@@ -310,10 +289,36 @@ DL enable |-----W=1, FCN=7 (111), Seq=8----->|
 ```
 The sequence number between the last 2 messages is consecutive. 
 
-#### Case 5: Only the All-1 in last window is received and the All-0 is lost in first window
+In this case, the All-1 is lost. 
+The Retransmission Timer expires and the All-1 (acting as an ACK Request) is sent again.
+The ACK is sent and the transmission completed.
 
 ```text
                  Sender                            Receiver
+          |-----W=0, FCN=6 (110), Seq=1----->|
+          |-----W=0, FCN=5 (101), Seq=2----->|
+          |-----W=0, FCN=4 (100), Seq=3----->|
+          |-----W=0, FCN=3 (011), Seq=4----->|
+          |-----W=0, FCN=2 (010), Seq=5----->|
+          |-----W=0, FCN=1 (001), Seq=6----->|
+DL enable |-----W=0, FCN=0 (000), Seq=7----->| 
+     (no ACK)
+DL enable |-----W=1, FCN=7 (111), Seq=8--X-->| 
+     (Retransmission Timer expired)
+DL enable |-----W=1, FCN=7 (111), Seq=9----->|
+          |<--------- ACK, W=1, C=1 ---------| 
+        (End)
+```
+
+
+
+#### Case 5: Only the All-1 in last window is received and the All-0 is lost in first window
+
+In this case, the the All-0 of window 1 (W=0) and all fragments, except the All-1, are lost. 
+The bitmap in the receiver is valid and another verification, such as the sequence number, is required.
+
+```text
+        Sender                            Receiver
           |-----W=0, FCN=6 (110), Seq=1----->|
           |-----W=0, FCN=5 (101), Seq=2----->|
           |-----W=0, FCN=4 (100), Seq=3----->|
@@ -337,8 +342,7 @@ DL enable |-----W=1, FCN=7 (111), Seq=21---->|
           |<--------- ACK, W=1, C=1 ---------| C=1
         (End)
 ```
-(*) There can be problems detecting the losts of fragments in the last window.
-
+(*) There can be problems detecting the lost fragments in the last window.
 
 
 #### Case 6: ACK is lost
@@ -361,12 +365,13 @@ DL Enable |-----W=0, FCN=0, Seq=7----->|
           |-----W=1, FCN=4, Seq=10---->|
 DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
           |<------ ACK, W=1, C=1 ---X--| C=1
+      (Retransmission Timer expired)
 DL Enable |-----W=1, FCN=7, Seq=13---->| RESEND ACK
           |<------ ACK, W=1, C=1 ------| C=1
         (End)
 ```
 The number of times an ACK will be requested is determined by the
- MAX_ACK_REQUESTS. The recommended value in SCHC over sigfox is 5.
+ MAX_ACK_REQUESTS. The recommended value in SCHC over Sigfox is 5.
  
  
  #### Case 7: SCHC Sender-Abort
@@ -389,16 +394,22 @@ DL Enable |-----W=0, FCN=0, Seq=7----->|
           |-----W=1, FCN=4, Seq=10---->|
 DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
           |<------ ACK, W=1, C=1 ---X--| C=1
+     (Retransmission Timer expired)
 DL Enable |-----W=1, FCN=7, Seq=14---->| RESEND ACK  (1)
           |<------ ACK, W=1, C=1 ---X--| C=1
+     (Retransmission Timer expired)
 DL Enable |-----W=1, FCN=7, Seq=15---->| RESEND ACK  (2)
           |<------ ACK, W=1, C=1 ---X--| C=1
+     (Retransmission Timer expired)
 DL Enable |-----W=1, FCN=7, Seq=16---->| RESEND ACK  (3)
           |<------ ACK, W=1, C=1 ---X--| C=1
+     (Retransmission Timer expired)
 DL Enable |-----W=1, FCN=7, Seq=17---->| RESEND ACK  (4)
           |<------ ACK, W=1, C=1 ---X--| C=1
+     (Retransmission Timer expired)
 DL Enable |-----W=1, FCN=7, Seq=18---->| RESEND ACK  (5) 
           |<------ ACK, W=1, C=1 ---X--| C=1
+     (Retransmission Timer expired)
 DL Enable |----Sender-Abort, Seq=19--->| exit with error condition
         (End)
 ```
