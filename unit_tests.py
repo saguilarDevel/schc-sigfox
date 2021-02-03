@@ -107,6 +107,15 @@ class TestSenderAbort(unittest.TestCase):
         self.assertFalse(abort.is_all_1())
         self.assertTrue(abort.is_sender_abort())
 
+        hex_data = "1f353235"
+        header = bytes.fromhex(hex_data[:2])
+        payload = bytearray.fromhex(hex_data[2:])
+        data = [header, payload]
+        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        fragment = Fragment(profile, data)
+
+        self.assertFalse(fragment.is_sender_abort())
+
 
 class TestReceiverAbort(unittest.TestCase):
     def test_init(self):
