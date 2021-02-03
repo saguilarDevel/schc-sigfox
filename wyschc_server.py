@@ -31,7 +31,7 @@ def schc_receiver():
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
     """
 
-    REASSEMBLER_URL = "http://localhost:5000/reassembler"
+    REASSEMBLER_URL = "http://localhost:5000/reassemble"
     CLEANUP_URL = "http://localhost:5000/cleanup"
 
     # File where we will store authentication credentials after acquiring them.
@@ -366,7 +366,6 @@ def schc_receiver():
                         print(f"Last sequence number {last_sequence_number}")
 
                         if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
-                            print("[ALL1] Integrity checking complete, launching reassembler.")
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
                             last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
@@ -374,6 +373,8 @@ def schc_receiver():
                                         data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                         f"all_windows/window_{current_window}/"
                                         f"fragment_{current_window}_{last_index}")
+
+                            print("[ALL1] Integrity checking complete, launching reassembler.")
                             try:
                                 _ = requests.post(url=REASSEMBLER_URL,
                                                   json={"last_index": last_index,
@@ -469,7 +470,7 @@ def reassemble():
         with open(config.PAYLOAD, "w") as file:
             file.write(payload)
         # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
+        upload_blob(BUCKET_NAME, payload, "PAYLOAD")
 
         if filecmp.cmp(config.PAYLOAD, config.MESSAGE):
             print("The reassembled file is equal to the original message.")
