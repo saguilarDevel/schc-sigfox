@@ -35,7 +35,7 @@ ACK Failure:
     000    00    0   1111101    51 padding bits  
 ```
 
-### Extended ACK
+### Compound ACK
 
 The Sigfox Donwlink frame is of a fixed size (64 bits), so padding must be added to the standard SCHC ACK format.
 However, if the information about lost fragments of more windows are centralized in a single ACK, less donwlink messages are required, as a single ACK may centralize the complete information of the lost fragments of all windows. 
@@ -44,7 +44,62 @@ In Uplink ACK-on-Error Single-byte SCHC Header mode the size of M allows the use
 
 The standard schc-over-sigfox failure ACK format is composed of a RuleID common for all the SCHC Packet. Then, each window is identify by its own set of values, such as the window number (W), the C bit and the bitmap. The success ACK format does not has any bitmap, therefore the extended ACK may have or not a bitmap when reporting a success reception of a given window.
 
-Following are two proposal examples of extended ACK Formats.
+
+#### Compound ACK format
+
+```text
+Compound ACK Failure Format:
+                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
+[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
+    000     00   0     1111011   1111101   1101111   1111011   30 padding bits
+   
+```
+
+```text
+Compound ACK Success Format 1:
+                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
+[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
+    000     11   1     1111111   1111111   1111111   1111111   30 padding bits
+   
+```
+
+```text
+Compound ACK Success Format 2:
+                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
+[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
+    000     11   1     0000000   0000000   0000000   0000000   30 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 1:
+                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
+[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
+    000     00   0     1111011   1111101   1111111   1111111   30 padding bits
+   
+```
+```text
+Compound ACK Failure Format 2:
+                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
+[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
+    000     00   0     1111011   1111101   0000000   0000000   30 padding bits
+   
+```
+```text
+Compound ACK Failure Format 3:
+                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --|-- W-4 --|-- W-5 --|-- W-6 --|-- W-7 --| 
+[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
+    000     00   0     1111011   1111101   1110111   1011111   1110111   1011101   1110101   0111101  2 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|------- W-1 -------|------- W-2 -------| 
+[ Rule ID | W | C-0 |       Bitmap      |       Bitmap      |       Bitmap      | (P-0)]
+    000     00   0     111101111111011     111101111011111     111101111011101    13 padding bits
+   
+```
 
 #### Example Extended ACK format 1
 
@@ -279,11 +334,11 @@ The last window will always generate an ACK.
           |-----W=3, FCN=2, Seq=26-X-->|
           |-----W=3, FCN=1, Seq=27---->|
 DL Enable |-----W=3, FCN=7, Seq=28---->| Bitmap: 1111011
-          |<---Extended ACK, Seq=28 ---| W=0, C=0, Bitmap:1111011 - W=1, C=0, Bitmap:1111101 - W=2, C=0, Bitmap:1101111 - W=3, C=0, Bitmap:1111011
-          |-----W=0, FCN=2, Seq=30---->| W=0, C=1
-          |-----W=1, FCN=1, Seq=31---->| W=1, C=1
-          |-----W=2, FCN=4, Seq=32---->| W=2, C=1
-          |-----W=3, FCN=2, Seq=33---->| W=3, C=1
+          |<---Extended ACK, Seq=28 ---| W=0, Bitmap:1111011 - W=1, Bitmap:1111101 - W=2, Bitmap:1101111 - W=3, Bitmap:1111011
+          |-----W=0, FCN=2, Seq=30---->| W=0 completed
+          |-----W=1, FCN=1, Seq=31---->| W=1 completed
+          |-----W=2, FCN=4, Seq=32---->| W=2 completed
+          |-----W=3, FCN=2, Seq=33---->| W=3 completed
 DL Enable |-----W=3, FCN=7, Seq=34---->|
           |<---Extended ACK, Seq=35 ---| All W, C=1
         (End)
