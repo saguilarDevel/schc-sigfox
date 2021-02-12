@@ -212,6 +212,7 @@ def hello_get(request):
                         print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                         if coin * 100 < loss_rate:
                             print("[LOSS-ALL0] The Downlink NACK was lost.")
+                            upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES")
                             return 'Downlink lost', 204
                 print("[ALL0] Sending ACK for lost fragments...")
                 print("bitmap with errors -> {}".format(bitmap_ack))
@@ -254,7 +255,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
-                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window))
+                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES")
                                 return 'Downlink lost', 204
                     print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
                     # Downlink Controlled Errors
@@ -306,6 +307,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
+                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES")
                                 return 'Downlink lost', 204
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                         # Downlink Controlled Errors
@@ -350,6 +352,7 @@ def hello_get(request):
                                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                                 if coin * 100 < loss_rate:
                                     print("[LOSS-ALL1] The Downlink NACK was lost.")
+                                    upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES")
                                     return 'Downlink lost', 204
                         print("[ALLX] Sending NACK for lost fragments because of SSN...")
                         ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
@@ -366,6 +369,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink NACK was lost.")
+                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES")
                                 return 'Downlink lost', 204
                     print("[ALLX] Sending NACK for lost fragments...")
                     ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
@@ -488,4 +492,5 @@ def clean(request):
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
         if exists_blob(BUCKET_NAME, "Reassembled_message"):
             delete_blob(BUCKET_NAME, "Reassembled_message")
+        upload_blob(BUCKET_NAME, "", "DL_LOSSES")
         return '', 204
