@@ -254,6 +254,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
+                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, "DL_LOSSES") + "\n Lost DL message in window {}".format(current_window))
                                 return 'Downlink lost', 204
                     print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
                     # Downlink Controlled Errors
