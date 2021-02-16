@@ -43,6 +43,7 @@ def hello_get(request):
         # Parse fragment into "fragment = [header, payload]
         header_bytes = None
         header_first_hex = fragment[:1]
+
         if (header_first_hex) == '0' or (header_first_hex) =='1':
             header = bytes.fromhex(fragment[:2])
             payload = bytearray.fromhex(fragment[2:])
@@ -55,7 +56,7 @@ def hello_get(request):
             print("Wrong header in fragment")
             return 'wrong header', 204
 
-        if bytearray.fromhex(fragment).decode() == "CLEAN":
+        if bytearray.fromhex(fragment[2:]).decode() == "CLEAN":
             t_i = time.perf_counter()
             _ = requests.post(
                 url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/clean',
