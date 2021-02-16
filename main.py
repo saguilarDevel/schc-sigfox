@@ -55,6 +55,14 @@ def hello_get(request):
             print("Wrong header in fragment")
             return 'wrong header', 204
 
+        if bytearray.fromhex(fragment).decode() == "CLEAN":
+            t_i = time.perf_counter()
+            _ = requests.post(
+                url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/clean',
+                json={"header_bytes": header_bytes})
+            t_f = (time.perf_counter())
+            print("[PERF] Cleanup took {} seconds".format(t_f - t_i))
+            return '', 204
 
         data = [header, payload]
 
