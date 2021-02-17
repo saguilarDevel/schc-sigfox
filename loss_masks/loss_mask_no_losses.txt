@@ -1,0 +1,20 @@
+# Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
+# lost, separated by windows:
+# 0 -> don't lose the fragment
+# 1 -> lose the fragment but accepts retransmissions
+# 2 -> lose the fragment, lose it's first retransmission
+# i > 0 -> lose the fragment i times
+
+0000000
+0000000
+0000000
+0000000
+0000000
+0000000
+
+# Se espera que se pierda el tercer fragmento de la primera ventana
+# junto con el All-0 de la segunda ventana.
+# El tercer fragmento de la primera ventana será retransmitido luego de que se envíe el All-0 de la primera ventana
+# y se reciba el ACK correspondiente antes de que expire el timer.
+# El timer del All-0 de la segunda ventana expirará, se enviará la tercera ventana y al enviar su All-0 se notificará
+# la pérdida del primero, el cual será retransmitido luego de recibir el ACK correspondiente.

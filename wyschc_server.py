@@ -4,7 +4,7 @@ import re
 import os
 import requests
 from flask import Flask, request
-from flask import abort
+from flask import abort, g
 
 import config.config as config
 from Entities.Reassembler import Reassembler
@@ -14,10 +14,24 @@ from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
 from blobHelperFunctions import *
 from function import *
-
+import time
 app = Flask(__name__)
 
-@app.route('/wyschc_get', methods=['GET', 'POST'])
+
+@app.before_request
+def before_request():
+    g.start = time.time()
+
+
+@app.after_request
+def after_request(response):
+    diff = time.time() - g.start
+    print("[after_request]: execution time: {}".format(diff))
+
+REASSEMBLER_URL = "http://localhost:5000/reassembler"
+CLEANUP_URL = "http://localhost:5000/cleanup"
+
+@app.route('/schc_receiver', methods=['GET', 'POST'])
 def schc_post():
     """HTTP Cloud Function.
     Args:
@@ -29,8 +43,7 @@ def schc_post():
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
     """
 
-    REASSEMBLER_URL = "http://localhost:5000/reassembler"
-    CLEANUP_URL = "http://localhost:5000/cleanup"
+
 
     # File where we will store authentication credentials after acquiring them.
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
@@ -495,21 +508,21 @@ def cleanup():
     header_bytes = request.get_json()["header_bytes"]
     profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 
-    # print("[CLN] Deleting timestamp blob")
-    # delete_blob(bucket_name, "timestamp")
-    #
-    # print("[CLN] Deleting modified loss mask")
-    # try:
-    #     os.remove(config.LOSS_MASK_MODIFIED)
-    # except FileNotFoundError:
-    #     pass
-    #
-    # print("[CLN] Resetting SSN")
-    # upload_blob(bucket_name, "{}", "SSN")
-    #
-    # print("[CLN] Initializing fragments...")
-    # delete_blob(bucket_name, "all_windows/")
-    # initialize_blobs(bucket_name, profile)
+    print("[CLN] Deleting timestamp blob")
+    delete_blob(bucket_name, "timestamp")
+
+    print("[CLN] Deleting modified loss mask")
+    try:
+        os.remove(config.LOSS_MASK_MODIFIED)
+    except FileNotFoundError:
+        pass
+
+    print("[CLN] Resetting SSN")
+    upload_blob(bucket_name, "{}", "SSN")
+
+    print("[CLN] Initializing fragments...")
+    delete_blob(bucket_name, "all_windows/")
+    initialize_blobs(bucket_name, profile)
 
     return '', 204
 

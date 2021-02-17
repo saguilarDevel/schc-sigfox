@@ -212,6 +212,7 @@ percent = round(0, 2)
 i = 0
 current_window = 0
 header_bytes = 1 if total_size <= 300 else 2
+print()
 profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
 window_size = profile_uplink.WINDOW_SIZE
@@ -228,9 +229,10 @@ if args.mode == 'cloud':
     CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
 
 elif args.mode == 'local':
-    SCHC_POST_URL = "https://localhost:5000/schc_receiver"
-    REASSEMBLER_URL = "https://localhost:5000/reassembler"
-    CLEANUP_URL = "https://localhost:5000/cleanup"
+    SCHC_POST_URL = "http://localhost:5000/schc_receiver"
+    # SCHC_POST_URL = "http://localhost:5000/wyschc_get"
+    REASSEMBLER_URL = "http://localhost:5000/http_reassemble"
+    CLEANUP_URL = "http://localhost:5000/cleanup"
 
 if args.clean or args.cleanonly:
     _ = requests.post(url=CLEANUP_URL,
