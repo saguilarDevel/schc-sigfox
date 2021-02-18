@@ -2,10 +2,48 @@ import unittest
 
 from Entities.Sigfox import Sigfox
 from Messages.ACK import ACK
+from Messages.ACKHeader import ACKHeader
 from Messages.Fragment import Fragment
+from Messages.FragmentHeader import FragmentHeader
 from Messages.ReceiverAbort import ReceiverAbort
 from Messages.SenderAbort import SenderAbort
 from function import bitstring_to_bytes, is_monochar
+
+
+class TestFragmentHeader(unittest.TestCase):
+    def test_to_string(self):
+        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        rule_id = "0" * profile.RULE_ID_SIZE
+        dtag = "0" * profile.T
+        w = "0" * profile.M
+        fcn = "0" * profile.N
+        header = FragmentHeader(profile, rule_id, dtag, w, fcn)
+        s = header.to_string()
+
+        self.assertEqual(s, "00000000")
+
+    def test_to_bytes(self):
+        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        rule_id = "0" * profile.RULE_ID_SIZE
+        dtag = "0" * profile.T
+        w = "0" * profile.M
+        fcn = "1" * profile.N
+        header = FragmentHeader(profile, rule_id, dtag, w, fcn)
+        b = header.to_bytes()
+        self.assertEqual(b, b"\x07")
+
+
+class TestACKHeader(unittest.TestCase):
+    def test_to_string(self):
+        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        rule_id = "0" * profile.RULE_ID_SIZE
+        dtag = "0" * profile.T
+        w = "0" * profile.M
+        c = "0"
+        header = ACKHeader(profile, rule_id, dtag, w, c)
+        s = header.to_string()
+
+        self.assertEqual(s, "000000")
 
 
 class TestFragment(unittest.TestCase):
@@ -40,12 +78,12 @@ class TestAck(unittest.TestCase):
         h = "0f08000000000000"
         ack = ACK.parse_from_hex(profile, h)
         self.assertEqual(ack.to_string(), "0000111100001000000000000000000000000000000000000000000000000000")
-        self.assertEqual(ack.rule_id, "00")
-        self.assertEqual(ack.dtag, "0")
-        self.assertEqual(ack.w, "01")
-        self.assertEqual(ack.c, "1")
-        self.assertEqual(ack.bitmap, "1100001")
-        self.assertTrue(is_monochar(ack.padding) and ack.padding[0] == '0')
+        self.assertEqual(ack.HEADER.RULE_ID, "00")
+        self.assertEqual(ack.HEADER.DTAG, "0")
+        self.assertEqual(ack.HEADER.W, "01")
+        self.assertEqual(ack.HEADER.C, "1")
+        self.assertEqual(ack.BITMAP, "1100001")
+        self.assertTrue(is_monochar(ack.PADDING) and ack.PADDING[0] == '0')
 
 
 class TestSenderAbort(unittest.TestCase):
@@ -56,18 +94,27 @@ class TestSenderAbort(unittest.TestCase):
         data = [header, payload]
         profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
         fragment = Fragment(profile, data)
-        abort = SenderAbort(profile, fragment.header)
+        abort = SenderAbort(profile, fragment.HEADER)
 
-        self.assertEqual(type(abort.profile), Sigfox)
-        self.assertEqual(abort.header.RULE_ID, fragment.header.RULE_ID)
-        self.assertEqual(abort.header.DTAG, fragment.header.DTAG)
-        self.assertEqual(abort.header.W, fragment.header.W)
-        self.assertTrue(abort.header.FCN[0] == '1' and all(abort.header.FCN),
-                        msg=f"{abort.header.FCN[0] == '1'} and {all(abort.header.FCN)}")
-        self.assertTrue(abort.payload.decode()[0] == '0' and all(abort.payload.decode()),
-                        msg=f"{abort.payload[0] == '0'} and {all(abort.payload)}")
+        self.assertEqual(type(abort.PROFILE), Sigfox)
+        self.assertEqual(abort.HEADER.RULE_ID, fragment.HEADER.RULE_ID)
+        self.assertEqual(abort.HEADER.DTAG, fragment.HEADER.DTAG)
+        self.assertEqual(abort.HEADER.W, fragment.HEADER.W)
+        self.assertTrue(abort.HEADER.FCN[0] == '1' and all(abort.HEADER.FCN),
+                        msg=f"{abort.HEADER.FCN[0] == '1'} and {all(abort.HEADER.FCN)}")
+        self.assertTrue(abort.PAYLOAD.decode()[0] == '0' and all(abort.PAYLOAD.decode()),
+                        msg=f"{abort.PAYLOAD[0] == '0'} and {all(abort.PAYLOAD)}")
         self.assertFalse(abort.is_all_1())
         self.assertTrue(abort.is_sender_abort())
+
+        hex_data = "1f353235"
+        header = bytes.fromhex(hex_data[:2])
+        payload = bytearray.fromhex(hex_data[2:])
+        data = [header, payload]
+        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        fragment = Fragment(profile, data)
+
+        self.assertFalse(fragment.is_sender_abort())
 
 
 class TestReceiverAbort(unittest.TestCase):
@@ -78,12 +125,12 @@ class TestReceiverAbort(unittest.TestCase):
         data = [header, payload]
         profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
         fragment = Fragment(profile, data)
-        abort = ReceiverAbort(profile, fragment.header)
+        abort = ReceiverAbort(profile, fragment.HEADER)
 
-        self.assertEqual(type(abort.profile), Sigfox)
-        self.assertEqual(abort.rule_id, fragment.header.RULE_ID)
-        self.assertEqual(abort.dtag, fragment.header.DTAG)
-        self.assertEqual(abort.w, fragment.header.W)
+        self.assertEqual(type(abort.PROFILE), Sigfox)
+        self.assertEqual(abort.HEADER.RULE_ID, fragment.HEADER.RULE_ID)
+        self.assertEqual(abort.HEADER.DTAG, fragment.HEADER.DTAG)
+        self.assertEqual(abort.HEADER.W, fragment.HEADER.W)
         self.assertEqual(len(abort.to_string()), 64)
         self.assertTrue(issubclass(type(abort), ACK))
         self.assertTrue(abort.is_receiver_abort())
@@ -111,12 +158,11 @@ class TestReceiverAbort(unittest.TestCase):
         ack = ACK.parse_from_hex(Sigfox("UPLINK", "ACK ON ERROR", 1), "07ff800000000000")
         self.assertEqual(ack.to_string(),
                          "0000011111111111100000000000000000000000000000000000000000000000")
-        self.assertEqual(ack.rule_id, "00")
-        self.assertEqual(ack.dtag, "0")
-        self.assertEqual(ack.w, "00")
-        self.assertEqual(ack.c, "1")
+        self.assertEqual(ack.HEADER.RULE_ID, "00")
+        self.assertEqual(ack.HEADER.DTAG, "0")
+        self.assertEqual(ack.HEADER.W, "00")
+        self.assertEqual(ack.HEADER.C, "1")
         self.assertTrue(ack.is_receiver_abort())
-
 
 
 if __name__ == '__main__':

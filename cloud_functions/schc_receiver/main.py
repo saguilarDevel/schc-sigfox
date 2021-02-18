@@ -10,10 +10,9 @@ from localpackage.functions import zfill, is_monochar, send_ack, replace_bit
 # ====== GLOBAL VARIABLES ======
 
 
-BUCKET_NAME = 'wyschc-niclabs'
-SCHC_POST_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/schc_receiver"
-REASSEMBLER_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/reassemble"
-CLEANUP_URL = "https://us-central1-wyschc-niclabs.cloudfunctions.net/cleanup"
+BUCKET_NAME = 'wyschc-2021'
+REASSEMBLER_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/reassemble"
+CLEANUP_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/cleanup"
 
 
 # ====== MAIN ======

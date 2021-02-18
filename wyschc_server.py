@@ -1,7 +1,8 @@
 import filecmp
+import os
 import random
 import re
-import os
+
 import requests
 from flask import Flask, request
 from flask import abort
@@ -17,8 +18,9 @@ from function import *
 
 app = Flask(__name__)
 
-@app.route('/wyschc_get', methods=['GET', 'POST'])
-def schc_post():
+
+@app.route('/schc_receiver', methods=['GET', 'POST'])
+def schc_receiver():
     """HTTP Cloud Function.
     Args:
         request (flask.Request): The request object.
@@ -29,7 +31,7 @@ def schc_post():
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
     """
 
-    REASSEMBLER_URL = "http://localhost:5000/reassembler"
+    REASSEMBLER_URL = "http://localhost:5000/reassemble"
     CLEANUP_URL = "http://localhost:5000/cleanup"
 
     # File where we will store authentication credentials after acquiring them.
@@ -99,10 +101,10 @@ def schc_post():
             return 'Sender-Abort received', 204
 
         # Get data from this fragment.
-        fcn = fragment_message.header.FCN
-        rule_id = fragment_message.header.RULE_ID
-        dtag = fragment_message.header.DTAG
-        current_window = int(fragment_message.header.W, 2)
+        fcn = fragment_message.HEADER.FCN
+        rule_id = fragment_message.HEADER.RULE_ID
+        dtag = fragment_message.HEADER.DTAG
+        current_window = int(fragment_message.HEADER.W, 2)
 
         # Get the current bitmap.
         bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
@@ -163,7 +165,7 @@ def schc_post():
                 # If the inactivity timer has been reached, abort communication.
                 if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
                     print("[RECV] Inactivity timer reached. Ending session.")
-                    receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                    receiver_abort = ReceiverAbort(profile, fragment_message.HEADER)
                     print("Sending Receiver Abort")
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
@@ -192,7 +194,7 @@ def schc_post():
 
         # Else, it is a normal fragment.
         else:
-            fragment_number = fcn_dict[fragment_message.header.FCN]
+            fragment_number = fcn_dict[fragment_message.HEADER.FCN]
 
             # Check if fragment is to be lost
             position = current_window * profile.WINDOW_SIZE + fragment_number
@@ -216,7 +218,7 @@ def schc_post():
                 # If the inactivity timer has been reached, abort communication.
                 if time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
                     print("[RECV] Inactivity timer reached. Ending session.")
-                    receiver_abort = ReceiverAbort(profile, fragment_message.header)
+                    receiver_abort = ReceiverAbort(profile, fragment_message.HEADER)
                     print("Sending Receiver Abort")
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
@@ -255,7 +257,7 @@ def schc_post():
                         f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # If the fragment requests an ACK...
-        if ack_req:
+        if ack_req == "true":
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
             # This bitmap corresponds to the lowest-numered window with losses.
@@ -367,14 +369,15 @@ def schc_post():
                         print(f"Last sequence number {last_sequence_number}")
 
                         if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
-                            print("[ALL1] Integrity checking complete, launching reassembler.")
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
-                            last_index = max(list(map(int, list(sequence_numbers.keys())))) + 1
-                            upload_blob_using_threads(BUCKET_NAME,
-                                                      data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                                      f"all_windows/window_{current_window}/"
-                                                      f"fragment_{current_window}_{last_index}")
+                            last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
+                            upload_blob(BUCKET_NAME,
+                                        data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                                        f"all_windows/window_{current_window}/"
+                                        f"fragment_{current_window}_{last_index}")
+
+                            print("[ALL1] Integrity checking complete, launching reassembler.")
                             try:
                                 _ = requests.post(url=REASSEMBLER_URL,
                                                   json={"last_index": last_index,
@@ -424,8 +427,7 @@ def schc_post():
 
 @app.route('/reassemble', methods=['GET', 'POST'])
 def reassemble():
-
-    CLEANUP_URL = "https://localhost:5000/cleanup"
+    CLEANUP_URL = "http://localhost:5000/cleanup"
 
     if request.method == "POST":
         print("[RSMB] The reassembler has been launched.")
@@ -441,8 +443,8 @@ def reassemble():
         BUCKET_NAME = config.BUCKET_NAME
 
         # Initialize SCHC variables.
-        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        n = profile_uplink.N
+        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        window_size = profile.WINDOW_SIZE
 
         print("[RSMB] Loading fragments")
 
@@ -451,7 +453,7 @@ def reassemble():
 
         # For each window, load every fragment into the fragments array
         for i in range(current_window + 1):
-            for j in range(2 ** n - 1):
+            for j in range(window_size):
                 print(f"[RSMB] Loading fragment {j}")
                 fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
                 print(f"[RSMB] Fragment data: {fragment_file}")
@@ -464,14 +466,14 @@ def reassemble():
 
         # Instantiate a Reassembler and start reassembling.
         print("[RSMB] Reassembling")
-        reassembler = Reassembler(profile_uplink, fragments)
+        reassembler = Reassembler(profile, fragments)
         payload = bytearray(reassembler.reassemble()).decode("utf-8")
 
         print("[RSMB] Uploading result")
         with open(config.PAYLOAD, "w") as file:
             file.write(payload)
         # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
+        upload_blob(BUCKET_NAME, payload, "PAYLOAD")
 
         if filecmp.cmp(config.PAYLOAD, config.MESSAGE):
             print("The reassembled file is equal to the original message.")

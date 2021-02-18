@@ -4,7 +4,7 @@ from localpackage.classes import Sigfox
 # ====== GLOBAL VARIABLES ======
 
 
-BUCKET_NAME = 'wyschc-niclabs'
+BUCKET_NAME = 'wyschc-2021'
 
 
 # ====== MAIN ======
