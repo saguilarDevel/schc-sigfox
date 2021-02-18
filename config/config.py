@@ -12,10 +12,12 @@ CLIENT_SECRETS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
 # File where we will store authentication credentials after acquiring them.
 # CREDENTIALS_FILE = './credentials/WySCHC-Niclabs-7a6d6ab0ca2b.json'
 CREDENTIALS_FILE = './credentials/schc-sigfox-upc-f573cd86ed0a.json'
+CREDENTIALS_FILE_FIREBASE = './credentials/schc-sigfox-upc-firebase-adminsdk-jf71b-66d927162a.json'
 
 # Loss mask path
 # LOSS_MASK = './loss_masks/loss_mask_0.txt'
-LOSS_MASK = './loss_masks/loss_mask_all_0_test_2.txt'
+# LOSS_MASK = './loss_masks/loss_mask_all_0_test_2.txt'
+LOSS_MASK = './loss_masks/loss_mask_no_losses.txt'
 LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
 
 # Message to be fragmented
