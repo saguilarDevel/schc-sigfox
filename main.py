@@ -57,12 +57,13 @@ def hello_get(request):
             return 'wrong header', 204
 
         if bytearray.fromhex(fragment[2:]).decode() == "CLEAN":
-            t_i = time.perf_counter()
-            _ = requests.post(
-                url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/clean',
-                json={"header_bytes": header_bytes})
-            t_f = (time.perf_counter())
-            print("[PERF] Cleanup took {} seconds".format(t_f - t_i))
+            try:
+                _ = requests.post(
+                    url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/clean',
+                    json={"header_bytes": header_bytes},
+                    timeout=0.1)
+            except requests.exceptions.ReadTimeout:
+                pass
             return '', 204
 
         data = [header, payload]
@@ -278,7 +279,7 @@ def hello_get(request):
                         try:
                             print('Activating reassembly process...')
                             _ = requests.post(
-                                url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
+                                url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/http_reassemble',
                                 json={"last_index": last_index, "current_window": current_window,
                                       "header_bytes": header_bytes},
                                 timeout=0.0000000001)
@@ -329,7 +330,7 @@ def hello_get(request):
                             print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
                             try:
                                 print('Activating reassembly process...')
-                                _ = requests.post(url='https://europe-west1-true-sprite-292308.cloudfunctions.net/http_reassemble',
+                                _ = requests.post(url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/http_reassemble',
                                                   json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
                                                   timeout=0.0000000001)
                             # except requests.exceptions.ReadTimeout:
