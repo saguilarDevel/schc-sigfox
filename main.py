@@ -106,7 +106,7 @@ def hello_get(request):
 
         # Find current experiment number
         current_experiment = 0
-        for blob in list_blobs(BUCKET_NAME):
+        for blob in blob_list(BUCKET_NAME):
             if blob.name.startswith("DL_LOSSES_"):
                 current_experiment += 1
         print(f"This is the {current_experiment}th experiment.")
@@ -503,18 +503,16 @@ def clean(request):
         # Get data and Sigfox Sequence Number.
         header_bytes = int(request_dict["header_bytes"])
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        bitmap = ''
+        bitmap = '0' * (2 ** profile.N - 1)
         BUCKET_NAME = config.BUCKET_NAME
-        for i in range(2 ** profile.N - 1):
-            bitmap += '0'
         for i in range(2 ** profile.M):
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
             upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
-        if exists_blob(BUCKET_NAME, "Reassembled_message"):
-            delete_blob(BUCKET_NAME, "Reassembled_message")
+        if exists_blob(BUCKET_NAME, "Reassembled_Packet"):
+            delete_blob(BUCKET_NAME, "Reassembled_Packet")
 
         if request_dict["from_lopy"] is not "True":
-            for blob in list_blobs(BUCKET_NAME):
+            for blob in blob_list(BUCKET_NAME):
                 if blob.name.startswith("DL_LOSSES_"):
                     delete_blob(BUCKET_NAME, blob.name)
 

@@ -50,10 +50,10 @@ def size_blob(bucket_name, blob_name):
     return blob.size if blob else 0
 
 
-def list_blobs(bucket_name):
+def blob_list(bucket_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
-    return list_blobs(bucket)
+    return bucket.list_blobs()
 
 
 def send_ack(request, ack):
