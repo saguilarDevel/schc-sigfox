@@ -26,6 +26,7 @@ def delete_blob(bucket_name, blob_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.get_blob(blob_name)
     blob.delete()
+    print('File {} deleted.'.format(blob_name))
 
 
 def exists_blob(bucket_name, blob_name):

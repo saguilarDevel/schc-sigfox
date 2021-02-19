@@ -110,7 +110,6 @@ def hello_get(request):
             if blob.name.startswith("DL_LOSSES_"):
                 current_experiment += 1
         print(f"This is the {current_experiment}th experiment.")
-        upload_blob(BUCKET_NAME, "", f"DL_LOSSES_{current_experiment}")
 
         # Initialize empty window
         window = []
@@ -515,5 +514,12 @@ def clean(request):
             for blob in blob_list(BUCKET_NAME):
                 if blob.name.startswith("DL_LOSSES_"):
                     delete_blob(BUCKET_NAME, blob.name)
+        else:
+            current_experiment = 1
+            for blob in blob_list(BUCKET_NAME):
+                if blob.name.startswith("DL_LOSSES_"):
+                    current_experiment += 1
+            print(f"Preparing for the {current_experiment}th experiment")
+            upload_blob(BUCKET_NAME, "", f"DL_LOSSES_{current_experiment}")
 
         return '', 204
