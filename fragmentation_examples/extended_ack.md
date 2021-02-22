@@ -47,13 +47,105 @@ The standard schc-over-sigfox failure ACK format is composed of a RuleID common 
 
 #### Compound ACK format
 
+Window_size = 7 tiles, N = 3, W = 2
+
 ```text
 Compound ACK Failure Format:
-                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
-[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
-    000     00   0     1111011   1111101   1101111   1111011   30 padding bits
+                    |-- W-0 --|---- W-1 ----|---- W-2 ----|---- W-3 ----| 
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | W |  Bitmap | W |  Bitmap | (P-0)]
+    000     00   0     1111011  01   1111101  10   1101111  11   1111011   24 padding bits
    
 ```
+```text
+Compound ACK Failure Format:
+                    |-- W-0 --|---- W-1 ----|
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | (P-0)]
+    000     00   0     1111011  01   1111101   42 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-2 --|
+[ Rule ID | W | C-0 |  Bitmap | (P-0)]
+    000     10   0     1111011   51 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-2 --|---- W-3 ----|
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | (P-0)]
+    000     10   0     1111011  11   1111101   42 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-1 --|---- W-3 ----|
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | (P-0)]
+    000     01   0     1111011  11   1111101   42 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-1 --|---- W-3 ----|
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | (P-0)]
+    000     01   0     1111011  11   1111101   42 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-0 --|---- W-2 ----|---- W-3 ----| 
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | W |  Bitmap | (P-0)]
+    000     00   0     1111011  10   1111101  11   1111011   33 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-1 --|---- W-2 ----|---- W-3 ----| 
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | W |  Bitmap | (P-0)]
+    000     01   0     1111011  01   1111101  11   1111011   33 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format:
+                    |-- W-1 --|---- W-2 ----|---- W-3 ----| 
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | W |  Bitmap | (P-0)]
+    000     01   0     1111011  01   1111101  11   1111011   33 padding bits
+   
+```
+
+Window_size = 15 tiles, N = 4, W = 2
+
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|--------- W-1 ---------|--------- W-2 ---------| 
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     00   0     111101111111011    01   111101111011111    10    111101111011101    9 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|--------- W-2 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     00   0     111101111111011    10   111101111011111     26 padding bits
+   
+```
+
+
+
+
+
+
+
+
 
 ```text
 Compound ACK Success Format 1:
