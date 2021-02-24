@@ -291,7 +291,7 @@ def hello_get(request):
                                 url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/http_reassemble',
                                 json={"last_index": last_index, "current_window": current_window,
                                       "header_bytes": header_bytes},
-                                timeout=0.0000000001)
+                                timeout=0.1)
                         # except requests.exceptions.ReadTimeout:
                         #     pass
                         except Exception as e:
@@ -341,7 +341,7 @@ def hello_get(request):
                                 print('Activating reassembly process...')
                                 _ = requests.post(url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/http_reassemble',
                                                   json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
-                                                  timeout=0.0000000001)
+                                                  timeout=0.1)
                             # except requests.exceptions.ReadTimeout:
                             #     pass
                             except Exception as e:
@@ -510,6 +510,8 @@ def clean(request):
         if exists_blob(BUCKET_NAME, "Reassembled_Packet"):
             delete_blob(BUCKET_NAME, "Reassembled_Packet")
 
+        upload_blob(BUCKET_NAME, "", "SSN")
+
         if request_dict["from_lopy"] is not "True":
             for blob in blob_list(BUCKET_NAME):
                 if blob.name.startswith("DL_LOSSES_"):
@@ -523,3 +525,13 @@ def clean(request):
             upload_blob(BUCKET_NAME, "", f"DL_LOSSES_{current_experiment}")
 
         return '', 204
+
+
+def test(request):
+    print("POST RECEIVED")
+    request_dict = request.get_json()
+    print('Received Sigfox message: {}'.format(request_dict))
+    response_dict = {request_dict["device"]: {'downlinkData': "0400000000000000"}}
+    response_json = json.dumps(response_dict)
+    print("200, Response content -> {}".format(response_json))
+    return response_json, 200
