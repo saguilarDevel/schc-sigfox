@@ -11,12 +11,12 @@ class Database(object):
 
     @staticmethod
     def initialize(bucket_name):
-        print('init db + {}'.format(bucket_name) )
+        print('init db + {}'.format(bucket_name))
         # Fetch the service account key JSON file contents
         cred = credentials.Certificate(config.CREDENTIALS_FILE_FIREBASE)
 
         # Initialize the app with a service account, granting admin privileges
-        firebase_admin.initialize_app(cred, {'databaseURL': 'https://schc-sigfox-upc-default-rtdb.firebaseio.com/'})
+        firebase_admin.initialize_app(cred, {'databaseURL': config.FIREBASE_RTDB_URL})
 
         # Get a database reference to our database.
         Database.ref = db.reference()

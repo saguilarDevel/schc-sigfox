@@ -2,10 +2,19 @@ from database import Database
 import config.config as config
 
 
+# Init database with the bucket name
 Database.initialize(config.BUCKET_NAME)
 
-bitmap = Database.read(config.BUCKET_NAME, 'all_windows/window_2/bitmap_0')
-all_windows = Database.read(config.BUCKET_NAME, 'all_windows')
-print(all_windows)
-print(all_windows[f"window_0"][f"fragment_0_6"])
-print(bitmap)
+# Save some example to the database
+Database.save(config.BUCKET_NAME, "some example text", 'test-database')
+
+# Read from database
+example = Database.read(config.BUCKET_NAME, 'test-database')
+
+print(example)
+
+# Delete specific Blob
+Database.delete(config.BUCKET_NAME, 'test-database')
+
+# Delete all
+Database.delete_all(config.BUCKET_NAME)
