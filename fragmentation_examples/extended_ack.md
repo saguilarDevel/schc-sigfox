@@ -139,6 +139,31 @@ Compound ACK Failure Format 3:
    
 ```
 
+```text
+Compound ACK Failure Format 3:
+                    |------- W-2 -------|--------- W-3 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     10   0     111101111111011    11   111101111011111     26 padding bits
+   
+```
+
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-1 -------|--------- W-3 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     01   0     111101111111011    11   111101111011111     26 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|--------- W-3 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     00   0     111101111111011    11   111101111011111     26 padding bits
+   
+```
+
 
 
 
