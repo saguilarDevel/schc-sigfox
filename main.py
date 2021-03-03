@@ -388,7 +388,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink NACK was lost.")
-                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES_{current_experiment}")
+                                upload_blob(BUCKET_NAE, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     print("[ALLX] Sending NACK for lost fragments...")
                     ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
@@ -512,7 +512,9 @@ def clean(request):
 
         upload_blob(BUCKET_NAME, "", "SSN")
 
-        if request_dict["from_lopy"] is not "True":
+        print(f"from lopy? {request_dict['from_lopy']}")
+
+        if request_dict["from_lopy"] != "True":
             for blob in blob_list(BUCKET_NAME):
                 if blob.name.startswith("DL_LOSSES_"):
                     delete_blob(BUCKET_NAME, blob.name)
