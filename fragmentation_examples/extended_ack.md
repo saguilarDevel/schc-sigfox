@@ -120,6 +120,106 @@ Compound ACK Failure Format:
    
 ```
 
+#### Transmission of a 150-byte SCHC Packet without Compound ACK
+
+The following is an example of a 150-byte SCHC Packet using 
+the standard ACK format. 
+Since there are fragment losses in all windows, 
+an ACK is generated after the All-0 for intermediate windows.
+
+```text
+        Sender                      Receiver
+          |-----W=0, FCN=6, Seq=1----->|
+          |-----W=0, FCN=5, Seq=2----->|
+          |-----W=0, FCN=4, Seq=3----->|
+          |-----W=0, FCN=3, Seq=4----->|
+          |-----W=0, FCN=2, Seq=5--X-->|
+          |-----W=0, FCN=1, Seq=6----->|
+DL Enable |-----W=0, FCN=0, Seq=7----->| Missing Fragment W=0, FCN=2, Seq=5
+          |<-- ACK, C=0, W=0, Seq=8  --| Bitmap: 1111011
+          |-----W=0, FCN=2, Seq=9----->|
+      (no ACK)
+          |-----W=1, FCN=6, Seq=10---->|
+          |-----W=1, FCN=5, Seq=11---->|
+          |-----W=1, FCN=4, Seq=12---->|
+          |-----W=1, FCN=3, Seq=13---->|
+          |-----W=1, FCN=2, Seq=14---->|
+          |-----W=1, FCN=1, Seq=15-X-->|
+DL Enable |-----W=1, FCN=7, Seq=16---->| Missing Fragment W=1, FCN=1, Seq=15
+          |<-- ACK, C=0, W=1, Seq=17 --| Bitmap: 1111101
+          |-----W=1, FCN=1, Seq=18---->|
+DL Enable |-----W=1, FCN=7, Seq=19---->| All fragments Received
+          |<-- ACK, C=1, W=1, Seq=20 --|
+        (End)
+```
+
+Without the compound ACK format, after the All-0 message an ACK is sent, 
+therefore using a compound ACK format may reduce, for example, one downlink message when error are present in 2 windows (the ACK of the intermediate window).
+
+When errors are found in all windows, using compound ACK will reduce the number of ACKs. 
+The ACK reduction can be calculated as the number of windows required for a SCHC Packet minus 1. 
+For example, if the SCHC Packet requires 3 windows, and errors are found in all windows, without the extended ACK format there will be 2 All-0 messages that will generate an ACK.
+With the extended ACK format, only the last ACK is generated, after the All-1 message is received. 
+Therefore, the number of ACKs (not considering losses in retranmission) is reduced by the number of windows (3) - 1 = 2 ACKs.
+As the packet size increases and the number of windows increases to 4, the reduction of ACKs increases to 3. 
+SCHC Packet sizes that requires less than one window (less than 77 bytes) will see no benefit from using the Extended ACK format, as an ACK is always required after the last SCHC fragment (All-1 message).
+
+
+
+
+
+#### Transmission of a 150-byte SCHC Packet with Compound ACK
+In this example, instead of 4 downlink SCHC ACK, only 1 compound SCHC ACK is generated, 
+reducing at lest 1 downlink messages (one for each window with errors except for the last one), 
+when compared with the example using the standard ACK format. 
+The last window will always generate an ACK after the All-1 SCHC message.
+
+```text
+        Sender                      Receiver
+          |-----W=0, FCN=6, Seq=1----->|
+          |-----W=0, FCN=5, Seq=2----->|
+          |-----W=0, FCN=4, Seq=3----->|
+          |-----W=0, FCN=3, Seq=4----->|
+          |-----W=0, FCN=2, Seq=5--X-->|
+          |-----W=0, FCN=1, Seq=6----->|
+          |-----W=0, FCN=0, Seq=7----->| Bitmap: 1111011
+      (no ACK - no DL Enable)
+          |-----W=1, FCN=6, Seq=8----->|
+          |-----W=1, FCN=5, Seq=9----->|
+          |-----W=1, FCN=4, Seq=10---->|
+          |-----W=1, FCN=3, Seq=11---->|
+          |-----W=1, FCN=2, Seq=12---->|
+          |-----W=1, FCN=1, Seq=13-X-->|
+DL Enable |-----W=1, FCN=7, Seq=14---->| Bitmap: 1111101
+          |<--- Compund ACK, Seq=15 ---| W=0, Bitmap:1111011 - W=1, Bitmap:1111101
+          |-----W=0, FCN=2, Seq=16---->| W=0 completed
+          |-----W=1, FCN=1, Seq=17---->| W=1 completed
+DL Enable |-----W=1, FCN=7, Seq=18---->|
+          |<--- Success ACK, Seq=19 ---| W=1, C=1
+        (End)
+```
+Compound ACK format
+
+```text
+Compound ACK Failure Format:
+                    |-- W-0 --|---- W-1 ----|
+[ Rule ID | W | C-0 |  Bitmap | W |  Bitmap | (P-0)]
+    000     00   0     1111101  01   1111011   42 padding bits
+   
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 Window_size = 15 tiles, N = 4, W = 2
 
 
@@ -414,9 +514,123 @@ Extended ACK Format 2:
 The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with error in all transmission windows. 
 Moreover, an example using the standard ACK format is presented for the same 300-byte SCHC Packet transmission.
 
-#### Transmission of a 300-byte SCHC Packet with Extended ACK
-In this example, instead of 4 downlink SCHC ACK, only 1 extended SCHC ACK is generated, reducing at lest 3 downlink messages (one for each window with errors except for the last one), when compared with the example using the standard ACK format. 
+#### Transmission of a 300-byte SCHC Packet with Compound ACK
+In this example, instead of 4 downlink SCHC ACK, only 1 compound SCHC ACK is generated, reducing at lest 3 downlink messages (one for each window with errors except for the last one), when compared with the example using the standard ACK format. 
 The last window will always generate an ACK.
+
+```text
+        Sender                      Receiver
+          |-----W=0, FCN=6, Seq=1----->|
+          |-----W=0, FCN=5, Seq=2----->|
+          |-----W=0, FCN=4, Seq=3----->|
+          |-----W=0, FCN=3, Seq=4----->|
+          |-----W=0, FCN=2, Seq=5--X-->|
+          |-----W=0, FCN=1, Seq=6----->|
+          |-----W=0, FCN=0, Seq=7----->| Bitmap: 1111011
+      (no ACK - no DL Enable)
+          |-----W=1, FCN=6, Seq=8----->|
+          |-----W=1, FCN=5, Seq=9----->|
+          |-----W=1, FCN=4, Seq=10---->|
+          |-----W=1, FCN=3, Seq=11---->|
+          |-----W=1, FCN=2, Seq=12---->|
+          |-----W=1, FCN=1, Seq=13-X-->|
+          |-----W=1, FCN=0, Seq=14---->| Bitmap: 1111101
+      (no ACK - no DL Enable)
+          |-----W=2, FCN=6, Seq=15---->|
+          |-----W=2, FCN=5, Seq=16---->|
+          |-----W=2, FCN=4, Seq=17-X-->|
+          |-----W=2, FCN=3, Seq=18---->|
+          |-----W=2, FCN=2, Seq=19---->|
+          |-----W=2, FCN=1, Seq=20---->|
+          |-----W=2, FCN=0, Seq=21---->| Bitmap: 1101111
+      (no ACK - no DL Enable)
+          |-----W=3, FCN=6, Seq=22---->|
+          |-----W=3, FCN=5, Seq=23---->|
+          |-----W=3, FCN=4, Seq=24---->|
+          |-----W=3, FCN=3, Seq=25---->|
+          |-----W=3, FCN=2, Seq=26-X-->|
+          |-----W=3, FCN=1, Seq=27---->|
+DL Enable |-----W=3, FCN=7, Seq=28---->| Bitmap: 1111011
+          |<---Compound ACK, Seq=28 ---| W=0, W=1, W=2, W=3
+          |-----W=0, FCN=2, Seq=30---->| W=0 completed
+          |-----W=1, FCN=1, Seq=31---->| W=1 completed
+          |-----W=2, FCN=4, Seq=32---->| W=2 completed
+          |-----W=3, FCN=2, Seq=33---->| W=3 completed
+DL Enable |-----W=3, FCN=7, Seq=34---->|
+          |<--- Success ACK, Seq=35 ---| C=1
+        (End)
+```
+
+To request the ACK after retransmissions an All-1 message (Seq = 34) is sent.
+
+#### Transmission of a 300-byte SCHC Packet without Compound ACK
+
+The following is an example of a 300-byte SCHC Packet using the standard ACK format. 
+Since there are fragment losses in all windows, and ACK is generated after the All-0 for intermediate windows.
+
+```text
+        Sender                      Receiver
+          |-----W=0, FCN=6, Seq=1----->|
+          |-----W=0, FCN=5, Seq=2----->|
+          |-----W=0, FCN=4, Seq=3----->|
+          |-----W=0, FCN=3, Seq=4----->|
+          |-----W=0, FCN=2, Seq=5--X-->|
+          |-----W=0, FCN=1, Seq=6----->| 
+DL Enable |-----W=0, FCN=0, Seq=7----->| Missing Fragments 
+          |<-- ACK, W=0, C=0, Seq=8 ---| Bitmap: 1111011
+          |-----W=0, FCN=2, Seq=9----->|
+      (no ACK)
+          |-----W=1, FCN=6, Seq=10---->|
+          |-----W=1, FCN=5, Seq=11---->|
+          |-----W=1, FCN=4, Seq=12---->|
+          |-----W=1, FCN=3, Seq=13---->|
+          |-----W=1, FCN=2, Seq=14---->|
+          |-----W=1, FCN=1, Seq=15-X-->|   
+DL Enable |-----W=1, FCN=0, Seq=16---->| Missing Fragments
+          |<-- ACK, W=1, C=0, Seq=17 --| Bitmap: 1111101
+          |-----W=1, FCN=1, Seq=18---->|
+      (no ACK)
+          |-----W=2, FCN=6, Seq=19---->|
+          |-----W=2, FCN=5, Seq=20---->|
+          |-----W=2, FCN=4, Seq=21-X-->|
+          |-----W=2, FCN=3, Seq=23---->|
+          |-----W=2, FCN=2, Seq=24---->|
+          |-----W=2, FCN=1, Seq=25---->| 
+DL Enable |-----W=2, FCN=0, Seq=26---->| Missing Fragments
+          |<-- ACK, W=2, C=0, Seq=27 --| Bitmap: 1101111
+          |-----W=2, FCN=4, Seq=28---->|
+      (no ACK)
+          |-----W=3, FCN=6, Seq=29---->|
+          |-----W=3, FCN=5, Seq=30---->|
+          |-----W=3, FCN=4, Seq=31---->|
+          |-----W=3, FCN=3, Seq=32---->|
+          |-----W=3, FCN=2, Seq=33-X-->|
+          |-----W=3, FCN=1, Seq=34---->|
+DL Enable |-----W=3, FCN=7, Seq=35---->| Missing Fragments
+          |<-- ACK, W=3, C=0, Seq=36 --| Bitmap: 1111011
+          |-----W=3, FCN=2, Seq=37---->| All fragments received
+DL Enable |-----W=3, FCN=7, Seq=38---->|
+          |<------ ACK, W=3, C=1 ------| 
+        (End)
+```
+
+Without the extended ACK format, after the All-0 message an ACK should be send, therefore
+using the extended ACK format reduces, for example, one downlink message when error are present in 2
+windows.
+
+When errors are found in all windows, using extended ACK will reduce the number of ACKs. 
+The ACK reduction can be calculated as the number of windows required for a SCHC Packet minus 1. 
+For example, if the SCHC Packet requires 3 windows, and errors are found in all windows, without the extended ACK format there will be 2 All-0 messages that will generate an ACK.
+With the extended ACK format, only the last ACK is generated, after the All-1 message is received. 
+Therefore, the number of ACKs (not considering losses in retranmission) is reduced by the number of windows (3) - 1 = 2 ACKs.
+As the packet size increases and the number of windows increases to 4, the reduction of ACKs increases to 3. 
+SCHC Packet sizes that requires less than one window (less than 77 bytes) will see no benefit from using the Extended ACK format, as an ACK is always required after the last SCHC fragment (All-1 message).
+
+
+
+
+---------
+150-bytes SCHC Packet 
 
 ```text
         Sender                      Receiver
@@ -460,69 +674,3 @@ DL Enable |-----W=3, FCN=7, Seq=34---->|
           |<---Extended ACK, Seq=35 ---| All W, C=1
         (End)
 ```
-
-To request the ACK after retransmissions an All-1 message (Seq = 34) is sent.
-
-#### Transmission of a 300-byte SCHC Packet without Extended ACK
-
-The following is an example of a 300-byte SCHC Packet using the standard ACK format. 
-Since there are fragment losses in all windows, and ACK is generated after the All-0 for intermediate windows.
-
-```text
-        Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2----->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5--X-->|
-          |-----W=0, FCN=1, Seq=6----->|
-DL Enable |-----W=0, FCN=0, Seq=7----->| Missing Fragment W=0, FCN=2, Seq=5
-          |<------  ACK, Seq=8   ------| W=0, C=0, Bitmap: 1111011
-          |-----W=0, FCN=2, Seq=9----->|
-      (no ACK)
-          |-----W=1, FCN=6, Seq=10---->|
-          |-----W=1, FCN=5, Seq=11---->|
-          |-----W=1, FCN=4, Seq=12---->|
-          |-----W=1, FCN=3, Seq=13---->|
-          |-----W=1, FCN=2, Seq=14---->|
-          |-----W=1, FCN=1, Seq=15-X-->|
-DL Enable |-----W=1, FCN=0, Seq=16---->| Missing Fragment W=1, FCN=1, Seq=15
-          |<------  ACK, Seq=17  ------| W=1, C=0, Bitmap: 1111101
-          |-----W=1, FCN=1, Seq=18---->|
-      (no ACK)
-          |-----W=2, FCN=6, Seq=19---->|
-          |-----W=2, FCN=5, Seq=20---->|
-          |-----W=2, FCN=4, Seq=21-X-->|
-          |-----W=2, FCN=3, Seq=23---->|
-          |-----W=2, FCN=2, Seq=24---->|
-          |-----W=2, FCN=1, Seq=25---->| Missing Fragment W=2, FCN=4, Seq=21
-DL Enable |-----W=2, FCN=0, Seq=26---->| Bitmap: 1101111
-          |<------  ACK, Seq=27  ------| W=2, C=0, Bitmap: 1101111
-          |-----W=2, FCN=4, Seq=28---->|
-      (no ACK)
-          |-----W=3, FCN=6, Seq=29---->|
-          |-----W=3, FCN=5, Seq=30---->|
-          |-----W=3, FCN=4, Seq=31---->|
-          |-----W=3, FCN=3, Seq=32---->|
-          |-----W=3, FCN=2, Seq=33-X-->|
-          |-----W=3, FCN=1, Seq=34---->|
-DL Enable |-----W=3, FCN=7, Seq=35---->| Bitmap: 1111011
-          |<------  ACK, Seq=36  ------| W=3, C=0, Bitmap: 1111011
-          |-----W=3, FCN=2, Seq=37---->| All fragments received
-DL Enable |-----W=3, FCN=7, Seq=38---->|
-          |<------ ACK, W=3, C=1 ------|
-        (End)
-```
-
-Without the extended ACK format, after the All-0 message an ACK should be send, therefore
-using the extended ACK format reduces, for example, one downlink message when error are present in 2
-windows.
-
-When errors are found in all windows, using extended ACK will reduce the number of ACKs. 
-The ACK reduction can be calculated as the number of windows required for a SCHC Packet minus 1. 
-For example, if the SCHC Packet requires 3 windows, and errors are found in all windows, without the extended ACK format there will be 2 All-0 messages that will generate an ACK.
-With the extended ACK format, only the last ACK is generated, after the All-1 message is received. 
-Therefore, the number of ACKs (not considering losses in retranmission) is reduced by the number of windows (3) - 1 = 2 ACKs.
-As the packet size increases and the number of windows increases to 4, the reduction of ACKs increases to 3. 
-SCHC Packet sizes that requires less than one window (less than 77 bytes) will see no benefit from using the Extended ACK format, as an ACK is always required after the last SCHC fragment (All-1 message).
-
