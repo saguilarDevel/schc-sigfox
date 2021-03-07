@@ -153,6 +153,33 @@ DL Enable |-----W=1, FCN=7, Seq=19---->| All fragments Received
         (End)
 ```
 
+
+```text
+        Sender              Receiver
+          |-----W=0, FCN=6---->|
+          |-----W=0, FCN=5---->|
+          |-----W=0, FCN=4---->|
+          |-----W=0, FCN=3---->|
+          |-----W=0, FCN=2-X-->|
+          |-----W=0, FCN=1---->|
+DL Enable |-----W=0, FCN=0---->| 
+          |<-- ACK, C=0, W=0 --| Bitmap: 1111011
+          |-----W=0, FCN=2---->|
+      (no ACK)
+          |-----W=1, FCN=6---->|
+          |-----W=1, FCN=5---->|
+          |-----W=1, FCN=4---->|
+          |-----W=1, FCN=3---->|
+          |-----W=1, FCN=2---->|
+          |-----W=1, FCN=1-X-->|
+DL Enable |-----W=1, FCN=7---->| 
+          |<-- ACK, C=0, W=1 --| Bitmap: 1111101
+          |-----W=1, FCN=1---->|
+DL Enable |-----W=1, FCN=7---->| All fragments received
+          |<-- ACK, C=1, W=1 --|
+        (End)
+```
+
 Without the compound ACK format, after the All-0 message an ACK is sent, 
 therefore using a compound ACK format may reduce, for example, one downlink message when error are present in 2 windows (the ACK of the intermediate window).
 
@@ -196,6 +223,32 @@ DL Enable |-----W=1, FCN=7, Seq=14---->| Bitmap: 1111101
           |-----W=1, FCN=1, Seq=17---->| W=1 completed
 DL Enable |-----W=1, FCN=7, Seq=18---->|
           |<--- Success ACK, Seq=19 ---| W=1, C=1
+        (End)
+```
+
+
+```text
+        Sender                      Receiver
+          |-----W=0, FCN=6---->|
+          |-----W=0, FCN=5---->|
+          |-----W=0, FCN=4---->|
+          |-----W=0, FCN=3---->|
+          |-----W=0, FCN=2-X-->|
+          |-----W=0, FCN=1---->|
+          |-----W=0, FCN=0---->| Bitmap: 1111011
+      (no ACK - no DL Enable)     
+          |-----W=1, FCN=6---->|
+          |-----W=1, FCN=5---->|
+          |-----W=1, FCN=4---->|
+          |-----W=1, FCN=3---->|
+          |-----W=1, FCN=2---->|
+          |-----W=1, FCN=1-X-->|
+DL Enable |-----W=1, FCN=7---->| Bitmap: 1111101
+          |<--- Compund ACK ---| W=0,1111011 - W=1,1111101
+          |-----W=0, FCN=2---->| W=0 completed
+          |-----W=1, FCN=1---->| W=1 completed
+DL Enable |-----W=1, FCN=7---->|
+          |<-- ACK, C=1, W=1 --|
         (End)
 ```
 Compound ACK format
