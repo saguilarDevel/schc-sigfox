@@ -4,11 +4,8 @@
 
 The settings of Uplink ACK-on-Error Single-byte SCHC Header are:
 
-* 300 bytes packet
 * Tile size: 11 bytes
-* Number of tiles: 28
 * WINDOW_SIZE: 7 tiles
-* Number of windows: 4 windows (00,01,10,11) 
 * M:2 
 * N:3
 * bitmap size: 7 bits
@@ -46,8 +43,13 @@ The standard schc-over-sigfox failure ACK format is composed of a RuleID common 
 
 
 #### Compound ACK format
-
-Window_size = 7 tiles, N = 3, W = 2
+Example of a 300-byte SCHC Packet.
+* Number of tiles: 28
+* Window_size = 7 tiles, 
+* N = 3
+* W = 2
+* 300 bytes packet
+* Number of windows: 4 windows (00,01,10,11) 
 
 ```text
 Compound ACK Failure Format:
@@ -120,12 +122,21 @@ Compound ACK Failure Format:
    
 ```
 
+
+
 #### Transmission of a 150-byte SCHC Packet without Compound ACK
 
 The following is an example of a 150-byte SCHC Packet using 
 the standard ACK format. 
 Since there are fragment losses in all windows, 
 an ACK is generated after the All-0 for intermediate windows.
+
+* Number of tiles: 14
+* Window_size = 7 tiles, 
+* N = 3
+* W = 2
+* 150 bytes packet
+* Number of windows: 2 windows (00,01) 
 
 ```text
         Sender                      Receiver
@@ -228,7 +239,7 @@ DL Enable |-----W=1, FCN=7, Seq=18---->|
 
 
 ```text
-        Sender                      Receiver
+        Sender              Receiver
           |-----W=0, FCN=6---->|
           |-----W=0, FCN=5---->|
           |-----W=0, FCN=4---->|
@@ -263,303 +274,6 @@ Compound ACK Failure Format:
 
 
 
-
-
-
-
-
-
-
-
-
-
-Window_size = 15 tiles, N = 4, W = 2
-
-
-```text
-Compound ACK Failure Format 3:
-                    |------- W-0 -------|--------- W-1 ---------|--------- W-2 ---------| 
-[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | W |       Bitmap      | (P-0)]
-    000     00   0     111101111111011    01   111101111011111    10    111101111011101    9 padding bits
-   
-```
-
-```text
-Compound ACK Failure Format 3:
-                    |------- W-0 -------|--------- W-2 ---------|
-[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
-    000     00   0     111101111111011    10   111101111011111     26 padding bits
-   
-```
-
-```text
-Compound ACK Failure Format 3:
-                    |------- W-2 -------|--------- W-3 ---------|
-[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
-    000     10   0     111101111111011    11   111101111011111     26 padding bits
-   
-```
-
-
-```text
-Compound ACK Failure Format 3:
-                    |------- W-1 -------|--------- W-3 ---------|
-[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
-    000     01   0     111101111111011    11   111101111011111     26 padding bits
-   
-```
-
-```text
-Compound ACK Failure Format 3:
-                    |------- W-0 -------|--------- W-3 ---------|
-[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
-    000     00   0     111101111111011    11   111101111011111     26 padding bits
-   
-```
-
-
-
-
-
-
-
-
-
-```text
-Compound ACK Success Format 1:
-                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
-[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
-    000     11   1     1111111   1111111   1111111   1111111   30 padding bits
-   
-```
-
-```text
-Compound ACK Success Format 2:
-                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
-[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
-    000     11   1     0000000   0000000   0000000   0000000   30 padding bits
-   
-```
-
-```text
-Compound ACK Failure Format 1:
-                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
-[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
-    000     00   0     1111011   1111101   1111111   1111111   30 padding bits
-   
-```
-```text
-Compound ACK Failure Format 2:
-                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --| 
-[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
-    000     00   0     1111011   1111101   0000000   0000000   30 padding bits
-   
-```
-```text
-Compound ACK Failure Format 3:
-                    |-- W-0 --|-- W-1 --|-- W-2 --|-- W-3 --|-- W-4 --|-- W-5 --|-- W-6 --|-- W-7 --| 
-[ Rule ID | W | C-0 |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap |  Bitmap | (P-0)]
-    000     00   0     1111011   1111101   1110111   1011111   1110111   1011101   1110101   0111101  2 padding bits
-   
-```
-
-```text
-Compound ACK Failure Format 3:
-                    |------- W-0 -------|------- W-1 -------|------- W-2 -------| 
-[ Rule ID | W | C-0 |       Bitmap      |       Bitmap      |       Bitmap      | (P-0)]
-    000     00   0     111101111111011     111101111011111     111101111011101    13 padding bits
-   
-```
-
-#### Example Extended ACK format 1
-
-In the extended ACK format 1, each window is identify by the combination of these two values: the window number and the C bit. 
-For each window, when the C bit is set to 1, the bitmap is not present, meaning that no fragments where lost in that window. 
-In case the C bit is set to 0, the 7-bit bitmap is added.
-
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with error in all transmission windows.
-Note that a 300-byte SCHC Packet requires 4 transmission windows and 28 SCHC fragments. 
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W-0 | C-0 | Bitmap | W-1 | C-0 | Bitmap | W-2 | C-0 | Bitmap | W-3 | C-0 | Bitmap | (P-0)]
-    000     00     0   1111011   01     0   1111101   10     0   1101111   11     0   1111011   21 padding bits
-
-```
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with errors only in the first window.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-0 | Bitmap | W | C-1 | W | C-1 | W | C-1 | (P-0)]
-    000    00    0   1111011  01    1   10    1   11    1    42 padding bits
-```
-
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with errors only in the last window.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-1 | W | C-1 | W | C-1 | W | C-0 | Bitmap | (P-0)]
-    000    00    1   01    1   10    1   11    0   1111011   42 padding bits
-```
-
-
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with no error. All windows are acknowledged by setting the C-bit to 1. 
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-1 | W | C-1 | W | C-1 | W | C-1 | (P-0)]
-    000    00    1   01    1   10    1   11    1    49 padding bits
-
-```
-
-The example below shows the extended ACK format in a transmission of a 150-byte SCHC Packet. Note that a 150-byte SCHC Packet requires 2 transmission windows and 14 SCHC fragments.
-When a SCHC Packet uses less than 4 windows, two options for the Extended ACK format are possible. 
-
-1) Send information of all windows, even if no fragments are received.
-2) Send only information about the windows received (as the sender knows how many windows are used).
-
-#### 1. Send information of all windows
-
-The 150-byte SCHC Packet only requires 2 window out of the 4 available. 
-If, for example, there are error in both the first and second transmission window, the ACK will still have the information of the third and fourth window. 
-This does not represent any issue, as the downlink frame must be of 64 bits.
-Below is an example of the extended ACK format for a 150-byte SCHC Packet with errors in the first 2 windows. 
-Note that the bitmap is added for windows 3 and 4, but with a bitmap of 0, as no fragment from that windows was received.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101  10    0   0000000  11    0   0000000  41 padding bits
-```
-
-When all SCHC fragments are correctly received, the Extended ACK format will have the C bit equal to 1 in the first 2 windows.
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-1 | W | C-1 | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    1   01    1   10    0   0000000  11    0   0000000  35 padding bits
-```
-
-Other option is to confirm that the SCHC Packet has been received completely by setting to 1 the C bit of all windows. 
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-1 | W | C-1 | W | C-1 | W | C-1 | (P-0)]
-    000    00    1   01    1   10    0   11    0    49 padding bits
-```
-
-
-#### 2. Send only information about the windows received
-
-Following the example of the 150-byte SCHC Packet with errors in the first window, but in this case only two windows are present in the Extended ACK format, as shown below.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-0 | Bitmap | W | C-0 | Bitmap | (P-0)]
-    000    00    0   1111011  01    0   1111101   41 padding bits
-```
-
-The example below shows the extended ACK format in a transmission of a 150-byte SCHC Packet with error in only one window.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-0 | Bitmap | W | C-1 | (P-0)]
-    000    00    0   1111011  01    1      21 padding bits
-```
-
-The example below shows the extended ACK format in a transmission of a 150-byte SCHC Packet with no error.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-1 | W | C-1 | (P-0)]
-    000    00    1   01    1    53 padding bits
-```
-
-Other option is to acknowledge the SCHC Packet is to send only the highest window numbered. 
-The example below shows the extended ACK format in a transmission of a 150-byte SCHC Packet with no error and only acknowleding the highest window number.
-
-```text
-Extended ACK format 1: 
-[ Rule ID | W | C-1 | (P-0)]
-    000    10    1    58 padding bits
-```
-
-#### Example Extended ACK format 2
-
-In the extended ACK format 2, each window is identify by the fix location in the ACK format, as the format is fixed for all cases.
-The C bit and bitmap combination is present for the 4 windows, and no window number "W" is used. 
-The C bit and bitmap for each window is identify by the position in the Extended ACK Format.
-Note that the bitmap is always present.
- 
-The example below shows the extended ACK format 2 in a transmission of a 300-byte SCHC Packet with error in all transmission windows. 
-
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-0 | Bitmap | C-0 | Bitmap | C-0 | Bitmap | C-0 | Bitmap | (P-0)]
-    000      0   1111011    0   1111101    0   1111110    0   1111011   29 padding bits
-   
-```
-
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with errors only in the first window.
-
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-0 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | (P-0)]
-    000      0   1111011    1   1111111    1   1111111    1   1111111   29 padding bits
-   
-```
-
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with errors only in the last window.
-
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | C-0 | Bitmap | (P-0)]
-    000      1   1111111    1   1111111    1   1111111    0   1011111   29 padding bits
-   
-```
-
-The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with no error. 
-
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | (P-0)]
-    000      1   1111111    1   1111111    1   1111111    1   1111111   29 padding bits
-   
-```
-
-The example below shows the extended ACK format in a transmission of a 150-byte SCHC Packet with errors in the first 2 windows.
-
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-0 | Bitmap | C-0 | Bitmap | C-0 | Bitmap | C-0 | Bitmap | (P-0)]
-    000      0   1011111    0   1111011    0   0000000    0   0000000   29 padding bits
-   
-```
-
-The example below shows the extended ACK format in a transmission of a 150-byte SCHC Packet with no errors.
-There are 2 options:
-
-1) Set to 1 only the C bit of the actually received windows.
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | (P-0)]
-    000      1   1111111    1   1111111    0   0000000    0   0000000   29 padding bits
-   
-```
-
-2) Set to 1 all C bits as a confirmation that the SCHC Packet was correctly received.
-
-```text
-Extended ACK Format 2:
-          |----- W-1 ----|----- W-2 ----|----- W-3 ----|----- W-4 ----| 
-[ Rule ID | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | C-1 | Bitmap | (P-0)]
-    000      1   1111111    1   1111111    0   0000000    0   0000000   29 padding bits
-   
-```
 
 
 
@@ -614,6 +328,50 @@ DL Enable |-----W=3, FCN=7, Seq=34---->|
         (End)
 ```
 
+```text
+        Sender              Receiver
+          |-----W=0, FCN=6---->|
+          |-----W=0, FCN=5---->|
+          |-----W=0, FCN=4---->|
+          |-----W=0, FCN=3---->|
+          |-----W=0, FCN=2-X-->|
+          |-----W=0, FCN=1---->|
+          |-----W=0, FCN=0---->| Bitmap: 1111011
+      (no ACK - no DL Enable)
+          |-----W=1, FCN=6---->|
+          |-----W=1, FCN=5---->|
+          |-----W=1, FCN=4---->|
+          |-----W=1, FCN=3---->|
+          |-----W=1, FCN=2---->|
+          |-----W=1, FCN=1-X-->|
+          |-----W=1, FCN=0---->| Bitmap: 1111101
+      (no ACK - no DL Enable)
+        Sender              Receiver
+          |-----W=2, FCN=6---->|
+          |-----W=2, FCN=5---->|
+          |-----W=2, FCN=4-X-->|
+          |-----W=2, FCN=3---->|
+          |-----W=2, FCN=2---->|
+          |-----W=2, FCN=1---->|
+          |-----W=2, FCN=0---->| Bitmap: 1101111
+      (no ACK - no DL Enable)
+          |-----W=3, FCN=6---->|
+          |-----W=3, FCN=5---->|
+          |-----W=3, FCN=4---->|
+          |-----W=3, FCN=3---->|
+          |-----W=3, FCN=2-X-->|
+          |-----W=3, FCN=1---->|
+DL Enable |-----W=3, FCN=7---->| Bitmap: 1111011
+          |<---Compound ACK ---| W=0, W=1, W=2, W=3
+          |-----W=0, FCN=2---->| W=0 completed
+          |-----W=1, FCN=1---->| W=1 completed
+          |-----W=2, FCN=4---->| W=2 completed
+          |-----W=3, FCN=2---->| W=3 completed
+DL Enable |-----W=3, FCN=7---->| All fragments received
+          |<-- ACK, W=3, C=1 --| 
+        (End)
+```
+
 To request the ACK after retransmissions an All-1 message (Seq = 34) is sent.
 
 #### Transmission of a 300-byte SCHC Packet without Compound ACK
@@ -664,6 +422,54 @@ DL Enable |-----W=3, FCN=7, Seq=35---->| Missing Fragments
           |-----W=3, FCN=2, Seq=37---->| All fragments received
 DL Enable |-----W=3, FCN=7, Seq=38---->|
           |<------ ACK, W=3, C=1 ------| 
+        (End)
+```
+
+
+```text
+        Sender              Receiver
+          |-----W=0, FCN=6---->|
+          |-----W=0, FCN=5---->|
+          |-----W=0, FCN=4---->|
+          |-----W=0, FCN=3---->|
+          |-----W=0, FCN=2-X-->|
+          |-----W=0, FCN=1---->| 
+DL Enable |-----W=0, FCN=0---->| 
+          |<-- ACK, W=0, C=0 --| Bitmap: 1111011
+          |-----W=0, FCN=2---->|
+      (no ACK)
+          |-----W=1, FCN=6---->|
+          |-----W=1, FCN=5---->|
+          |-----W=1, FCN=4---->|
+          |-----W=1, FCN=3---->|
+          |-----W=1, FCN=2---->|
+          |-----W=1, FCN=1-X-->|   
+DL Enable |-----W=1, FCN=0---->| 
+          |<-- ACK, W=1, C=0 --| Bitmap: 1111101
+          |-----W=1, FCN=1---->|
+      (no ACK)
+        Sender              Receiver
+          |-----W=2, FCN=6---->|
+          |-----W=2, FCN=5---->|
+          |-----W=2, FCN=4-X-->|
+          |-----W=2, FCN=3---->|
+          |-----W=2, FCN=2---->|
+          |-----W=2, FCN=1---->| 
+DL Enable |-----W=2, FCN=0---->| 
+          |<-- ACK, W=2, C=0 --| Bitmap: 1101111
+          |-----W=2, FCN=4---->|
+      (no ACK)
+          |-----W=3, FCN=6---->|
+          |-----W=3, FCN=5---->|
+          |-----W=3, FCN=4---->|
+          |-----W=3, FCN=3---->|
+          |-----W=3, FCN=2-X-->|
+          |-----W=3, FCN=1---->|
+DL Enable |-----W=3, FCN=7---->| 
+          |<-- ACK, W=3, C=0 --| Bitmap: 1111011
+          |-----W=3, FCN=2---->| All fragments received
+DL Enable |-----W=3, FCN=7---->|
+          |<-- ACK, W=3, C=1 --| 
         (End)
 ```
 
@@ -727,3 +533,54 @@ DL Enable |-----W=3, FCN=7, Seq=34---->|
           |<---Extended ACK, Seq=35 ---| All W, C=1
         (End)
 ```
+
+
+
+
+
+
+Window_size = 15 tiles, N = 4, W = 2
+
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|--------- W-1 ---------|--------- W-2 ---------| 
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     00   0     111101111111011    01   111101111011111    10    111101111011101    9 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|--------- W-2 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     00   0     111101111111011    10   111101111011111     26 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-2 -------|--------- W-3 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     10   0     111101111111011    11   111101111011111     26 padding bits
+   
+```
+
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-1 -------|--------- W-3 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     01   0     111101111111011    11   111101111011111     26 padding bits
+   
+```
+
+```text
+Compound ACK Failure Format 3:
+                    |------- W-0 -------|--------- W-3 ---------|
+[ Rule ID | W | C-0 |       Bitmap      | W |       Bitmap      | (P-0)]
+    000     00   0     111101111111011    11   111101111011111     26 padding bits
+   
+```
+
+
