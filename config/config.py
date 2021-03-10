@@ -9,3 +9,5 @@ CLIENT_SECRETS_FILE = './credentials/true-sprite-292308-8fa4cf95223b.json'
 
 # File where we will store authentication credentials after acquiring them.
 CREDENTIALS_FILE = './credentials/true-sprite-292308-8fa4cf95223b.json'
+
+FIREBASE_RTDB_URL = 'https://wyschc-303621-default-rtdb.firebaseio.com/'
