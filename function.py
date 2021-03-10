@@ -1,4 +1,7 @@
 #  FUNCTIONS
+import json
+
+
 def zfill(string, width):
     if len(string) < width:
         return ("0" * (width - len(string))) + string
@@ -18,3 +21,12 @@ def replace_bit(string, position, value):
 
 def find(string, character):
     return [i for i, ltr in enumerate(string) if ltr == character]
+
+
+def send_ack(request, ack):
+    device = request["device"]
+    print("ack string -> {}".format(ack.to_string()))
+    response_dict = {device: {'downlinkData': ack.to_bytes().hex()}}
+    response_json = json.dumps(response_dict)
+    print("response_json -> {}".format(response_json))
+    return response_json

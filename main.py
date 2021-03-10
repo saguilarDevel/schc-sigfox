@@ -11,8 +11,9 @@ from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 
 from function import *
-from blobHelperFunctions import *
+from firebase_utils import *
 import config.config as config
+
 
 def hello_get(request):
     """HTTP Cloud Function.
@@ -81,32 +82,30 @@ def hello_get(request):
             return json.dumps({"message": "Fragment size is greater than buffer size D:"}), 200
 
         # If the folder named "all windows" does not exist, create it along with all subdirectories.
-        if not exists_blob(BUCKET_NAME, "all_windows/"):
+        if not exists_blob("all_windows/"):
             print("INITIALIZING... (be patient)")
-            create_folder(BUCKET_NAME, "all_windows/")
+            create_folder("all_windows/")
 
             # For each window in the SCHC Profile, create its blob.
             for i in range(2 ** m):
-                create_folder(BUCKET_NAME, "all_windows/window_%d/" % i)
+                create_folder("all_windows/window_%d/" % i)
 
                 # For each fragment in the SCHC Profile, create its blob.
                 for j in range(2 ** n - 1):
-                    upload_blob(BUCKET_NAME, "", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
+                    upload_blob("", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
 
                 # Create the blob for each bitmap.
-                if not exists_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(BUCKET_NAME,
-                                                                                                        "all_windows/window_%d/bitmap_%d" % (
-                                                                                                        i, i)) == 0):
+                if not exists_blob("all_windows/window_%d/bitmap_%d" % (i, i) or size_blob("all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
                     bitmap = ""
                     for b in range(profile_uplink.BITMAP_SIZE):
                         bitmap += "0"
-                    upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+                    upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
 
         print("BLOBs created")
 
         # Find current experiment number
         current_experiment = 0
-        for blob in blob_list(BUCKET_NAME):
+        for blob in blob_list():
             if blob.name.startswith("DL_LOSSES_"):
                 current_experiment += 1
         print(f"This is the {current_experiment}th experiment.")
@@ -134,29 +133,29 @@ def hello_get(request):
                 if coin * 100 < loss_rate:
                     print("[LOSS] The fragment was lost.")
                     if fragment_message.is_all_1():
-                        last_sequence_number = read_blob(BUCKET_NAME, "SSN")
+                        last_sequence_number = read_blob("SSN")
                         print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
                         if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                             # We do that to save the last SSN value for future use (when the next All-1 Arrives)
                             # In a Real Loss Scenario we will not know the SSN...
-                            upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
+                            upload_blob(sigfox_sequence_number, "SSN")
                     return 'fragment lost', 204
 
         # Get current window for this fragment.
         current_window = int(fragment_message.header.W, 2)
 
         # Get the current bitmap.
-        bitmap = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+        bitmap = read_blob("all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
         # Try getting the fragment number from the FCN dictionary.
         try:
             fragment_number = fcn_dict[fragment_message.header.FCN]
-            upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
+            upload_blob(fragment_number, "fragment_number")
 
             time_received = int(request_dict["time"])
-            if exists_blob(BUCKET_NAME, "timestamp"):
+            if exists_blob("timestamp"):
                 # Check time validation.
-                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+                last_time_received = int(read_blob("timestamp"))
 
                 # If this is not the very first fragment and the inactivity timer has been reached, ignore the message.
                 # TODO: Send SCHC abort message.
@@ -165,7 +164,7 @@ def hello_get(request):
                     return json.dumps({"message": "Inactivity timer reached. Message ignored."}), 200
 
             # Upload current timestamp.
-            upload_blob(BUCKET_NAME, time_received, "timestamp")
+            upload_blob(time_received, "timestamp")
 
             # Print some data for the user.
             print("[RECV] This corresponds to the " + str(fragment_number) + "th fragment of the " + str(
@@ -182,10 +181,10 @@ def hello_get(request):
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+            upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+            upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                         "all_windows/window_%d/fragment_%d_%d" % (current_window, current_window, fragment_number))
 
         # If the FCN could not been found, it almost certainly is the final fragment.
@@ -193,12 +192,12 @@ def hello_get(request):
             print("[RECV] This seems to be the final fragment.")
             # Upload current timestamp.
             time_received = int(request_dict["time"])
-            upload_blob(BUCKET_NAME, time_received, "timestamp")
+            upload_blob(time_received, "timestamp")
             print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_1(), fragment_message.is_all_0()))
             # print("RULE_ID: {}, W:{}, FCN:{}".format(fragment.header.RULE_ID, fragment.header.W, fragment.header.FCN))
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+            upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
         # Get some SCHC values from the fragment.
         rule_id = fragment_message.header.RULE_ID
@@ -207,16 +206,16 @@ def hello_get(request):
 
         # Get last and current Sigfox sequence number (SSN)
         last_sequence_number = 0
-        if exists_blob(BUCKET_NAME, "SSN"):
-            last_sequence_number = read_blob(BUCKET_NAME, "SSN")
-        upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
+        if exists_blob("SSN"):
+            last_sequence_number = read_blob("SSN")
+        upload_blob(sigfox_sequence_number, "SSN")
 
         # If the fragment is at the end of a window (ALL-0 or ALL-1)
         if fragment_message.is_all_0() or fragment_message.is_all_1():
 
             # Prepare the ACK bitmap. Find the first bitmap with a 0 in it.
             for i in range(current_window + 1):
-                bitmap_ack = read_blob(BUCKET_NAME, "all_windows/window_%d/bitmap_%d" % (i, i))
+                bitmap_ack = read_blob("all_windows/window_%d/bitmap_%d" % (i, i))
                 print(bitmap_ack)
                 window_ack = i
                 if '0' in bitmap_ack:
@@ -231,7 +230,7 @@ def hello_get(request):
                         if coin * 100 < loss_rate:
                             print("[LOSS-ALL0] The Downlink NACK was lost.")
 
-                            upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
+                            upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                             return 'Downlink lost', 204
                 print("[ALL0] Sending ACK for lost fragments...")
                 print("bitmap with errors -> {}".format(bitmap_ack))
@@ -274,14 +273,14 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
-                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
                     # Downlink Controlled Errors
-                    dl_errors = int(read_blob(BUCKET_NAME, "dl_errors"))
+                    dl_errors = int(read_blob("dl_errors"))
                     if dl_errors == 0:
                         last_index = 0
-                        upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                        upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                     "all_windows/window_%d/fragment_%d_%d" % (
                                         current_window, current_window, last_index))
                         print("Info for reassemble: last_index:{}, current_window:{}".format(last_index, current_window))
@@ -310,7 +309,7 @@ def hello_get(request):
                         return response_json, 200
                     else:
                         dl_errors -= 1
-                        upload_blob(BUCKET_NAME, dl_errors, "dl_errors")
+                        upload_blob(dl_errors, "dl_errors")
                         print("[DL-ERROR] We simulate a downlink error. We don't send an ACK")
                         return '', 204
 
@@ -326,14 +325,14 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
-                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                         # Downlink Controlled Errors
-                        dl_errors = int(read_blob(BUCKET_NAME, "dl_errors"))
+                        dl_errors = int(read_blob("dl_errors"))
                         if dl_errors == 0:
-                            last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                            upload_blob(BUCKET_NAME, data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                            last_index = int(read_blob("fragment_number")) + 1
+                            upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                         "all_windows/window_%d/fragment_%d_%d" % (
                                             current_window, current_window, last_index))
                             print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
@@ -360,7 +359,7 @@ def hello_get(request):
                             return response_json, 200
                         else:
                             dl_errors -= 1
-                            upload_blob(BUCKET_NAME, dl_errors, "dl_errors")
+                            upload_blob(dl_errors, "dl_errors")
                             print("[DL-ERROR] We simulate a downlink error. We don't send an ACK")
                             return '', 204
                     else:
@@ -371,7 +370,7 @@ def hello_get(request):
                                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                                 if coin * 100 < loss_rate:
                                     print("[LOSS-ALL1] The Downlink NACK was lost.")
-                                    upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
+                                    upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                     return 'Downlink lost', 204
                         print("[ALLX] Sending NACK for lost fragments because of SSN...")
                         ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
@@ -388,7 +387,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink NACK was lost.")
-                                upload_blob(BUCKET_NAME, read_blob(BUCKET_NAME, f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     print("[ALLX] Sending NACK for lost fragments...")
                     ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
@@ -435,8 +434,7 @@ def http_reassemble(request):
         for i in range(current_window + 1):
             for j in range(2 ** n - 1):
                 print("Loading fragment {}".format(j))
-                fragment_file = read_blob(BUCKET_NAME,
-                                          "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
+                fragment_file = read_blob("all_windows/window_%d/fragment_%d_%d" % (i, i, j))
                 print(fragment_file)
                 ultimate_header = fragment_file[:header_bytes]
                 ultimate_payload = fragment_file[header_bytes:]
@@ -450,7 +448,7 @@ def http_reassemble(request):
         payload = bytearray(reassembler.reassemble())
 
         # Upload the full message.
-        upload_blob(BUCKET_NAME, payload.decode("utf-8"), "Reassembled_Packet")
+        upload_blob(payload.decode("utf-8"), "Reassembled_Packet")
 
         return '', 204
 
@@ -476,7 +474,7 @@ def losses_mask(request):
         mask = request_dict["mask"]
         last_error_window = int(request_dict["last_error_window"])
         for i in range(last_error_window+1):
-            upload_blob(BUCKET_NAME, mask, "all_windows/window_%d/losses_mask_%d" % (i,i))
+            upload_blob(mask, "all_windows/window_%d/losses_mask_%d" % (i,i))
 
         return '', 204
 
@@ -505,26 +503,26 @@ def clean(request):
         bitmap = '0' * (2 ** profile.N - 1)
         BUCKET_NAME = config.BUCKET_NAME
         for i in range(2 ** profile.M):
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
-            upload_blob(BUCKET_NAME, bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
-        if exists_blob(BUCKET_NAME, "Reassembled_Packet"):
-            delete_blob(BUCKET_NAME, "Reassembled_Packet")
+            upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
+            upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
+        if exists_blob("Reassembled_Packet"):
+            delete_blob("Reassembled_Packet")
 
-        upload_blob(BUCKET_NAME, "", "SSN")
+        upload_blob("", "SSN")
 
         print(f"from lopy? {request_dict['from_lopy']}")
 
         if request_dict["from_lopy"] != "True":
-            for blob in blob_list(BUCKET_NAME):
+            for blob in blob_list():
                 if blob.name.startswith("DL_LOSSES_"):
-                    delete_blob(BUCKET_NAME, blob.name)
+                    delete_blob(blob.name)
         else:
             current_experiment = 1
-            for blob in blob_list(BUCKET_NAME):
+            for blob in blob_list():
                 if blob.name.startswith("DL_LOSSES_"):
                     current_experiment += 1
             print(f"Preparing for the {current_experiment}th experiment")
-            upload_blob(BUCKET_NAME, "", f"DL_LOSSES_{current_experiment}")
+            upload_blob("", f"DL_LOSSES_{current_experiment}")
 
         return '', 204
 
