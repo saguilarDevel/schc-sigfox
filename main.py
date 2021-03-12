@@ -59,7 +59,7 @@ def hello_get(request):
         if bytearray.fromhex(fragment[2:]).decode() == "CLEAN":
             try:
                 _ = requests.post(
-                    url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/clean',
+                    url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
                           "from_lopy": "True"},
                     timeout=0.1)
@@ -286,14 +286,12 @@ def hello_get(request):
                         try:
                             print('Activating reassembly process...')
                             _ = requests.post(
-                                url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/http_reassemble',
+                                url=config.REASSEMBLE_URL,
                                 json={"last_index": last_index, "current_window": current_window,
                                       "header_bytes": header_bytes},
                                 timeout=0.1)
-                        # except requests.exceptions.ReadTimeout:
-                        #     pass
-                        except Exception as e:
-                            print("exception in reassembly call: {}".format(e))
+                        except requests.exceptions.ReadTimeout:
+                            pass
 
                         # Send last ACK to end communication.
                         print("[ALL1] Reassembled: Sending last ACK")
@@ -337,13 +335,11 @@ def hello_get(request):
                             print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
                             try:
                                 print('Activating reassembly process...')
-                                _ = requests.post(url='https://southamerica-east1-wyschc-303621.cloudfunctions.net/http_reassemble',
+                                _ = requests.post(url=config.REASSEMBLE_URL,
                                                   json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
                                                   timeout=0.1)
-                            # except requests.exceptions.ReadTimeout:
-                            #     pass
-                            except Exception as e:
-                                print("exception in reassembly call: {}".format(e))
+                            except requests.exceptions.ReadTimeout:
+                                pass
 
                             # Send last ACK to end communication.
                             print("[ALL1] Reassembled: Sending last ACK")
@@ -503,6 +499,9 @@ def clean(request):
         for i in range(2 ** profile.M):
             upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
             upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
+            # For each fragment in the SCHC Profile, create its blob.
+            for j in range(2 ** profile.N - 1):
+                upload_blob("", f"all_windows/window_{i}/fragment_{i}_{j}")
         if exists_blob("Reassembled_Packet"):
             delete_blob("Reassembled_Packet")
 

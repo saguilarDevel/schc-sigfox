@@ -55,7 +55,7 @@ msg2_9 = {'deviceType': '01B29CC4', 'device': '1B29CC4', 'time': '1602249609', '
 msgs1 = [msg1, msg2, msg3]
 msgs2 = [msg2_1, msg2_2, msg2_3, msg2_4, msg2_5, msg2_6, msg2_7, msg2_8, msg2_9]
 
-for i, msg in enumerate(msgs1):
+for i, msg in enumerate(msgs2):
     print('sending msg {}, {}'.format(i, msg))
     response = send_request(msg, 45)
     if response.status_code == 204:
