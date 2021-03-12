@@ -1,3 +1,5 @@
+from time import perf_counter
+
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
@@ -48,22 +50,35 @@ database = Database(config.BUCKET_NAME)
 
 def upload_blob(blob_text, destination_blob_name):
     global database
+    # t_i = perf_counter()
     database.save(blob_text, destination_blob_name)
+    # t_f = perf_counter()
+    # print(f"Upload took {t_f - t_i} seconds")
 
 
 def create_folder(folder_name):
     global database
+    # t_i = perf_counter()
     database.save("", folder_name)
+    # t_f = perf_counter()
+    # print(f"Folder creation took {t_f - t_i} seconds")
 
 
 def read_blob(blob_name):
     global database
-    return database.read(blob_name)
+    # t_i = perf_counter()
+    res = database.read(blob_name)
+    # t_f = perf_counter()
+    # print(f"Read took {t_f - t_i} seconds")
+    return res
 
 
 def delete_blob(blob_name):
     global database
+    # t_i = perf_counter()
     database.delete(blob_name)
+    # t_f = perf_counter()
+    # print(f"Deletion took {t_f - t_i} seconds")
 
 
 def delete_all():

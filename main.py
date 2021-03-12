@@ -105,7 +105,7 @@ def hello_get(request):
         # Find current experiment number
         current_experiment = 0
         for blob in blob_list():
-            if blob.name.startswith("DL_LOSSES_"):
+            if blob.startswith("DL_LOSSES_"):
                 current_experiment += 1
         print(f"This is the {current_experiment}th experiment.")
 
@@ -500,7 +500,6 @@ def clean(request):
         header_bytes = int(request_dict["header_bytes"])
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
         bitmap = '0' * (2 ** profile.N - 1)
-        BUCKET_NAME = config.BUCKET_NAME
         for i in range(2 ** profile.M):
             upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
             upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
@@ -513,12 +512,12 @@ def clean(request):
 
         if request_dict["from_lopy"] != "True":
             for blob in blob_list():
-                if blob.name.startswith("DL_LOSSES_"):
+                if blob.startswith("DL_LOSSES_"):
                     delete_blob(blob.name)
         else:
             current_experiment = 1
             for blob in blob_list():
-                if blob.name.startswith("DL_LOSSES_"):
+                if blob.startswith("DL_LOSSES_"):
                     current_experiment += 1
             print(f"Preparing for the {current_experiment}th experiment")
             upload_blob("", f"DL_LOSSES_{current_experiment}")
