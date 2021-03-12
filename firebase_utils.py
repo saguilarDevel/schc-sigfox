@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
-import config.config as config
+from config import config
 
 
 class Database(object):
@@ -11,6 +11,7 @@ class Database(object):
     def __init__(self, bucket_name):
         print('init db + {}'.format(bucket_name))
         # Fetch the service account key JSON file contents
+
         cred = credentials.Certificate(config.CREDENTIALS_FILE_FIREBASE)
 
         # Initialize the app with a service account, granting admin privileges

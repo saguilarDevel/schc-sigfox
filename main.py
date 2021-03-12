@@ -12,7 +12,6 @@ from Messages.Fragment import Fragment
 
 from function import *
 from firebase_utils import *
-import config.config as config
 
 
 def hello_get(request):
