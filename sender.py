@@ -273,5 +273,5 @@ while i < len(fragment_list):
     # On All-1 fragments, this function will enter retransmission phase.
     post(fragment)
 
-    timer = SCHCTimer(profile.INACTIVITY_TIMER_VALUE * 2)
-    timer.wait()
+    # timer = SCHCTimer(profile.INACTIVITY_TIMER_VALUE * 2)
+    # timer.wait()

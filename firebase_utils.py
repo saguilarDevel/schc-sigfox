@@ -99,3 +99,18 @@ def blob_list(blob_name=''):
     # Try to redefine without isinstance
     if isinstance(root, dict):
         return list(read_blob(blob_name).keys())
+
+
+def initialize_blobs(profile):
+    create_folder("all_windows/")
+
+    # For each window in the SCHC Profile, create its blob.
+    for i in range(2 ** profile.M):
+        create_folder(f"all_windows/window_{i}/")
+
+        # For each fragment in the SCHC Profile, create its blob.
+        for j in range(2 ** profile.N - 1):
+            upload_blob("", f"all_windows/window_{i}/fragment_{i}_{j}")
+
+        # Create the blob for each bitmap.
+        upload_blob("0" * profile.BITMAP_SIZE, f"all_windows/window_{i}/bitmap_{i}")
