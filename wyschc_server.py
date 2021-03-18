@@ -13,7 +13,7 @@ from Entities.Sigfox import Sigfox
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
-from blobHelperFunctions import *
+from firebase_utils import *
 from function import *
 
 app = Flask(__name__)
@@ -74,9 +74,6 @@ def schc_receiver():
         if len(raw_data) / 2 * 8 > profile.UPLINK_MTU:  # Fragment is hex, 1 hex = 1/2 byte
             return json.dumps({"message": "Fragment size is greater than buffer size"}), 200
 
-        # If the folder named "all windows" does not exist, create it along with all subdirectories.
-        initialize_blobs(BUCKET_NAME, profile)
-
         # Compute the fragment compressed number (FCN) from the Profile
         fcn_dict = {}
         for j in range(2 ** n - 1):
@@ -105,7 +102,7 @@ def schc_receiver():
         current_window = int(fragment_message.HEADER.W, 2)
 
         # Get the current bitmap.
-        bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
+        bitmap = read_blob(f"all_windows/window_{current_window}/bitmap_{current_window}")
 
         # Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
         # lost, separated by windows.
@@ -154,9 +151,9 @@ def schc_receiver():
             # Inactivity timer validation
             time_received = int(request_dict["time"])
 
-            if exists_blob(BUCKET_NAME, "timestamp"):
+            if exists_blob("timestamp"):
                 # Check time validation.
-                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+                last_time_received = int(read_blob("timestamp"))
                 print(f"[RECV] Previous timestamp: {last_time_received}")
                 print(f"[RECV] This timestamp: {time_received}")
 
@@ -176,17 +173,15 @@ def schc_receiver():
                     return response_json, 200
 
             # Update timestamp
-            upload_blob(BUCKET_NAME, time_received, "timestamp")
+            upload_blob(time_received, "timestamp")
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
             print(f"Bitmap is now {bitmap}")
-            upload_blob(BUCKET_NAME,
-                        bitmap,
+            upload_blob(bitmap,
                         f"all_windows/window_{current_window}/bitmap_{current_window}")
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME,
-                        data[0].decode("utf-8") + data[1].decode("utf-8"),
+            upload_blob(data[0].decode("utf-8") + data[1].decode("utf-8"),
                         f"all_windows/window_{current_window}/fragment_{current_window}_{profile.WINDOW_SIZE - 1}")
 
         # Else, it is a normal fragment.
@@ -206,9 +201,9 @@ def schc_receiver():
             # Inactivity timer validation
             time_received = int(request_dict["time"])
 
-            if exists_blob(BUCKET_NAME, "timestamp"):
+            if exists_blob("timestamp"):
                 # Check time validation.
-                last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+                last_time_received = int(read_blob("timestamp"))
                 print(f"[RECV] Previous timestamp: {last_time_received}")
                 print(f"[RECV] This timestamp: {time_received}")
 
@@ -228,15 +223,15 @@ def schc_receiver():
                     return response_json, 200
 
             # Update timestamp
-            upload_blob(BUCKET_NAME, time_received, "timestamp")
+            upload_blob(time_received, "timestamp")
 
             # Update Sigfox sequence number JSON
-            sequence_numbers = json.loads(read_blob(BUCKET_NAME, "SSN"))
+            sequence_numbers = json.loads(read_blob("SSN"))
             sequence_numbers[position] = request_dict["seqNumber"]
             print(sequence_numbers)
-            upload_blob(BUCKET_NAME, json.dumps(sequence_numbers), "SSN")
+            upload_blob(json.dumps(sequence_numbers), "SSN")
 
-            upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
+            upload_blob(fragment_number, "fragment_number")
 
             # Print some data for the user.
             print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment "
@@ -246,11 +241,10 @@ def schc_receiver():
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
             print(f"Bitmap is now {bitmap}")
-            upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
+            upload_blob(bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
 
             # Upload the fragment data.
-            upload_blob(BUCKET_NAME,
-                        data[0].decode("utf-8") + data[1].decode("utf-8"),
+            upload_blob(data[0].decode("utf-8") + data[1].decode("utf-8"),
                         f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # If the fragment requests an ACK...
@@ -261,7 +255,7 @@ def schc_receiver():
             bitmap_ack = None
             window_ack = None
             for i in range(current_window + 1):
-                bitmap_ack = read_blob(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
+                bitmap_ack = read_blob(f"all_windows/window_{i}/bitmap_{i}")
                 print(bitmap_ack)
                 window_ack = i
                 if '0' in bitmap_ack:
@@ -347,7 +341,7 @@ def schc_receiver():
                         # If the All-1 is the only fragment of the last window (bitmap 0000001), and bitmap check of
                         # prior windows has passed, check the consecutiveness of the last All-0 and the All-1.
 
-                        sequence_numbers = json.loads(read_blob(BUCKET_NAME, "SSN"))
+                        sequence_numbers = json.loads(read_blob("SSN"))
 
                         # This array has the SSNs of the last window.
                         # last_window_ssn = list(sequence_numbers.values())[current_window * profile.WINDOW_SIZE + 1:]
@@ -369,8 +363,7 @@ def schc_receiver():
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
                             last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
-                            upload_blob(BUCKET_NAME,
-                                        data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                            upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                         f"all_windows/window_{current_window}/"
                                         f"fragment_{current_window}_{last_index}")
 
@@ -452,7 +445,7 @@ def reassemble():
         for i in range(current_window + 1):
             for j in range(window_size):
                 print(f"[RSMB] Loading fragment {j}")
-                fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
+                fragment_file = read_blob(f"all_windows/window_{i}/fragment_{i}_{j}")
                 print(f"[RSMB] Fragment data: {fragment_file}")
                 header = fragment_file[:header_bytes]
                 payload = fragment_file[header_bytes:]
@@ -470,7 +463,7 @@ def reassemble():
         with open(config.PAYLOAD, "w") as file:
             file.write(payload)
         # Upload the full message.
-        upload_blob(BUCKET_NAME, payload, "PAYLOAD")
+        upload_blob(payload, "PAYLOAD")
 
         if filecmp.cmp(config.PAYLOAD, config.MESSAGE):
             print("The reassembled file is equal to the original message.")
@@ -490,12 +483,11 @@ def reassemble():
 @app.route('/cleanup', methods=['GET', 'POST'])
 def cleanup():
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = config.CLIENT_SECRETS_FILE
-    bucket_name = config.BUCKET_NAME
     header_bytes = request.get_json()["header_bytes"]
     profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 
     print("[CLN] Deleting timestamp blob")
-    delete_blob(bucket_name, "timestamp")
+    delete_blob("timestamp")
 
     print("[CLN] Deleting modified loss mask")
     try:
@@ -504,11 +496,11 @@ def cleanup():
         pass
 
     print("[CLN] Resetting SSN")
-    upload_blob(bucket_name, "{}", "SSN")
+    upload_blob("{}", "SSN")
 
     print("[CLN] Initializing fragments...")
-    delete_blob(bucket_name, "all_windows/")
-    initialize_blobs(bucket_name, profile)
+    delete_blob("all_windows/")
+    initialize_blobs(profile)
 
     return '', 204
 
