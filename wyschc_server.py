@@ -232,8 +232,7 @@ def schc_receiver():
             # upload_blob(json.dumps(sequence_numbers), "SSN")
 
             upload_blob(sigfox_sequence_number, "SSN")
-
-            # upload_blob(fragment_number, "fragment_number")
+            upload_blob(fragment_number, "fragment_number")
 
             # Print some data for the user.
             print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment "
@@ -365,7 +364,8 @@ def schc_receiver():
                         if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
-                            last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
+                            # last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
+                            last_index = int(read_blob("fragment_number")) + 1
 
                             upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                         f"all_windows/window_{current_window}/"
