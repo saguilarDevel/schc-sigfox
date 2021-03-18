@@ -7,6 +7,9 @@ BUCKET_NAME = 'wyschc-2021'
 
 # File where we will store authentication credentials after acquiring them.
 CLIENT_SECRETS_FILE = './credentials/wyschc27-cc31b2bc6fbc.json'
+CREDENTIALS_FILE_FIREBASE = './credentials/schc-sigfox-upc-firebase-adminsdk-jf71b-66d927162a.json'
+
+FIREBASE_RTDB_URL = 'https://schc-sigfox-upc-default-rtdb.firebaseio.com/'
 
 # Loss mask path
 LOSS_MASK = './loss_masks/loss_mask_0.txt'
