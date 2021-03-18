@@ -16,7 +16,7 @@ LOSS_MASK = './loss_masks/loss_mask_0.txt'
 LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
 
 # Message to be fragmented
-MESSAGE = './comm/example_300.txt'
+MESSAGE = './comm/example.txt'
 PAYLOAD = './comm/PAYLOAD.txt'
 
 # GCP Cloud Functions URL

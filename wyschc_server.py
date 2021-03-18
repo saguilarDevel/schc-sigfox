@@ -226,12 +226,14 @@ def schc_receiver():
             upload_blob(time_received, "timestamp")
 
             # Update Sigfox sequence number JSON
-            sequence_numbers = json.loads(read_blob("SSN"))
-            sequence_numbers[position] = request_dict["seqNumber"]
-            print(sequence_numbers)
-            upload_blob(json.dumps(sequence_numbers), "SSN")
+            # sequence_numbers = json.loads(read_blob("SSN"))
+            # sequence_numbers[position] = request_dict["seqNumber"]
+            # print(sequence_numbers)
+            # upload_blob(json.dumps(sequence_numbers), "SSN")
 
-            upload_blob(fragment_number, "fragment_number")
+            upload_blob(sigfox_sequence_number, "SSN")
+
+            # upload_blob(fragment_number, "fragment_number")
 
             # Print some data for the user.
             print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment "
@@ -341,7 +343,7 @@ def schc_receiver():
                         # If the All-1 is the only fragment of the last window (bitmap 0000001), and bitmap check of
                         # prior windows has passed, check the consecutiveness of the last All-0 and the All-1.
 
-                        sequence_numbers = json.loads(read_blob("SSN"))
+                        # sequence_numbers = json.loads(read_blob("SSN"))
 
                         # This array has the SSNs of the last window.
                         # last_window_ssn = list(sequence_numbers.values())[current_window * profile.WINDOW_SIZE + 1:]
@@ -352,7 +354,8 @@ def schc_receiver():
                         # print(last_window_ssn)
 
                         # The last sequence number should be the highest of these values.
-                        last_sequence_number = max(list(map(int, list(sequence_numbers.values()))))
+                        # last_sequence_number = max(list(map(int, list(sequence_numbers.values()))))
+                        last_sequence_number = read_blob("SSN")
 
                         # TODO: If the All-0 has the highest of these values, it may have been retransmitted using the All-1
 
@@ -363,6 +366,7 @@ def schc_receiver():
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the higest registered fragment number.
                             last_index = (max(list(map(int, list(sequence_numbers.keys())))) + 1) % profile.WINDOW_SIZE
+
                             upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                         f"all_windows/window_{current_window}/"
                                         f"fragment_{current_window}_{last_index}")
