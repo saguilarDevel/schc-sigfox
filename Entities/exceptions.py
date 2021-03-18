@@ -4,3 +4,7 @@ class SCHCError(Exception):
 
 class LengthMismatchError(SCHCError):
     pass
+
+
+class SCHCTimeoutError(SCHCError):
+    pass

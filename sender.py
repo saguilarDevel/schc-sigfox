@@ -6,6 +6,7 @@ import requests
 from requests import Timeout
 
 from Entities.Fragmenter import Fragmenter
+from Entities.SCHCTimer import SCHCTimer
 from Entities.Sigfox import Sigfox
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
@@ -271,3 +272,6 @@ while i < len(fragment_list):
     # On All-0 fragments, this function will wait for SIGFOX_DL_TIMER to expire
     # On All-1 fragments, this function will enter retransmission phase.
     post(fragment)
+
+    timer = SCHCTimer(profile.INACTIVITY_TIMER_VALUE * 2)
+    timer.wait()

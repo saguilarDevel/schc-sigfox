@@ -6,7 +6,7 @@
 BUCKET_NAME = 'wyschc-2021'
 
 # File where we will store authentication credentials after acquiring them.
-CLIENT_SECRETS_FILE = './credentials/wyschc-303621-57ad8d989a41.json'
+CLIENT_SECRETS_FILE = './credentials/wyschc27-cc31b2bc6fbc.json'
 
 # Loss mask path
 LOSS_MASK = './loss_masks/loss_mask_0.txt'
