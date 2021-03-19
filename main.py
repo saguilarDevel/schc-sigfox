@@ -124,7 +124,7 @@ def hello_get(request):
         fragment_message = Fragment(profile_uplink, data)
 
         if 'enable_losses' in request_dict:
-            if request_dict['enable_losses']:
+            if request_dict['enable_losses'] == "True":
                 loss_rate = request_dict["loss_rate"]
                 # loss_rate = 10
                 coin = random.random()
@@ -223,7 +223,7 @@ def hello_get(request):
             # If the ACK bitmap has a 0 at the end of a non-final window, a fragment has been lost.
             if fragment_message.is_all_0() and '0' in bitmap_ack:
                 if 'enable_dl_losses' in request_dict:
-                    if request_dict['enable_dl_losses']:
+                    if request_dict['enable_dl_losses'] == "True":
                         coin = random.random()
                         print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                         if coin * 100 < loss_rate:
@@ -267,7 +267,7 @@ def hello_get(request):
                 pattern2 = re.compile("0*1")
                 if pattern2.fullmatch(bitmap_ack):
                     if 'enable_dl_losses' in request_dict:
-                        if request_dict['enable_dl_losses']:
+                        if request_dict['enable_dl_losses'] == "True":
                             coin = random.random()
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
@@ -317,7 +317,7 @@ def hello_get(request):
                     print("SSN is {} and last SSN is {}".format(sigfox_sequence_number,last_sequence_number))
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if 'enable_dl_losses' in request_dict:
-                        if request_dict['enable_dl_losses']:
+                        if request_dict['enable_dl_losses'] == "True":
                             coin = random.random()
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
@@ -360,7 +360,7 @@ def hello_get(request):
                     else:
                         # Send NACK at the end of the window.
                         if 'enable_dl_losses' in request_dict:
-                            if request_dict['enable_dl_losses']:
+                            if request_dict['enable_dl_losses'] == "True":
                                 coin = random.random()
                                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                                 if coin * 100 < loss_rate:
@@ -377,7 +377,7 @@ def hello_get(request):
                 else:
                     # Send NACK at the end of the window.
                     if 'enable_dl_losses' in request_dict:
-                        if request_dict['enable_dl_losses']:
+                        if request_dict['enable_dl_losses'] == "True":
                             coin = random.random()
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
@@ -509,10 +509,10 @@ def clean(request):
 
         print(f"from lopy? {request_dict['from_lopy']}")
 
-        if request_dict["from_lopy"] != "True":
+        if request_dict["from_lopy"] == "False":
             for blob in blob_list():
                 if blob.startswith("DL_LOSSES_"):
-                    delete_blob(blob.name)
+                    delete_blob(blob)
         else:
             current_experiment = 1
             for blob in blob_list():
