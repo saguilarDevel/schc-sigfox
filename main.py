@@ -500,8 +500,13 @@ def clean(request):
             upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
             upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
             # For each fragment in the SCHC Profile, create its blob.
-            for j in range(2 ** profile.N - 1):
-                upload_blob("", f"all_windows/window_{i}/fragment_{i}_{j}")
+
+            _ = requests.post(
+                url=config.CLEAN_WINDOW_URL,
+                json={"header_bytes": header_bytes,
+                      "window_number": i},
+                timeout=0.1)
+
         if exists_blob("Reassembled_Packet"):
             delete_blob("Reassembled_Packet")
 
@@ -532,3 +537,17 @@ def test(request):
     response_json = json.dumps(response_dict)
     print("200, Response content -> {}".format(response_json))
     return response_json, 200
+
+
+def clean_window(request):
+
+    request_dict = request.get_json()
+    header_bytes = int(request_dict["header_bytes"])
+    window_number = int(request_dict["window_number"])
+    profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+
+    for j in range(2 ** profile.N - 1):
+        # if request_dict["from_lopy"] == "False":
+        #     delete_blob(f"all_windows/window_{i}/fragment_{i}_{j}")
+        # else:
+        upload_blob("", f"all_windows/window_{window_number}/fragment_{window_number}_{j}")
