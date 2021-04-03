@@ -21,8 +21,8 @@ The Sigfox backend callback has the following JSON format:
     "seqNumber" : "{seqNumber}",
     "ack" : "{ack}",
     "loss_rate" : 10 or 20,
-    "enable_losses" : true or false,
-    "enable_dl_losses" : true or false
+    "enable_losses" : "True" or "False",
+    "enable_dl_losses" : "True" or "False"
 }
 ```
 

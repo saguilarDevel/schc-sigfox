@@ -382,7 +382,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink NACK was lost.")
-                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), "DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     print("[ALLX] Sending NACK for lost fragments...")
                     ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
@@ -463,7 +463,6 @@ def losses_mask(request):
 
         # Get request JSON.
         print("POST RECEIVED")
-        BUCKET_NAME = config.BUCKET_NAME
         request_dict = request.get_json()
         print('Received Request message: {}'.format(request_dict))
         mask = request_dict["mask"]
@@ -501,11 +500,15 @@ def clean(request):
             upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
             # For each fragment in the SCHC Profile, create its blob.
 
-            _ = requests.post(
-                url=config.CLEAN_WINDOW_URL,
-                json={"header_bytes": header_bytes,
-                      "window_number": i},
-                timeout=0.1)
+            try:
+                _ = requests.post(
+                    url=config.CLEAN_WINDOW_URL,
+                    json={"header_bytes": header_bytes,
+                          "window_number": i,
+                          "clear": request_dict["clear"] if "clear" in request_dict else "False"},
+                    timeout=0.1)
+            except requests.ReadTimeout:
+                pass
 
         if exists_blob("Reassembled_Packet"):
             delete_blob("Reassembled_Packet")
@@ -547,7 +550,7 @@ def clean_window(request):
     profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
 
     for j in range(2 ** profile.N - 1):
-        # if request_dict["from_lopy"] == "False":
-        #     delete_blob(f"all_windows/window_{i}/fragment_{i}_{j}")
-        # else:
-        upload_blob("", f"all_windows/window_{window_number}/fragment_{window_number}_{j}")
+        if request_dict["clear"] == "False":
+            upload_blob("", f"all_windows/window_{window_number}/fragment_{window_number}_{j}")
+        else:
+            delete_blob(f"all_windows/window_{window_number}/fragment_{window_number}_{j}")
