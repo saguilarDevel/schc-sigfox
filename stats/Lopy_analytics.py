@@ -92,5 +92,5 @@ if __name__ == '__main__':
             print(f"Current folder: {foldername}")
             output_file.write(f"============== FOLDER: {foldername} ==============\n\n")
             for file in os.listdir(f'results/{foldername}'):
-                print(f"Extracting data from {file}")
+                print(f"Extracting data from {foldername}/{file}")
                 extract_data(f"results/{foldername}/{file}", output_file)
