@@ -1,0 +1,122 @@
+======== 10% ========
+
+>>> 77 B:
+
+DL_LOSSES_2:
+"\n Lost DL message in window 0\n Lost DL message in window 0"
+
+DL_LOSSES_6:
+"\n Lost DL message in window 0"
+
+>>> 150 B:
+
+DL_LOSSES_7:
+"\n Lost DL message in window 1"
+
+DL_LOSSES_8:
+"\n Lost DL message in window 1"
+
+DL_LOSSES_10:
+"\n Lost DL message in window 0"
+
+>> 231 B:
+
+DL_LOSSES_8:
+"\n Lost DL message in window 2"
+
+>> 512 B:
+
+DL_LOSSES_2:
+"\n Lost DL message in window 0"
+
+DL_LOSSES_3:
+"\n Lost DL message in window 1"
+
+DL_LOSSES_5:
+"\n Lost DL message in window 1"
+
+DL_LOSSES_6:
+"\n Lost DL message in window 1\n Lost DL message in window 1"
+
+DL_LOSSES_8:
+"\n Lost DL message in window 1"
+
+
+======== 20% ========
+
+>>> 77 B:
+
+DL_LOSSES_2:
+"\n Lost DL message in window 0\n Lost DL message in window 0\n Lost DL message in window 0"
+
+DL_LOSSES_11:
+"\n Lost DL message in window 0"
+
+DL_LOSSES_13:
+"\n Lost DL message in window 0\n Lost DL message in window 0"
+
+DL_LOSSES_14:
+"\n Lost DL message in window 0"
+
+DL_LOSSES_15:
+"\n Lost DL message in window 0\n Lost DL message in window 0"
+
+DL_LOSSES_16:
+"\n Lost DL message in window 0"
+
+DL_LOSSES_17:
+"\n Lost DL message in window 0"
+
+>>> 150 B:
+
+DL_LOSSES_1:
+"\n Lost DL message in window 1"
+
+DL_LOSSES_2:
+"\n Lost DL message in window 1\n Lost DL message in window 1\n Lost DL message in window 1"
+
+DL_LOSSES_3:
+"\n Lost DL message in window 0\n Lost DL message in window 1"
+
+DL_LOSSES_5:
+"\n Lost DL message in window 1"
+
+DL_LOSSES_6:
+"\n Lost DL message in window 0\n Lost DL message in window 1"
+
+DL_LOSSES_7:
+"\n Lost DL message in window 1\n Lost DL message in window 1\n Lost DL message in window 1"
+
+>> 231 B:
+
+DL_LOSSES_3:
+"\n Lost DL message in window 1\n Lost DL message in window 2\n Lost DL message in window 2"
+
+DL_LOSSES_4:
+"\n Lost DL message in window 2"
+
+DL_LOSSES_5:
+"\n Lost DL message in window 2\n Lost DL message in window 2"
+
+DL_LOSSES_6:
+"\n Lost DL message in window 2"
+
+DL_LOSSES_10:
+"\n Lost DL message in window 2\n Lost DL message in window 2\n Lost DL message in window 2"
+
+
+>> 512 B:
+
+DL_LOSSES_2: "\n Lost DL message in window 0\n Lost DL message in window 1"
+
+DL_LOSSES_3: "\n Lost DL message in window 1"
+
+DL_LOSSES_5: "\n Lost DL message in window 0\n Lost DL message in window 1\n Lost DL message in window 1\n Lost DL message in window 1\n Lost DL message in window 1"
+
+DL_LOSSES_7: "\n Lost DL message in window 1"
+
+DL_LOSSES_8: "\n Lost DL message in window 0"
+
+DL_LOSSES_9: "\n Lost DL message in window 1\n Lost DL message in window 1"
+
+DL_LOSSES_10: "\n Lost DL message in window 1\n Lost DL message in window 1"
