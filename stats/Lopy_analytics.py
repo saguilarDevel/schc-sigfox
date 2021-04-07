@@ -16,10 +16,10 @@ def extract_data(filename, output):
                'payload_size': data['payload_size'],
                'total_number_of_fragments': data['total_number_of_fragments'],
                'total_transmission_time': data['total_transmission_time']}
-    output.write(f"tx_json = {tx_json}\n\n")
+    output.write(f"tx_json =\n{tx_json}\n\n")
     df_tx = pd.DataFrame(tx_json, index=[0])
     df_tx = df_tx.T
-    output.write(f"dl_tx = {df_tx}\n\n")
+    output.write(f"dl_tx =\n{df_tx}\n\n")
 
     assert data['fragments']
     df1 = pd.read_json(str(json.dumps(data['fragments'], sort_keys=True)))
@@ -28,7 +28,7 @@ def extract_data(filename, output):
     # df1.astype({"Column 6": bool})
     # print(df1.dtypes)
     df1_transposed = df1.T  # or df1.transpose()
-    output.write(f"df1_transposed = {df1_transposed} \n\n")
+    output.write(f"df1_transposed =\n{df1_transposed} \n\n")
     df1_transposed.astype(
         {"downlink_enable": bool, "sending_start": float, "ack_received": bool, "data": str, "sending_end": float,
          "FCN": str, "fragment_size": int, "ack": str, "timeout": int, "RULE_ID": str, "rssi": int, "W": str,
@@ -40,7 +40,7 @@ def extract_data(filename, output):
     df_nowait = df1_transposed[df1_transposed['downlink_enable'].isin([False])]
 
     output.write(f"Regular Fragments (nowait)\n"
-                 f"send_time = {df_nowait['send_time']}"
+                 f"send_time =\n{df_nowait['send_time']}"
                  f"count: {df_nowait['send_time'].count()}\n"
                  f"sum: {df_nowait['send_time'].sum(axis=0, skipna=True)}\n"
                  f"mean: {df_nowait['send_time'].mean(axis=0, skipna=True)}\n"
@@ -49,15 +49,15 @@ def extract_data(filename, output):
 
     df_wait = df1_transposed[df1_transposed['downlink_enable'].isin([True])]
 
-    output.write(f"Regular Fragments (wait)\n"
-                 f"send_time = {df_wait['send_time']}"
-                 f"count: {df_wait['send_time'].count()}\n"
-                 f"sum: {df_wait['send_time'].sum(axis=0, skipna=True)}\n"
-                 f"mean: {df_wait['send_time'].mean(axis=0, skipna=True)}\n"
-                 f"std: {df_wait['send_time'].std(axis=0, skipna=True)}\n"
-                 f"\n")
+    # output.write(f"Regular Fragments (wait)\n"
+    #              f"send_time =\n{df_wait['send_time']}"
+    #              f"count: {df_wait['send_time'].count()}\n"
+    #              f"sum: {df_wait['send_time'].sum(axis=0, skipna=True)}\n"
+    #              f"mean: {df_wait['send_time'].mean(axis=0, skipna=True)}\n"
+    #              f"std: {df_wait['send_time'].std(axis=0, skipna=True)}\n"
+    #              f"\n")
 
-    if len(df_wait[df_wait['RULE_ID'] == "00"]) != 0:
+    if len(df_wait[df_wait['RULE_ID'] == "000"]) != 0:
         df_all0 = df_wait[df_wait['FCN'].isin(['000'])]
         df_all1 = df_wait[df_wait['FCN'].isin(['111'])]
     else:
@@ -65,7 +65,7 @@ def extract_data(filename, output):
         df_all1 = df_wait[df_wait['FCN'].isin(['11111'])]
 
     output.write(f"Fragments - downlink requested - ALL 0\n"
-                 f"send_time = {df_all0['send_time']}"
+                 f"send_time =\n{df_all0['send_time']}"
                  f"count: {df_all0['send_time'].count()}\n"
                  f"sum: {df_all0['send_time'].sum(axis=0, skipna=True)}\n"
                  f"mean: {df_all0['send_time'].mean(axis=0, skipna=True)}\n"
@@ -73,7 +73,7 @@ def extract_data(filename, output):
                  f"\n")
 
     output.write(f"Fragments - downlink requested - ALL 1\n"
-                 f"send_time = {df_all1['send_time']}"
+                 f"send_time =\n{df_all1['send_time']}"
                  f"count: {df_all1['send_time'].count()}\n"
                  f"sum: {df_all1['send_time'].sum(axis=0, skipna=True)}\n"
                  f"mean: {df_all1['send_time'].mean(axis=0, skipna=True)}\n"
