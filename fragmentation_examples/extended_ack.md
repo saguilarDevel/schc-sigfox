@@ -274,10 +274,10 @@ Compound ACK Failure Format:
 
 
 
+-----END-------
 
 
-
-### Transmission example comparison of 300-byte SCHC Packet with and without extended ACK
+### Transmission example comparison of 300-byte SCHC Packet with and without compound ACK
 The example below shows the extended ACK format in a transmission of a 300-byte SCHC Packet with error in all transmission windows. 
 Moreover, an example using the standard ACK format is presented for the same 300-byte SCHC Packet transmission.
 
