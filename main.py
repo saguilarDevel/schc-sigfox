@@ -66,6 +66,16 @@ def hello_get(request):
             except requests.exceptions.ReadTimeout:
                 pass
             return '', 204
+        elif bytearray.fromhex(fragment[2:]).decode() == "CLEAN_ALL":
+            try:
+                _ = requests.post(
+                    url=config.CLEAN_URL,
+                    json={"header_bytes": header_bytes,
+                          "from_lopy": "True"},
+                    timeout=0.1)
+            except requests.exceptions.ReadTimeout:
+                pass
+            return '', 204
 
         data = [header, payload]
 
