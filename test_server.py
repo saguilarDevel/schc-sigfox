@@ -25,6 +25,7 @@ from Messages.ReceiverAbort import ReceiverAbort
 from Messages.SenderAbort import SenderAbort
 
 import config.config as config
+from database import Database
 
 app = Flask(__name__)
 
@@ -78,6 +79,10 @@ def save_current_fragment(fragment):
     return
 
 
+@app.before_first_request
+def init_db():
+    Database.initialize(config.BUCKET_NAME)
+
 @app.before_request
 def before_request():
     g.start = time.time()
@@ -108,7 +113,7 @@ def before_request():
             g.current_fragment['s-fragment_size'] = len(data)
             print('[before_request]: {}'.format(g.current_fragment))
 
-    elif request.endpoint == 'wyschc_get':
+    elif request.endpoint == 'schc_receiver':
         print('[before_request]: ' + request.endpoint)
         if request.method == 'POST':
             print("[before_request]: POST RECEIVED")
@@ -170,7 +175,7 @@ def before_request():
 def after_request(response):
     diff = time.time() - g.start
     print("[after_request]: execution time: {}".format(diff))
-    if request.endpoint == 'wyschc_get':
+    if request.endpoint == 'schc_receiver':
         g.current_fragment['s-sending_end'] = time.time()
         g.current_fragment['s-send_time'] = diff
         g.current_fragment['s-lost'] = False
@@ -244,12 +249,15 @@ def test_link():
     """
     import json
     request_json = request.get_json()
-
+    # Inactivity timer validation
+    time_received = int(request_json["time"])
+    Database.save(config.BUCKET_NAME, time_received, "timestamp")
     # if request.args and 'device' in request.args:
     #    return request.args.get('message')
     if request_json and 'device' in request_json and 'data' in request_json:
         device = request_json['device']
         print('Data received from device id:{}, data:{}'.format(device, request_json['data']))
+
         if 'ack' in request_json:
             if request_json['ack'] == 'true':
                 response = {request_json['device']: {'downlinkData': '07f7ffffffffffff'}}
@@ -503,16 +511,16 @@ def clean():
 
         header_bytes = request.get_json()["header_bytes"]
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-
-        print("[CLN] Deleting timestamp blob")
-        delete_blob(config.BUCKET_NAME, "timestamp")
-
-        print("[CLN] Resetting SSN")
-        upload_blob(config.BUCKET_NAME, "{}", "SSN")
-
-        print("[CLN] Initializing fragments...")
-        delete_blob(config.BUCKET_NAME, "all_windows/")
-        initialize_blobs(config.BUCKET_NAME, profile)
+        Database.delete_all(config.BUCKET_NAME)
+        # print("[CLN] Deleting timestamp blob")
+        # delete_blob(config.BUCKET_NAME, "timestamp")
+        #
+        # print("[CLN] Resetting SSN")
+        # upload_blob(config.BUCKET_NAME, "{}", "SSN")
+        #
+        # print("[CLN] Initializing fragments...")
+        # delete_blob(config.BUCKET_NAME, "all_windows/")
+        # initialize_blobs(config.BUCKET_NAME, profile)
         return '', 204
 
 @app.route('/losses_mask', methods=['GET', 'POST'])
@@ -543,8 +551,8 @@ def losses_mask():
 
         return '', 204
 
-@app.route('/wyschc_get', methods=['GET', 'POST'])
-def wyschc_get():
+@app.route('/schc_receiver', methods=['GET', 'POST'])
+def schc_receiver():
     """HTTP Cloud Function.
     Args:
         request (flask.Request): The request object.
@@ -623,8 +631,11 @@ def wyschc_get():
         current_window = int(fragment_message.header.W, 2)
 
         # Get the current bitmap.
-        bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
-
+        # bitmap = read_blob(BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
+        bitmap = Database.read(config.BUCKET_NAME, f"all_windows/window_{current_window}/bitmap_{current_window}")
+        # New data base can return None if bitmap does not exist
+        if bitmap is None:
+            bitmap = "0"*profile.BITMAP_SIZE
         # Controlling deterministic losses. This loads the file "loss_mask.txt" which states when should a fragment be
         # lost, separated by windows.
         fd = None
@@ -660,9 +671,12 @@ def wyschc_get():
         # Inactivity timer validation
         time_received = int(request_dict["time"])
 
-        if exists_blob(BUCKET_NAME, "timestamp"):
+        # if exists_blob(BUCKET_NAME, "timestamp"):
+        if Database.read(BUCKET_NAME, "timestamp"):
             # Check time validation.
-            last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+            # last_time_received = int(read_blob(BUCKET_NAME, "timestamp"))
+            last_time_received = int(Database.read(BUCKET_NAME, "timestamp"))
+
             print(f"[RECV] Previous timestamp: {last_time_received}")
             print(f"[RECV] This timestamp: {time_received}")
 
@@ -677,8 +691,8 @@ def wyschc_get():
                 return response_json, 200
 
         # Upload timestamp
-        upload_blob(BUCKET_NAME, time_received, "timestamp")
-
+        # upload_blob(BUCKET_NAME, time_received, "timestamp")
+        Database.save(BUCKET_NAME, time_received, "timestamp")
         # Check if the fragment is an All-1
         if is_monochar(fcn) and fcn[0] == '1':
             print("[RECV] This is an All-1.")
@@ -694,9 +708,13 @@ def wyschc_get():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob_using_threads(BUCKET_NAME,
+            # upload_blob_using_threads(BUCKET_NAME,
+            #                           bitmap,
+            #                           f"all_windows/window_{current_window}/bitmap_{current_window}")
+            Database.save(BUCKET_NAME,
                                       bitmap,
                                       f"all_windows/window_{current_window}/bitmap_{current_window}")
+
 
         # Else, it is a normal fragment.
         else:
@@ -712,7 +730,8 @@ def wyschc_get():
                 print(f"Loss mask after loss: {loss_mask}")
                 return 'fragment lost', 204
 
-            upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
+            # upload_blob(BUCKET_NAME, fragment_number, "fragment_number")
+            Database.save(BUCKET_NAME, fragment_number, "fragment_number")
 
             # Print some data for the user.
             print(f"[RECV] This corresponds to the {str(fragment_number)}th fragment "
@@ -731,18 +750,22 @@ def wyschc_get():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
-            upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
-
+            # upload_blob(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
+            Database.save(BUCKET_NAME, bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
             # Upload the fragment data.
-            upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+            # upload_blob_using_threads(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
+            #                           f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
+            Database.save(BUCKET_NAME, data[0].decode("utf-8") + data[1].decode("utf-8"),
                                       f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
-
         # Get last and current Sigfox sequence number (SSN)
         last_sequence_number = 0
-        if exists_blob(BUCKET_NAME, "SSN"):
-            last_sequence_number = read_blob(BUCKET_NAME, "SSN")
-        upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
+        # if exists_blob(BUCKET_NAME, "SSN"):
+        if Database.read(BUCKET_NAME, "SSN"):
+            # last_sequence_number = read_blob(BUCKET_NAME, "SSN")
+            last_sequence_number = Database.read(BUCKET_NAME, "SSN")
 
+        # upload_blob(BUCKET_NAME, sigfox_sequence_number, "SSN")
+        Database.save(BUCKET_NAME,sigfox_sequence_number, "SSN")
         # If the fragment is at the end of a window (ALL-0 or ALL-1) it expects an ACK.
         if fragment_message.expects_ack():
 
@@ -751,7 +774,8 @@ def wyschc_get():
             bitmap_ack = None
             window_ack = None
             for i in range(current_window+1):
-                bitmap_ack = read_blob(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
+                # bitmap_ack = read_blob(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
+                bitmap_ack = Database.read(BUCKET_NAME, f"all_windows/window_{i}/bitmap_{i}")
                 print(bitmap_ack)
                 window_ack = i
                 if '0' in bitmap_ack:
@@ -814,8 +838,13 @@ def wyschc_get():
                             print("[ALL1] Integrity checking complete, launching reassembler.")
                             # All-1 does not define a fragment number, so its fragment number must be the next
                             # of the last registered fragment number.
-                            last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
-                            upload_blob_using_threads(BUCKET_NAME,
+                            # last_index = int(read_blob(BUCKET_NAME, "fragment_number")) + 1
+                            last_index = int(Database.read(BUCKET_NAME, "fragment_number")) + 1
+                            # upload_blob_using_threads(BUCKET_NAME,
+                            #                           data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                            #                           f"all_windows/window_{current_window}/"
+                            #                           f"fragment_{current_window}_{last_index}")
+                            Database.save(BUCKET_NAME,
                                                       data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                                       f"all_windows/window_{current_window}/"
                                                       f"fragment_{current_window}_{last_index}")
@@ -896,12 +925,15 @@ def http_reassemble():
 
         # Get all the fragments into an array in the format "fragment = [header, payload]"
         fragments = []
+        all_window_fragments = Database.read(config.BUCKET_NAME, f"all_windows")
 
         # For each window, load every fragment into the fragments array
         for i in range(current_window + 1):
             for j in range(2 ** n - 1):
                 print(f">>>[RSMB] Loading fragment {j}")
-                fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
+                # fragment_file = read_blob(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
+                # fragment_file = Database.read(BUCKET_NAME, f"all_windows/window_{i}/fragment_{i}_{j}")
+                fragment_file = all_window_fragments[f"window_{i}"][f"fragment_{i}_{j}"]
                 print(f">>>[RSMB] Fragment data: {fragment_file}")
                 header = fragment_file[:header_bytes]
                 payload = fragment_file[header_bytes:]
@@ -915,11 +947,17 @@ def http_reassemble():
         reassembler = Reassembler(profile_uplink, fragments)
         payload = bytearray(reassembler.reassemble()).decode("utf-8")
 
+
+        from Messages.mic_crc32 import get_mic, get_mic_size
+
+        mic = get_mic(reassembler.reassemble())
+        print("mic:{}, mic size: {}".format(mic, get_mic_size()))
         print(">>>[RSMB] Uploading result")
         with open(config.PAYLOAD, "w") as file:
             file.write(payload)
         # Upload the full message.
-        upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
+        # upload_blob_using_threads(BUCKET_NAME, payload, "PAYLOAD")
+        Database.save(BUCKET_NAME, payload, "PAYLOAD")
         # try:
         #     print("Waiting INACTIVITY_TIMER_VALUE: {} seg for cleaning".format(profile_uplink.INACTIVITY_TIMER_VALUE))
         #     time.sleep(profile_uplink.INACTIVITY_TIMER_VALUE)
