@@ -10,7 +10,7 @@ from Entities.Reassembler import Reassembler
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 
-from function import *
+from schc_utils import *
 from blobHelperFunctions import *
 import config.config as config
 

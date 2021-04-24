@@ -7,7 +7,7 @@ from Messages.Fragment import Fragment
 from Messages.FragmentHeader import FragmentHeader
 from Messages.ReceiverAbort import ReceiverAbort
 from Messages.SenderAbort import SenderAbort
-from function import bitstring_to_bytes, is_monochar
+from schc_utils import bitstring_to_bytes, is_monochar
 
 
 class TestFragmentHeader(unittest.TestCase):

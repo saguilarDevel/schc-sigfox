@@ -10,7 +10,7 @@ from flask import abort, g
 import time
 from datetime import datetime
 from google.cloud import storage
-from function import *
+from schc_utils import *
 from blobHelperFunctions import *
 from Entities.Fragmenter import Fragmenter
 
@@ -20,7 +20,7 @@ from Entities.Sigfox import Sigfox
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from blobHelperFunctions import *
-from function import *
+from schc_utils import *
 from Messages.ReceiverAbort import ReceiverAbort
 from Messages.SenderAbort import SenderAbort
 

@@ -1,6 +1,5 @@
 from Messages.Fragment import Fragment
-from Messages.FragmentHeader import FragmentHeader
-from function import bitstring_to_bytes
+from schc_utils import bitstring_to_bytes
 
 
 class SenderAbort(Fragment):

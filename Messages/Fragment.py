@@ -1,5 +1,5 @@
 from Messages.FragmentHeader import FragmentHeader
-from function import zfill, is_monochar
+from schc_utils import zfill, is_monochar
 
 
 class Fragment:

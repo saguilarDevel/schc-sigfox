@@ -257,13 +257,10 @@ if len(fragment_list) > (2 ** profile.M) * window_size:
 # Start sending fragments.
 while i < len(fragment_list):
     # A fragment has the format "fragment = [header, payload]".
-    data = bytes(fragment_list[i][0] + fragment_list[i][1])
     current_size += len(fragment_list[i][1])
     percent = round(float(current_size) / float(total_size) * 100, 2)
 
     # Convert to a Fragment class for easier manipulation.
-    resent = None
-    timeout = False
     fragment = Fragment(profile, fragment_list[i])
 
     # Send the data.
