@@ -70,7 +70,7 @@ some example text
 ```
 In the example above, the bucket name is sigfoxschc, and the blob name is test-database.
 
-For more information about the Realtime database, please vist the [Firebase Realtime Database Docs](https://firebase.google.com/docs/database/admin/start).
+For more information about the Realtime database, please visit the [Firebase Realtime Database Docs](https://firebase.google.com/docs/database/admin/start).
 
 
 
