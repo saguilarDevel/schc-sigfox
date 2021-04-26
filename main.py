@@ -72,7 +72,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "from_lopy": "True"},
+                          "from_lopy": "False"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -82,7 +82,7 @@ def hello_get(request):
 
         # Initialize SCHC variables.
         profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        buffer_size = profile.MTU
+        buffer_size = profile.UPLINK_MTU
         n = profile.N
         m = profile.M
 
@@ -594,10 +594,12 @@ def test(request):
     print("POST RECEIVED")
     request_dict = request.get_json()
     print('Received Sigfox message: {}'.format(request_dict))
-    response_dict = {request_dict["device"]: {'downlinkData': "0400000000000000"}}
-    response_json = json.dumps(response_dict)
-    print("200, Response content -> {}".format(response_json))
-    return response_json, 200
+    if request_dict['ack'] == 'true':
+        response_dict = {request_dict["device"]: {'downlinkData': "0400000000000000"}}
+        response_json = json.dumps(response_dict)
+        print("200, Response content -> {}".format(response_json))
+        return response_json, 200
+    return '', 204
 
 
 def clean_window(request):
