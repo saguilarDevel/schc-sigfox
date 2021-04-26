@@ -141,6 +141,13 @@ def hello_get(request):
                 print(f'loss rate: {loss_rate}, random toss:{coin * 100}')
                 if coin * 100 < loss_rate:
                     print("[LOSS] The fragment was lost.")
+                    if fragment_message.is_all_1():
+                        last_sequence_number = read_blob("SSN")
+                        print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
+                        if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
+                            # We do that to save the last SSN value for future use (when the next All-1 Arrives)
+                            # In a Real Loss Scenario we will not know the SSN...
+                            upload_blob(sigfox_sequence_number, "SSN")
                     return 'fragment lost', 204
 
         # Get current window for this fragment.
