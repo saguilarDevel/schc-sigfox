@@ -9,7 +9,6 @@ from Entities.Sigfox import Sigfox
 from Entities.Reassembler import Reassembler
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
-from Messages.ReceiverAbort import ReceiverAbort
 
 from function import *
 from firebase_utils import *
@@ -45,7 +44,7 @@ def hello_get(request):
         header_bytes = None
         header_first_hex = fragment[:1]
 
-        if (header_first_hex) == '0' or (header_first_hex) == '1':
+        if (header_first_hex) == '0' or (header_first_hex) =='1':
             header = bytes.fromhex(fragment[:2])
             payload = bytearray.fromhex(fragment[2:])
             header_bytes = 1
@@ -81,10 +80,11 @@ def hello_get(request):
         data = [header, payload]
 
         # Initialize SCHC variables.
-        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
-        buffer_size = profile.MTU
-        n = profile.N
-        m = profile.M
+        profile_uplink = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        profile_downlink = Sigfox("DOWNLINK", "NO ACK", header_bytes)
+        buffer_size = profile_uplink.MTU
+        n = profile_uplink.N
+        m = profile_uplink.M
 
         # If fragment size is greater than buffer size, ignore it and end function.
         if len(fragment) / 2 * 8 > buffer_size:  # Fragment is hex, 1 hex = 1/2 byte
@@ -104,10 +104,9 @@ def hello_get(request):
                     upload_blob("", "all_windows/window_%d/fragment_%d_%d" % (i, i, j))
 
                 # Create the blob for each bitmap.
-                if not exists_blob("all_windows/window_%d/bitmap_%d" % (i, i) or size_blob(
-                        "all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
+                if not exists_blob("all_windows/window_%d/bitmap_%d" % (i, i) or size_blob("all_windows/window_%d/bitmap_%d" % (i, i)) == 0):
                     bitmap = ""
-                    for b in range(profile.BITMAP_SIZE):
+                    for b in range(profile_uplink.BITMAP_SIZE):
                         bitmap += "0"
                     upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
 
@@ -130,39 +129,36 @@ def hello_get(request):
         for j in range(2 ** n - 1):
             fcn_dict[zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], n)] = j
 
-        # Convert to a Fragment class for easier manipulation.
-        fragment_message = Fragment(profile, data)
 
-        if 'enable_losses' in request_dict and not (fragment_message.is_all_0() or fragment_message.is_all_1()):
-            if request_dict['enable_losses']:
+        # Convert to a Fragment class for easier manipulation.
+        fragment_message = Fragment(profile_uplink, data)
+
+        if 'enable_losses' in request_dict:
+            if request_dict['enable_losses'] == "True":
                 loss_rate = request_dict["loss_rate"]
                 # loss_rate = 10
                 coin = random.random()
-                print(f'loss rate: {loss_rate}, random toss:{coin * 100}')
+                print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                 if coin * 100 < loss_rate:
                     print("[LOSS] The fragment was lost.")
+                    if fragment_message.is_all_1():
+                        last_sequence_number = read_blob("SSN")
+                        print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
+                        if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
+                            # We do that to save the last SSN value for future use (when the next All-1 Arrives)
+                            # In a Real Loss Scenario we will not know the SSN...
+                            upload_blob(sigfox_sequence_number, "SSN")
                     return 'fragment lost', 204
 
         # Get current window for this fragment.
-        current_window = int(fragment_message.HEADER.W, 2)
+        current_window = int(fragment_message.header.W, 2)
 
         # Get the current bitmap.
         bitmap = read_blob("all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
-        if fragment_message.is_sender_abort():
-            print("Sender-Abort received")
-            try:
-                print("Cleaning")
-                _ = requests.post(url=config.CLEAN_URL,
-                                  json={"header_bytes": header_bytes},
-                                  timeout=0.1)
-            except requests.exceptions.ReadTimeout:
-                pass
-            return 'Sender-Abort received', 204
-
         # Try getting the fragment number from the FCN dictionary.
         try:
-            fragment_number = fcn_dict[fragment_message.HEADER.FCN]
+            fragment_number = fcn_dict[fragment_message.header.FCN]
             upload_blob(fragment_number, "fragment_number")
 
             time_received = int(request_dict["time"])
@@ -171,20 +167,10 @@ def hello_get(request):
                 last_time_received = int(read_blob("timestamp"))
 
                 # If this is not the very first fragment and the inactivity timer has been reached, ignore the message.
+                # TODO: Send SCHC abort message.
                 if str(fragment_number) != "0" and str(
-                        current_window) != "0" and time_received - last_time_received > profile.INACTIVITY_TIMER_VALUE:
-                    print("[RECV] Inactivity timer reached. Ending session.")
-                    receiver_abort = ReceiverAbort(profile, fragment_message.HEADER)
-                    print("Sending Receiver Abort")
-                    response_json = send_ack(request_dict, receiver_abort)
-                    print(f"Response content -> {response_json}")
-                    try:
-                        _ = requests.post(url=config.CLEAN_URL,
-                                          json={"header_bytes": header_bytes},
-                                          timeout=0.1)
-                    except requests.exceptions.ReadTimeout:
-                        pass
-                    return response_json, 200
+                        current_window) != "0" and time_received - last_time_received > profile_uplink.INACTIVITY_TIMER_VALUE:
+                    return json.dumps({"message": "Inactivity timer reached. Message ignored."}), 200
 
             # Upload current timestamp.
             upload_blob(time_received, "timestamp")
@@ -194,7 +180,7 @@ def hello_get(request):
                 current_window) + "th window.")
             print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
 
-            # Controlled Errors check
+            #Controlled Errors check
             # losses_mask = read_blob(BUCKET_NAME, "all_windows/window_%d/losses_mask_%d" % (current_window, current_window))
             # if (losses_mask[fragment_number]) != '0':
             #     losses_mask = replace_bit(losses_mask, fragment_number, str(int(losses_mask[fragment_number])-1))
@@ -223,9 +209,9 @@ def hello_get(request):
             upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
 
         # Get some SCHC values from the fragment.
-        rule_id = fragment_message.HEADER.RULE_ID
-        dtag = fragment_message.HEADER.DTAG
-        w = fragment_message.HEADER.W
+        rule_id = fragment_message.header.RULE_ID
+        dtag = fragment_message.header.DTAG
+        w = fragment_message.header.W
 
         # Get last and current Sigfox sequence number (SSN)
         last_sequence_number = 0
@@ -253,14 +239,12 @@ def hello_get(request):
                         if coin * 100 < loss_rate:
                             print("[LOSS-ALL0] The Downlink NACK was lost.")
 
-                            upload_blob(
-                                read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(
-                                    current_window), f"DL_LOSSES_{current_experiment}")
+                            upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                             return 'Downlink lost', 204
                 print("[ALL0] Sending ACK for lost fragments...")
                 print("bitmap with errors -> {}".format(bitmap_ack))
                 # Create an ACK message and send it.
-                ack = ACK(profile, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
+                ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                 response_json = send_ack(request_dict, ack)
                 print("Response content -> {}".format(response_json))
                 return response_json, 200
@@ -298,9 +282,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
-                                upload_blob(read_blob(
-                                    f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(
-                                    current_window), f"DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
                     # Downlink Controlled Errors
@@ -310,8 +292,7 @@ def hello_get(request):
                         upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                     "all_windows/window_%d/fragment_%d_%d" % (
                                         current_window, current_window, last_index))
-                        print(
-                            "Info for reassemble: last_index:{}, current_window:{}".format(last_index, current_window))
+                        print("Info for reassemble: last_index:{}, current_window:{}".format(last_index, current_window))
                         try:
                             print('Activating reassembly process...')
                             _ = requests.post(
@@ -325,14 +306,9 @@ def hello_get(request):
                         # Send last ACK to end communication.
                         print("[ALL1] Reassembled: Sending last ACK")
                         bitmap = ''
-                        for k in range(profile.BITMAP_SIZE):
+                        for k in range(profile_uplink.BITMAP_SIZE):
                             bitmap += '0'
-                        last_ack = ACK(profile=profile,
-                                       rule_id=rule_id,
-                                       dtag=dtag,
-                                       w=zfill(format(window_ack, 'b'), m),
-                                       c='1',
-                                       bitmap=bitmap)
+                        last_ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                         response_json = send_ack(request_dict, last_ack)
                         # return response_json, 200
                         # response_json = send_ack(request_dict, last_ack)
@@ -348,7 +324,7 @@ def hello_get(request):
 
                 # If the bitmap matches the regex, check if the last two received fragments are consecutive.
                 if pattern.fullmatch(bitmap_ack):
-                    print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
+                    print("SSN is {} and last SSN is {}".format(sigfox_sequence_number,last_sequence_number))
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if 'enable_dl_losses' in request_dict:
                         if request_dict['enable_dl_losses'] == "True":
@@ -356,9 +332,7 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink ACK was lost.")
-                                upload_blob(read_blob(
-                                    f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(
-                                    current_window), f"DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
                         # Downlink Controlled Errors
@@ -368,13 +342,11 @@ def hello_get(request):
                             upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
                                         "all_windows/window_%d/fragment_%d_%d" % (
                                             current_window, current_window, last_index))
-                            print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,
-                                                                                                 current_window))
+                            print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,current_window))
                             try:
                                 print('Activating reassembly process...')
                                 _ = requests.post(url=config.REASSEMBLE_URL,
-                                                  json={"last_index": last_index, "current_window": current_window,
-                                                        "header_bytes": header_bytes},
+                                                  json={"last_index": last_index, "current_window": current_window, "header_bytes": header_bytes},
                                                   timeout=0.1)
                             except requests.exceptions.ReadTimeout:
                                 pass
@@ -382,14 +354,9 @@ def hello_get(request):
                             # Send last ACK to end communication.
                             print("[ALL1] Reassembled: Sending last ACK")
                             bitmap = ''
-                            for k in range(profile.BITMAP_SIZE):
+                            for k in range(profile_uplink.BITMAP_SIZE):
                                 bitmap += '0'
-                            last_ack = ACK(profile=profile,
-                                           rule_id=rule_id,
-                                           dtag=dtag,
-                                           w=zfill(format(window_ack, 'b'), m),
-                                           c='1',
-                                           bitmap=bitmap)
+                            last_ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '1')
                             response_json = send_ack(request_dict, last_ack)
                             # return response_json, 200
                             # response_json = send_ack(request_dict, last_ack)
@@ -408,17 +375,10 @@ def hello_get(request):
                                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                                 if coin * 100 < loss_rate:
                                     print("[LOSS-ALL1] The Downlink NACK was lost.")
-                                    upload_blob(read_blob(
-                                        f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(
-                                        current_window), f"DL_LOSSES_{current_experiment}")
+                                    upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                     return 'Downlink lost', 204
                         print("[ALLX] Sending NACK for lost fragments because of SSN...")
-                        ack = ACK(profile=profile,
-                                  rule_id=rule_id,
-                                  dtag=dtag,
-                                  w=zfill(format(window_ack, 'b'), m),
-                                  c='0',
-                                  bitmap=bitmap_ack)
+                        ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                         response_json = send_ack(request_dict, ack)
                         return response_json, 200
 
@@ -432,17 +392,10 @@ def hello_get(request):
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
                                 print("[LOSS-ALL1] The Downlink NACK was lost.")
-                                upload_blob(read_blob(
-                                    f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(
-                                    current_window), f"DL_LOSSES_{current_experiment}")
+                                upload_blob(read_blob(f"DL_LOSSES_{current_experiment}") + "\n Lost DL message in window {}".format(current_window), f"DL_LOSSES_{current_experiment}")
                                 return 'Downlink lost', 204
                     print("[ALLX] Sending NACK for lost fragments...")
-                    ack = ACK(profile=profile,
-                              rule_id=rule_id,
-                              dtag=dtag,
-                              w=zfill(format(window_ack, 'b'), m),
-                              c='0',
-                              bitmap=bitmap_ack)
+                    ack = ACK(profile_downlink, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
                     response_json = send_ack(request_dict, ack)
                     return response_json, 200
 
@@ -454,6 +407,7 @@ def hello_get(request):
 
 
 def http_reassemble(request):
+
     # Wait for an HTTP POST request.
     if request.method == 'POST':
 
@@ -503,7 +457,6 @@ def http_reassemble(request):
 
         return '', 204
 
-
 def losses_mask(request):
     """HTTP Cloud Function.
     Args:
@@ -524,11 +477,10 @@ def losses_mask(request):
         print('Received Request message: {}'.format(request_dict))
         mask = request_dict["mask"]
         last_error_window = int(request_dict["last_error_window"])
-        for i in range(last_error_window + 1):
-            upload_blob(mask, "all_windows/window_%d/losses_mask_%d" % (i, i))
+        for i in range(last_error_window+1):
+            upload_blob(mask, "all_windows/window_%d/losses_mask_%d" % (i,i))
 
         return '', 204
-
 
 def clean(request):
     """HTTP Cloud Function.
@@ -601,6 +553,7 @@ def test(request):
 
 
 def clean_window(request):
+
     request_dict = request.get_json()
     header_bytes = int(request_dict["header_bytes"])
     window_number = int(request_dict["window_number"])
