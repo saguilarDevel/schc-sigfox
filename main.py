@@ -42,14 +42,13 @@ def hello_get(request):
         BUCKET_NAME = config.BUCKET_NAME
 
         # Parse fragment into "fragment = [header, payload]
-        header_bytes = None
         header_first_hex = fragment[:1]
 
-        if (header_first_hex) == '0' or (header_first_hex) == '1':
+        if header_first_hex == '0' or header_first_hex == '1':
             header = bytes.fromhex(fragment[:2])
             payload = bytearray.fromhex(fragment[2:])
             header_bytes = 1
-        elif (header_first_hex) == '2':
+        elif header_first_hex == 'f':
             header = bytearray.fromhex(fragment[:4])
             payload = bytearray.fromhex(fragment[4:])
             header_bytes = 2
@@ -62,7 +61,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "from_lopy": "True"},
+                          "delete_dl_losses": "True"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -72,7 +71,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "from_lopy": "False"},
+                          "delete_dl_losses": "False"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -161,7 +160,8 @@ def hello_get(request):
             try:
                 print("Cleaning")
                 _ = requests.post(url=config.CLEAN_URL,
-                                  json={"header_bytes": header_bytes},
+                                  json={"header_bytes": header_bytes,
+                                        "delete_dl_losses": "False"},
                                   timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -187,7 +187,8 @@ def hello_get(request):
                     print(f"Response content -> {response_json}")
                     try:
                         _ = requests.post(url=config.CLEAN_URL,
-                                          json={"header_bytes": header_bytes},
+                                          json={"header_bytes": header_bytes,
+                                                "delete_dl_losses": "False"},
                                           timeout=0.1)
                     except requests.exceptions.ReadTimeout:
                         pass
@@ -580,9 +581,8 @@ def clean(request):
 
         upload_blob("", "SSN")
 
-        print(f"from lopy? {request_dict['from_lopy']}")
-
-        if request_dict["from_lopy"] == "False":
+        print(f"delete_dl_losses? {request_dict['delete_dl_losses']}")
+        if request_dict["delete_dl_losses"] == "False":
             for blob in blob_list():
                 if blob.startswith("DL_LOSSES_"):
                     delete_blob(blob)
