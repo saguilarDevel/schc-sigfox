@@ -42,13 +42,13 @@ def hello_get(request):
         BUCKET_NAME = config.BUCKET_NAME
 
         # Parse fragment into "fragment = [header, payload]
-        header_first_hex = fragment[:1]
+        header_first_hex = fragment[0]
 
         if header_first_hex == '0' or header_first_hex == '1':
             header = bytes.fromhex(fragment[:2])
             payload = bytearray.fromhex(fragment[2:])
             header_bytes = 1
-        elif header_first_hex == 'f':
+        elif header_first_hex == 'f' or header_first_hex == '2':
             header = bytearray.fromhex(fragment[:4])
             payload = bytearray.fromhex(fragment[4:])
             header_bytes = 2
@@ -268,7 +268,12 @@ def hello_get(request):
                 print("[ALL0] Sending ACK for lost fragments...")
                 print("bitmap with errors -> {}".format(bitmap_ack))
                 # Create an ACK message and send it.
-                ack = ACK(profile, rule_id, dtag, zfill(format(window_ack, 'b'), m), bitmap_ack, '0')
+                ack = ACK(profile=profile,
+                          rule_id=rule_id,
+                          dtag=dtag,
+                          w=zfill(format(window_ack, 'b'), m),
+                          c='0',
+                          bitmap=bitmap_ack)
                 response_json = send_ack(request_dict, ack)
                 print("Response content -> {}".format(response_json))
                 return response_json, 200
