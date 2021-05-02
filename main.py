@@ -61,7 +61,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "delete_dl_losses": "True"},
+                          "not_delete_dl_losses": "False"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -71,7 +71,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "delete_dl_losses": "False"},
+                          "not_delete_dl_losses": "True"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -161,7 +161,7 @@ def hello_get(request):
                 print("Cleaning")
                 _ = requests.post(url=config.CLEAN_URL,
                                   json={"header_bytes": header_bytes,
-                                        "delete_dl_losses": "False"},
+                                        "not_delete_dl_losses": "True"},
                                   timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -188,7 +188,7 @@ def hello_get(request):
                     try:
                         _ = requests.post(url=config.CLEAN_URL,
                                           json={"header_bytes": header_bytes,
-                                                "delete_dl_losses": "False"},
+                                                "not_delete_dl_losses": "True"},
                                           timeout=0.1)
                     except requests.exceptions.ReadTimeout:
                         pass
@@ -586,8 +586,8 @@ def clean(request):
 
         upload_blob("", "SSN")
 
-        print(f"delete_dl_losses? {request_dict['delete_dl_losses']}")
-        if request_dict["delete_dl_losses"] == "False":
+        print(f"not_delete_dl_losses? {request_dict['not_delete_dl_losses']}")
+        if request_dict["not_delete_dl_losses"] == "False":
             for blob in blob_list():
                 if blob.startswith("DL_LOSSES_"):
                     delete_blob(blob)
