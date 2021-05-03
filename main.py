@@ -61,7 +61,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "not_delete_dl_losses": "False"},
+                          "not_delete_dl_losses": "True"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -71,7 +71,7 @@ def hello_get(request):
                 _ = requests.post(
                     url=config.CLEAN_URL,
                     json={"header_bytes": header_bytes,
-                          "not_delete_dl_losses": "True"},
+                          "not_delete_dl_losses": "False"},
                     timeout=0.1)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -157,14 +157,6 @@ def hello_get(request):
 
         if fragment_message.is_sender_abort():
             print("Sender-Abort received")
-            try:
-                print("Cleaning")
-                _ = requests.post(url=config.CLEAN_URL,
-                                  json={"header_bytes": header_bytes,
-                                        "not_delete_dl_losses": "True"},
-                                  timeout=0.1)
-            except requests.exceptions.ReadTimeout:
-                pass
             return 'Sender-Abort received', 204
 
         # Try getting the fragment number from the FCN dictionary.
@@ -185,13 +177,6 @@ def hello_get(request):
                     print("Sending Receiver Abort")
                     response_json = send_ack(request_dict, receiver_abort)
                     print(f"Response content -> {response_json}")
-                    try:
-                        _ = requests.post(url=config.CLEAN_URL,
-                                          json={"header_bytes": header_bytes,
-                                                "not_delete_dl_losses": "True"},
-                                          timeout=0.1)
-                    except requests.exceptions.ReadTimeout:
-                        pass
                     return response_json, 200
 
             # Upload current timestamp.
@@ -256,6 +241,7 @@ def hello_get(request):
             if fragment_message.is_all_0() and '0' in bitmap_ack:
                 if 'enable_dl_losses' in request_dict:
                     if request_dict['enable_dl_losses'] == "True":
+                        loss_rate = request_dict["loss_rate"]
                         coin = random.random()
                         print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                         if coin * 100 < loss_rate:
@@ -307,6 +293,7 @@ def hello_get(request):
                 if pattern2.fullmatch(bitmap_ack):
                     if 'enable_dl_losses' in request_dict:
                         if request_dict['enable_dl_losses'] == "True":
+                            loss_rate = request_dict["loss_rate"]
                             coin = random.random()
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
@@ -365,6 +352,7 @@ def hello_get(request):
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if 'enable_dl_losses' in request_dict:
                         if request_dict['enable_dl_losses'] == "True":
+                            loss_rate = request_dict["loss_rate"]
                             coin = random.random()
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
@@ -417,6 +405,7 @@ def hello_get(request):
                         # Send NACK at the end of the window.
                         if 'enable_dl_losses' in request_dict:
                             if request_dict['enable_dl_losses'] == "True":
+                                loss_rate = request_dict["loss_rate"]
                                 coin = random.random()
                                 print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                                 if coin * 100 < loss_rate:
@@ -441,6 +430,7 @@ def hello_get(request):
                     # Send NACK at the end of the window.
                     if 'enable_dl_losses' in request_dict:
                         if request_dict['enable_dl_losses'] == "True":
+                            loss_rate = request_dict["loss_rate"]
                             coin = random.random()
                             print('loss rate: {}, random toss:{}'.format(loss_rate, coin * 100))
                             if coin * 100 < loss_rate:
