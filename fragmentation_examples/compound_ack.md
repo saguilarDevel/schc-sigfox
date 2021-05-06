@@ -8,7 +8,8 @@ This section defines the SCHC fragment formats, the compound SCHC ACK format and
 
 
 #### Regular SCHC Frgment
-Figure 1 shows an example of a regular SCHC fragment for all fragments except the last one.
+Figure 1 shows an example of a regular SCHC fragment for all fragments except the last one. 
+As tiles are of 11 bytes, padding MUST NOT be added.
 
 
 ```text
@@ -29,14 +30,16 @@ As per RFC8724, the All-0 message is distinguishable from the SCHC ACK REQ (All-
 
 Figure 2 shows an example of the All-1 message. 
 The All-1 message MUST contain the last tile of the SCHC Packet.
+The last tile MUST be of at least 1 byte (one L2 word). 
+Padding MUST NOT be added, as the resulting size is a L2 word multiple.
 
 ```text
     
    |---  SCHC Fragment Header ---|
-   + --------------------------- + ------------ + ------------ +
-   | RuleID |   W    | FCN=ALL-1 |    Payload   |     0-pad    |
-   + ------ + ------ + --------- + ------------ + ------------ +
-   | 3 bits | 2 bits |  3 bits   | 8 to 88 bits | 80 to 0 bits |
+   + --------------------------- + ------------ + 
+   | RuleID |   W    | FCN=ALL-1 |    Payload   |
+   + ------ + ------ + --------- + ------------ +
+   | 3 bits | 2 bits |  3 bits   | 8 to 88 bits |
 
         Figure 2: All-1 SCHC Message with last tile
 
@@ -53,14 +56,18 @@ What happens with a payload of zeros (0) or ones (1) in All-1?
 #### SCHC Compound ACK Format
 
 Figure 3 shows the SCHC ACK format when all fragments have been correctly received (C=1).
+Padding MUST be added to complete the 88 bits Sigfox donwlink payload size.
+
 ```text
     
    |---- SCHC ACK Header ----|
    + ----------------------- + ------- +
-   | RuleID |  W=00  |  C=1  |  0-pad  |
+   | RuleID | W=b'00 | C=b'1 | b'0-pad |
    + ------ + ------ + ----- + ------- +
    | 3 bits | 2 bits | 1 bit | 58 bits |
-        Figure 3: SCHC Compound ACK format. On top are noted the window of each window number and bitmap group. Losses are found in windows 0 and 1. 
+        Figure 3: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        Losses are found in windows 0 and 1. 
 ```
 
 In case SCHC fragment losses are found in any windows (C=0), the SCHC Compound ACK MUST be used.
@@ -73,9 +80,9 @@ The Compound ACK:
 * MUST report at least one window (the format will the same as RFC8724).
 * MAY not report all windows of a SCHC Packet.
 * Has a variable size.
-* Compatible with SCHC Receiver Abort and ACK Failure format 
+* Compatible with SCHC Receiver-Abort and ACK Failure format (in RFC8724))
 
-W and bitmap groups must be ordered from the lowest-numbered window number to the highest-numbered window.
+W and bitmap groups MUST be ordered from the lowest-numbered window number to the highest-numbered window.
 If window numbered 00 is present in the compound ACK, the window MUST be placed between the Rule ID and C bit to avoid confusion with padding bits.
 The Compound ACK MUST be 0 padded (Padding bits must be 0).
 
@@ -84,11 +91,12 @@ The Compound ACK MUST be 0 padded (Padding bits must be 0).
     
    |---- SCHC ACK Header ----|- W=00 -|----- W=01 ------|
    + ----------------------- + ------ + ------ + ------ + ------- +
-   | RuleID |  W=00  |  C=0  | Bitmap |  W=01  | Bitmap |  0-pad  |
+   | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'01 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 42 bits |
-        Figure 4: SCHC Compound ACK format. On top are noted the window of each window number and bitmap group. Losses are found in windows 0 and 1. 
-
+        Figure 4: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        Losses are found in windows 0 and 1. 
 ```
 
 Following figures are examples of the Compound ACK message format.
@@ -97,7 +105,7 @@ Following figures are examples of the Compound ACK message format.
     
    |---- SCHC ACK Header ----|- W=01 -|----- W=11 ------|
    + ----------------------- + ------ + ------ + ------ + ------- +
-   | RuleID |  W=01  |  C=0  | Bitmap |  W=11  | Bitmap |  0-pad  |
+   | RuleID | W=b'01 | C=b'0 | Bitmap | W=b'11 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 42 bits |
         Figure 5: SCHC Compound ACK format with losses in windows 1 and 3 
@@ -108,7 +116,7 @@ Following figures are examples of the Compound ACK message format.
     
    |---- SCHC ACK Header ----|- W=00 -|----- W=10 ------|
    + ----------------------- + ------ + ------ + ------ + ------- +
-   | RuleID |  W=00  |  C=0  | Bitmap |  W=10  | Bitmap |  0-pad  |
+   | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'10 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 42 bits |
         Figure 6: SCHC Compound ACK format with losses in windows 1 and 3 
@@ -120,9 +128,9 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
 
 ```text
     
-   |---- SCHC ACK Header ----|- W=00 -|----- W=01 ------|----- W=10 ------|----- W=11 ------|
+   |---- SCHC ACK Header ----|-W=b'00-|---- W=b'01 -----|---- W=b'10 -----|---- W=b'11 -----|
    + ----------------------- + ------ + ------ + ------ + ------ + ------ + ------ + ------ + ------- +
-   | RuleID |  W=00  |  C=0  | Bitmap |  W=01  | Bitmap |  W=10  | Bitmap |  W=11  | Bitmap |  0-pad  |
+   | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'01 | Bitmap | W=b'10 | Bitmap | W=b'11 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------ + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 2 bits | 7 bits | 2 bits | 7 bits | 24 bits |
         Figure 7: SCHC Compound ACK format with losses in windows 1 and 3 
@@ -132,9 +140,9 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
 
 ```text
     
-   |---- SCHC ACK Header ----|- W=00 -|----- W=01 ------|----- W=10 ------|
+   |---- SCHC ACK Header ----|-W=b'00-|---- W=b'01 -----|---- W=b'10 -----|
    + ----------------------- + ------ + ------ + ------ + ------ + ------ + ------- +
-   | RuleID |  W=00  |  C=0  | Bitmap |  W=01  | Bitmap |  W=10  | Bitmap |  0-pad  |
+   | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'01 | Bitmap | W=b'10 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 2 bits | 7 bits | 33 bits |
         Figure 8: SCHC Compound ACK format with losses in windows 0, 1 and 2 
@@ -146,7 +154,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
     
    |---- Sender-Abort Header ----|
    + --------------------------- + ------- +
-   | RuleID |   W    | FCN=ALL-1 |  0-pad  |
+   | RuleID |   W    | FCN=ALL-1 | b'0-pad |
    + ------ + ------ + --------- + ------- +
    | 3 bits | 2 bits |  3 bits   | 88 bits |
 
@@ -160,7 +168,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
     
    |- Receiver-Abort Header -|
    + ----------------------- + ------- +
-   | RuleID |  W=11  |  C=1  |  1-pad  |
+   | RuleID | W=b'11 | C=b'1 | b'1-pad |
    + ------ + ------ + ----- + ------- +
    | 3 bits | 2 bits | 1 bit | 58 bits |
         Figure 10: SCHC Sender-Abort format.
@@ -218,27 +226,34 @@ As per RFC8724 the All-1 must be distinguishable from the a SCHC Sender-Abort me
 
 The SCHC Compound ACK message is shown in Figure 13.
 The Compound ACK can report up to 2 windows with losses.
+W and bitmap groups MUST be ordered from the lowest-numbered window number to the highest-numbered window.
+If window numbered 000 is present in the compound ACK, the window MUST be placed between the Rule ID and C bit to avoid confusion with padding bits.
+The Compound ACK MUST be 0 padded (Padding bits must be 0).
 
 
 
 ```text
     
-   |---- SCHC ACK Header ----|- W=000 -|----- W=001 ------|
-   + ----------------------- + ------- + ------ + ------- + ------- +
-   | RuleID | W=000  |  C=0  |  Bitmap | W=001  |  Bitmap |  0-pad  |
-   + ------ + ------ + ----- + ------- + ------ + ------- + ------- +
-   | 8 bits | 3 bits | 1 bit | 15 bits | 3 bits | 15 bits |
-        Figure 13: SCHC Compound ACK format. On top are noted the window of each window number and bitmap group. Losses are found in windows 0 and 1. 
+   |----- SCHC ACK Header ----|-W=b'000-|----- W=b'001 -----|
+   + ------------------------ + ------- + ------- + ------- + ------- +
+   | RuleID | W=b'000 | C=b'0 |  Bitmap | W=b'001 |  Bitmap | b'0-pad |
+   + ------ + ------- + ----- + ------- + ------- + ------- + ------- +
+   | 8 bits |  3 bits | 1 bit | 15 bits |  3 bits | 15 bits | 19 bits |
+        Figure 13: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        Losses are found in windows 0 and 1. 
 ```
 
 ```text
     
-   |---- SCHC ACK Header ----|- W=001 -|----- W=011 ------|
-   + ----------------------- + ------- + ------ + ------- + ------- +
-   | RuleID | W=001  |  C=0  |  Bitmap | W=011  |  Bitmap |  0-pad  |
-   + ------ + ------ + ----- + ------- + ------ + ------- + ------- +
-   | 8 bits | 3 bits | 1 bit | 15 bits | 3 bits | 15 bits |
-        Figure 14: SCHC Compound ACK format. On top are noted the window of each window number and bitmap group. Losses are found in windows 1 and 3. 
+   |----- SCHC ACK Header ----|-W=b'001-|----- W=b'011 -----|
+   + ------------------------ + ------- + ------- + ------- + ------- +
+   | RuleID | W=b'001 | C=b'0 |  Bitmap | W=b'011 |  Bitmap | b'0-pad |
+   + ------ + ------- + ----- + ------- + ------- + ------- + ------- +
+   | 8 bits |  3 bits | 1 bit | 15 bits |  3 bits | 15 bits |
+        Figure 14: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        Losses are found in windows 1 and 3. 
 ```
 
 
@@ -249,7 +264,7 @@ The Compound ACK can report up to 2 windows with losses.
     
    |---- Sender-Abort Header ----|
    + --------------------------- + ------- +
-   | RuleID |   W    | FCN=ALL-1 |  0-pad  |
+   | RuleID |   W    | FCN=ALL-1 | b'0-pad |
    + ------ + ------ + --------- + ------- +
    | 8 bits | 3 bits |  5 bits   | 80 bits |
 
@@ -261,10 +276,10 @@ The Compound ACK can report up to 2 windows with losses.
 
 ```text
     
-   |- Receiver-Abort Header -|
-   + ----------------------- + ------- +
-   | RuleID |  W=111 |  C=1  |  1-pad  |
-   + ------ + ------ + ----- + ------- +
-   | 8 bits | 3 bits | 1 bit | 58 bits |
+   |-- Receiver-Abort Header -|
+   + ------------------------ + ------- +
+   | RuleID | W=b'111 | C=b'1 | b'1-pad |
+   + ------ + ------- + ----- + ------- +
+   | 8 bits |  3 bits | 1 bit | 58 bits |
         Figure 9: SCHC Sender-Abort format.
 ```
