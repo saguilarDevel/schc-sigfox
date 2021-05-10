@@ -3,7 +3,7 @@
 
 To take maximum advantages of downlink tranmissions, a SCHC Compound ACK MUST be sent when SCHC bi-directional services (e.g. ACK-on-Error fragmentation mode) are used. 
 The SCHC Compound ACK reduces the number of donwlink transmission (e.g. SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC Compound ACK. 
-The SCHC compound ACK substitutes the SCHC ACK failure message format, by extending its format to contain additional bitmaps, with its corresponding window number.
+The SCHC Compound ACK substitutes the SCHC ACK failure message format, by extending its format to contain additional bitmaps, with its corresponding window number.
 
 The SCHC Compound ACK:
 * report only windows with fragment losses,
