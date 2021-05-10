@@ -45,7 +45,8 @@ As tiles are of 11 bytes, padding MUST NOT be added.
 ```
 
 The SCHC ACK REQ is not used, instead the All-1 SCHC Fragment MUST be used. 
-As per RFC8724, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message)
+As per RFC8724, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).
+The penultimate tile of a SCHC Packet is of the regular size.
 
 #### All-1 SCHC Fragment
 
@@ -67,12 +68,18 @@ Padding MUST NOT be added, as the resulting size is a L2 word multiple.
 ```
 
 As per RFC8724 the All-1 must be distinguishable from the a SCHC Sender-Abort message (with same Rule ID, M and N values). 
-The All-1 MUST have the last tile of the SCHC Packet, therefore there is a different. 
-What happens with a payload of zeros (0) or ones (1) in All-1?
+The All-1 MUST have the last tile of the SCHC Packet, that MUST be of at least 1 byte. 
+The SCHC Sender-Abort message header size is of 1 byte, with no padding bits.
+
+
+
 
 
 ***Review how the message are distinguishable***
+What happens with a payload of zeros (0) or ones (1) in All-1?
 
+For the All-1 message to be distinguishable from the Sender-Abort message, the Sender-Abort message MUST be of 1 byte (only header with no padding).
+This way, the minimum size of the All-1 is 3 bytes, and the Sender-Abort message is of 2 bytes.
 
 #### SCHC ACK Format
 
@@ -170,6 +177,18 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
 
 ```
 
+```text
+    
+   |---- Sender-Abort Header ----|
+   + --------------------------- +
+   | RuleID |   W    | FCN=ALL-1 |
+   + ------ + ------ + --------- +
+   | 3 bits | 2 bits |  3 bits   |
+
+        Figure 9.1: SCHC Sender-Abort Message with no padding
+
+```
+
 #### SCHC Receiver-Abort Message
 
 ```text
@@ -179,7 +198,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
    | RuleID | W=b'11 | C=b'1 | b'1-pad |
    + ------ + ------ + ----- + ------- +
    | 3 bits | 2 bits | 1 bit | 58 bits |
-        Figure 10: SCHC Sender-Abort format.
+        Figure 10: SCHC Receiver-Abort format.
 ```
 
 
@@ -192,7 +211,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
 
 #### Regular SCHC Frgment
 Figure 11 shows an example of a regular SCHC fragment for all fragments except the last one.
-
+The penultimate tile of a SCHC Packet is of the regular size.
 
 ```text
     
@@ -226,9 +245,12 @@ The All-1 message MUST contain the last tile of the SCHC Packet.
 ```
 
 As per RFC8724 the All-1 must be distinguishable from the a SCHC Sender-Abort message (with same Rule ID, M and N values).
+The All-1 MUST have the last tile of the SCHC Packet, that MUST be of at least 1 byte. 
+The SCHC Sender-Abort message header size is of 1 byte, with no padding bits.
 
 ***Review how the message are distinguishable***
-
+For the All-1 message to be distinguishable from the Sender-Abort message, the Sender-Abort message MUST be of 2 byte (only header with no padding).
+This way, the minimum size of the All-1 is 3 bytes, and the Sender-Abort message is of 2 bytes.
 
 #### SCHC ACK Format
 
@@ -305,6 +327,17 @@ The SCHC Compound ACK MUST be 0 padded (Padding bits must be 0).
         Figure 16: SCHC Sender-Abort Message
 
 ```
+```text
+    
+   |---- Sender-Abort Header ----|
+   + --------------------------- + 
+   | RuleID |   W    | FCN=ALL-1 |
+   + ------ + ------ + --------- +
+   | 8 bits | 3 bits |  5 bits   |
+
+        Figure 16.1: SCHC Sender-Abort Message with no padding
+
+```
 
 #### SCHC Receiver-Abort Message
 
@@ -315,5 +348,5 @@ The SCHC Compound ACK MUST be 0 padded (Padding bits must be 0).
    | RuleID | W=b'111 | C=b'1 | b'1-pad |
    + ------ + ------- + ----- + ------- +
    | 8 bits |  3 bits | 1 bit | 58 bits |
-        Figure 17: SCHC Sender-Abort format.
+        Figure 17: SCHC Receiver-Abort format.
 ```
