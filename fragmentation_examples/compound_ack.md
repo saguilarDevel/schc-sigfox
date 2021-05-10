@@ -8,7 +8,7 @@ The SCHC Compound ACK substitutes the SCHC ACK failure message format, by extend
 The SCHC Compound ACK:
 * report only windows with fragment losses,
 * includes the window number of each bitmap (i.e. W and bitmap groups),
-* reports at least one window with fragment losses (i.e., the SCHC ACK will the have the same format as in RFC8724),
+* reports at least one window with fragment losses (i.e., if only one window with losses is reported in the SCHC Compound ACK, the SCHC ACK will the have the same format as in RFC8724),
 * MAY not report all windows with fragment losses of a SCHC Packet,
 * has a variable size, that depends on the number of windows with fragment losses being reported in the single Compound SCHC ACK,
 * is distinguishable of the SCHC Receiver-Abort.
