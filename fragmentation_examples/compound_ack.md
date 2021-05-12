@@ -99,30 +99,16 @@ In case SCHC fragment losses are found in any of the windows of the SCHC Packet 
   If padding is needed for the SCHC Compound ACK, padding bits must be 0 to make subsequent window numbers and bitmap groups distinguishable.
 
 
-
 ```text
     
-   |---- SCHC ACK Header ----|- W=X  -|----- W=X+1 ------| ... |----- W=X+N ------|
-   + ----------------------- + ------ + ------- + ------ + ... |------- + ------ + ------- +
-   | RuleID | W=b'X  | C=b'0 | Bitmap | W=b'X+1 | Bitmap | ...  W=b'X+1 | Bitmap | b'0-pad |
-   + ------ + ------ + ----- + ------ + ------- + ------ + ... |------- + ------ + ------- +
-   | 3 bits | 2 bits | 1 bit | 7 bits |  2 bits | 7 bits | ..  | 2 bits | 7 bits |
-        Figure 4: SCHC Compound ACK format. 
-        On top are noted the window of each window number and bitmap group. 
-        In this example, losses are found in windows X and X+1.
-```
-
-
-```text
-    
-   |---- SCHC ACK Header ----|-W = X -| ... | --- W = X + N ---|
+   |---- SCHC ACK Header ----|-W = x -| ... | --- W = x + i ---|
    + ----------------------- + ------ + ... + ------- + ------ + ------- +
-   | RuleID | W=b'X  | C=b'0 | Bitmap | ... | W=b'X+N | Bitmap | b'0-pad |
+   | RuleID | W=b'x  | C=b'0 | Bitmap | ... | W=b'x+i | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ... + ------- + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits |     | 2 bits | 7 bits |
         Figure 4: SCHC Compound ACK format. 
         On top are noted the window number of the corresponding bitmap. 
-        Losses are found in windows X,...,X+N.
+        Losses are found in windows x,...,x+i.
 ```
 
 
