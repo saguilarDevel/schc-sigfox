@@ -1,27 +1,25 @@
 
 # Compound ACK
 
-To take maximum advantages of downlink tranmissions, a SCHC Compound ACK MUST be sent when SCHC bi-directional services (e.g. ACK-on-Error fragmentation mode) are used. 
-The SCHC Compound ACK reduces the number of donwlink transmission (e.g. SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC Compound ACK. 
-The SCHC Compound ACK substitutes the SCHC ACK failure message format, by extending its format to contain additional bitmaps, with its corresponding window number.
+In order to take an efficient use of the downlink channel, a SCHC Compound ACK may MUST  be sent when SCHC bidirectional services (e.g. ACK-on-Error fragmentation mode) are used. 
+The SCHC Compound ACK is intended to reduce the number of downlink  transmissions (e.g. SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC message (i.e., the SCHC Compound ACK). 
+The SCHC Compound ACK extends the SCHC ACK message format so that it can contain several bitmaps, each bitmap being identified by its corresponding window number.
 
 The SCHC Compound ACK:
-* report only windows with fragment losses,
-* includes the window number of each bitmap (i.e. W and bitmap groups),
-* reports at least one window with fragment losses (i.e., if only one window with losses is reported in the SCHC Compound ACK, the SCHC ACK will the have the same format as in RFC8724),
-* MAY not report all windows with fragment losses of a SCHC Packet,
-* has a variable size, that depends on the number of windows with fragment losses being reported in the single Compound SCHC ACK,
-* is distinguishable of the SCHC Receiver-Abort.
+    * provides feedback only for windows with fragment losses,
+    * has a variable size that depends on the number of windows with fragment losses being reported in the single Compound SCHC ACK,
+    * includes the window number (i.e. W) of each bitmap,
+    * has a format coincident with that of a SCHC ACK (RFC 8724) when only one window with losses is reported,
+    * might not cover all windows with fragment losses of a SCHC Packet,
+    * is distinguishable from the SCHC Receiver-Abort.
 
-The SCHC Compound ACK uses W and bitmap groups.
- The W and bitmaps groups MUST be ordered from the lowest-numbered window number to the highest-numbered window.
-The window numbered 00 if present in the SCHC Compound ACK MUST be placed between the Rule ID and C bit to avoid confusion with padding bits.
-The Compound ACK MUST be 0 padded (Padding bits must be 0) to make distinguishable subsequents windows numbers and bitmaps groups.
 
+The SCHC Compound ACK groups the window number (W) with its corresponding bitmapuses W and bitmap groups.
+The W window number and its bitmaps groups MUST be ordered from the lowest-numbered to the highest-numbered window. 
 
 
 # SCHC-over-Sigfox F/R Message Formats
-This section defines the SCHC fragment formats, the SCHC ACK format, including the SCHC Compound ACK, and the SCHC Abort formats.
+This section defines the SCHC Fragment formats, the SCHC ACK formats, including the SCHC Compound ACK, and the SCHC Abort formats used in SCHC over Sigfox.
 
 ## Uplink ACK-on-Error Mode: Single-byte SCHC Header
 
@@ -44,16 +42,15 @@ As tiles are of 11 bytes, padding MUST NOT be added.
 
 ```
 
-The SCHC ACK REQ is not used, instead the All-1 SCHC Fragment MUST be used. 
+The SCHC ACK REQ SHOULD NOT be used, instead the All-1 SCHC Fragment MUST be used to request a SCHC ACK from the receiver. 
+As per RFC8724, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message). 
+The penultimate tile of a SCHC Packet is of regular size.
 As per RFC8724, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).
 The penultimate tile of a SCHC Packet is of the regular size.
 
 #### All-1 SCHC Fragment
 
-Figure 2 shows an example of the All-1 message. 
-The All-1 message MUST contain the last tile of the SCHC Packet.
-The last tile MUST be of at least 1 byte (one L2 word). 
-Padding MUST NOT be added, as the resulting size is a L2 word multiple.
+Figure 2 shows an example of the All-1 message. The All-1 message MUST contain the last tile of the SCHC Packet. The last tile MUST be of at least 1 byte (one L2 word). Padding MUST NOT be added, as the resulting size is L2-word-multiple.
 
 ```text
     
@@ -83,8 +80,8 @@ This way, the minimum size of the All-1 is 3 bytes, and the Sender-Abort message
 
 #### SCHC ACK Format
 
-Figure 3 shows the SCHC ACK format when all fragments have been correctly received (C=1).
-Padding MUST be added to complete the 88 bits Sigfox donwlink payload size.
+Figure 3 shows the SCHC ACK format when all fragments have been correctly received (C=1). 
+Padding MUST be added to complete the 88-bit Sigfox downlink frame payload size.
 
 ```text
     
@@ -96,11 +93,24 @@ Padding MUST be added to complete the 88 bits Sigfox donwlink payload size.
         Figure 3: SCHC Success ACK format. 
 ```
 
-In case SCHC fragment losses are found in any windows (C=0), the SCHC Compound ACK MUST be used for the ACK failure messages.
-The SCHC Compound ACK message is shown in Figure 4.
+In case SCHC fragment losses are found in any of the windows of the SCHC Packet (C=0), the SCHC Compound ACK MUST be used.
+ The SCHC Compound ACK message format is shown in Figure 4.
+  The window numbered 00, if present in the SCHC Compound ACK, MUST be placed between the Rule ID and the C bit to avoid confusion with padding bits.  
+  If padding is needed for the SCHC Compound ACK, padding bits must be 0 to make subsequent window numbers and bitmap groups distinguishable.
 
 
 
+```text
+    
+   |---- SCHC ACK Header ----|- W=X  -|----- W=X+1 ------|
+   + ----------------------- + ------ + ------- + ------ + ------- +
+   | RuleID | W=b'X  | C=b'0 | Bitmap | W=b'X+1 | Bitmap | b'0-pad |
+   + ------ + ------ + ----- + ------ + ------- + ------ + ------- +
+   | 3 bits | 2 bits | 1 bit | 7 bits |  2 bits | 7 bits | 42 bits |
+        Figure 4: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        In this example, losses are found in windows X and X+1.
+```
 
 ```text
     
@@ -163,7 +173,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
         Figure 8: SCHC Compound ACK format with losses in windows 0, 1 and 2 
 ```
 
-#### SCHC Sender-Abort Messages
+#### SCHC Sender-Abort Message formats
 
 ```text
     
@@ -173,7 +183,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
    + ------ + ------ + --------- + ------- +
    | 3 bits | 2 bits |  3 bits   | 88 bits |
 
-        Figure 9: SCHC Sender-Abort Message
+        Figure 9: SCHC Sender-Abort Message format
 
 ```
 
@@ -185,11 +195,11 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
    + ------ + ------ + --------- +
    | 3 bits | 2 bits |  3 bits   |
 
-        Figure 9.1: SCHC Sender-Abort Message with no padding
+        Figure 9.1: SCHC Sender-Abort Message format with no padding
 
 ```
 
-#### SCHC Receiver-Abort Message
+#### SCHC Receiver-Abort Message formats
 
 ```text
     
@@ -209,7 +219,7 @@ The window and bitmap groups are ordered from window numbered 00 to 11, notifyin
 ### SCHC Fragment Formats
 
 
-#### Regular SCHC Frgment
+#### Regular SCHC Fragment
 Figure 11 shows an example of a regular SCHC fragment for all fragments except the last one.
 The penultimate tile of a SCHC Packet is of the regular size.
 
@@ -273,6 +283,19 @@ The SCHC Compound ACK can report up to 3 windows with losses.
 W and bitmap groups MUST be ordered from the lowest-numbered window number to the highest-numbered window.
 If window numbered 000 is present in the SCHC Compound ACK, the window number 000 MUST be placed between the Rule ID and C bit to avoid confusion with padding bits.
 The SCHC Compound ACK MUST be 0 padded (Padding bits must be 0).
+
+
+```text
+    
+   |----- SCHC ACK Header ----|- W=b'X -|----- W=b'X+1 -----|
+   + ------------------------ + ------- + ------- + ------- + ------- +
+   | RuleID |  W=b'X  | C=b'0 |  Bitmap | W=b'X+1 |  Bitmap | b'0-pad |
+   + ------ + ------- + ----- + ------- + ------- + ------- + ------- +
+   | 8 bits |  3 bits | 1 bit | 15 bits |  3 bits | 15 bits | 19 bits |
+        Figure 14: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        Losses are found in windows X and X+1. 
+```
 
 
 ```text
