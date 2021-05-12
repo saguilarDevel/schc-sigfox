@@ -102,6 +102,34 @@ In case SCHC fragment losses are found in any of the windows of the SCHC Packet 
 
 ```text
     
+   |---- SCHC ACK Header ----|- W=X  -|----- W=X+1 ------| ... |----- W=X+N ------|
+   + ----------------------- + ------ + ------- + ------ + ... |------- + ------ + ------- +
+   | RuleID | W=b'X  | C=b'0 | Bitmap | W=b'X+1 | Bitmap | ...  W=b'X+1 | Bitmap | b'0-pad |
+   + ------ + ------ + ----- + ------ + ------- + ------ + ... |------- + ------ + ------- +
+   | 3 bits | 2 bits | 1 bit | 7 bits |  2 bits | 7 bits | ..  | 2 bits | 7 bits |
+        Figure 4: SCHC Compound ACK format. 
+        On top are noted the window of each window number and bitmap group. 
+        In this example, losses are found in windows X and X+1.
+```
+
+
+
+```text
+    
+   |---- SCHC ACK Header ----|-W = X -| ... | --- W = X + N ---|
+   + ----------------------- + ------ + ... + ------- + ------ + ------- +
+   | RuleID | W=b'X  | C=b'0 | Bitmap | ... | W=b'X+N | Bitmap | b'0-pad |
+   + ------ + ------ + ----- + ------ + ... + ------- + ------ + ------- +
+   | 3 bits | 2 bits | 1 bit | 7 bits |     | 2 bits | 7 bits |
+        Figure 4: SCHC Compound ACK format. 
+        On top are noted the window number of the corresponding bitmap. 
+        Losses are found in windows X,...,X+N.
+```
+
+
+
+```text
+    
    |---- SCHC ACK Header ----|- W=X  -|----- W=X+1 ------|
    + ----------------------- + ------ + ------- + ------ + ------- +
    | RuleID | W=b'X  | C=b'0 | Bitmap | W=b'X+1 | Bitmap | b'0-pad |
@@ -283,6 +311,19 @@ The SCHC Compound ACK can report up to 3 windows with losses.
 W and bitmap groups MUST be ordered from the lowest-numbered window number to the highest-numbered window.
 If window numbered 000 is present in the SCHC Compound ACK, the window number 000 MUST be placed between the Rule ID and C bit to avoid confusion with padding bits.
 The SCHC Compound ACK MUST be 0 padded (Padding bits must be 0).
+
+
+```text
+    
+   |----- SCHC ACK Header ----|- W=b'X -| ... |----- W=b'X+N -----|
+   + ------------------------ + ------- + ... + ------- + ------- + ------- +
+   | RuleID |  W=b'X  | C=b'0 |  Bitmap | ... | W=b'X+N |  Bitmap | b'0-pad |
+   + ------ + ------- + ----- + ------- + ... | ------- + ------- + ------- +
+   | 8 bits |  3 bits | 1 bit | 15 bits | ... |  3 bits | 15 bits |
+        Figure 14: SCHC Compound ACK format. 
+        On top are noted the window number of the corresponding bitmap. 
+        Losses are found in windows X,...,X+N. 
+```
 
 
 ```text
