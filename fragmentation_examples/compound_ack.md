@@ -67,7 +67,7 @@ As per RFC8724 the All-1 must be distinguishable from the a SCHC Sender-Abort me
 The All-1 MUST have the last tile of the SCHC Packet, that MUST be of at least 1 byte. 
 The SCHC Sender-Abort message header size is of 1 byte, with no padding bits.
 
-*How these message are distinguishable?*
+*How these messages are distinguishable?*
 
 What happens with a payload of zeros (0) or ones (1) in All-1?
 For the All-1 message to be distinguishable from the Sender-Abort message, the Sender-Abort message MUST be of 1 byte (only header with no padding).
@@ -249,7 +249,7 @@ As per RFC8724 the All-1 must be distinguishable from the a SCHC Sender-Abort me
 The All-1 MUST have the last tile of the SCHC Packet, that MUST be of at least 1 byte. 
 The SCHC Sender-Abort message header size is of 2 byte, with no padding bits.
 
-*How these message are distinguishable?*
+*How these messages are distinguishable?*
 For the All-1 message to be distinguishable from the Sender-Abort message, the Sender-Abort message MUST be of 2 byte (only header with no padding).
 This way, the minimum size of the All-1 is 3 bytes, and the Sender-Abort message is of 2 bytes.
 
