@@ -36,6 +36,7 @@ As tiles are of 11 bytes, padding MUST NOT be added.
    | RuleID |   W    | FCN    | Payload |
    + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 3 bits | 88 bits |
+
         Figure 1: Regular SCHC Fragment format for all fragments except the last one
 
 ```
@@ -85,6 +86,7 @@ Padding MUST be added to complete the 88-bit Sigfox downlink frame payload size.
    | RuleID |    W   | C=b'1 | b'0-pad |
    + ------ + ------ + ----- + ------- +
    | 3 bits | 2 bits | 1 bit | 58 bits |
+
         Figure 3: SCHC Success ACK message format. 
 ```
 
@@ -101,6 +103,7 @@ In case SCHC fragment losses are found in any of the windows of the SCHC Packet 
    | RuleID | W=b'x  | C=b'0 | Bitmap | ... | W=b'x+i | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ... + ------- + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits |     | 2 bits | 7 bits |
+
         Figure 4: SCHC Compound ACK message format. 
         On top are noted the window number of the corresponding bitmap. 
         Losses are found in windows x,...,x+i.
@@ -116,6 +119,7 @@ Following figures are examples of the Compound ACK message format.
    | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'01 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 42 bits |
+
         Figure 5: SCHC Compound ACK example. 
         On top are noted the window number of the corresponding bitmap.
         Losses are found in windows 0 and 1. 
@@ -128,6 +132,7 @@ Following figures are examples of the Compound ACK message format.
    | RuleID | W=b'01 | C=b'0 | Bitmap | W=b'11 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 42 bits |
+
         Figure 6: SCHC Compound ACK example.
         Losses are found in windows 0 and 1.
 
@@ -140,6 +145,7 @@ Following figures are examples of the Compound ACK message format.
    | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'10 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 42 bits |
+
         Figure 7: SCHC Compound ACK example 
         Losses are found in windows 0 and 1.
 ```
@@ -154,6 +160,7 @@ The window numbers and its corresponding bitmaps are ordered from window numbere
    | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'01 | Bitmap | W=b'10 | Bitmap | W=b'11 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------ + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 2 bits | 7 bits | 2 bits | 7 bits | 24 bits |
+        
         Figure 8: SCHC Compound ACK example
         Losses are found in windows 0, 1, 2 and 3. 
 ```
@@ -166,6 +173,7 @@ The window numbers and its corresponding bitmaps are ordered from window numbere
    | RuleID | W=b'00 | C=b'0 | Bitmap | W=b'01 | Bitmap | W=b'10 | Bitmap | b'0-pad |
    + ------ + ------ + ----- + ------ + ------ + ------ + ------ + ------ + ------- +
    | 3 bits | 2 bits | 1 bit | 7 bits | 2 bits | 7 bits | 2 bits | 7 bits | 33 bits |
+
         Figure 9: SCHC Compound ACK example 
         Losses are found in 0, 1 and 2.
 ```
@@ -205,6 +213,7 @@ The window numbers and its corresponding bitmaps are ordered from window numbere
    | RuleID | W=b'11 | C=b'1 | b'1-pad |
    + ------ + ------ + ----- + ------- +
    | 3 bits | 2 bits | 1 bit | 58 bits |
+
         Figure 11: SCHC Receiver-Abort message format.
 ```
 
@@ -223,6 +232,7 @@ The penultimate tile of a SCHC Packet is of the regular size.
    | RuleID |   W    | FCN    | Payload |
    + ------ + ------ + ------ + ------- +
    | 8 bits | 3 bits | 5 bits | 80 bits |
+
         Figure 12: Regular SCHC Fragment format for all fragments except the last one
 ```
 
@@ -261,10 +271,11 @@ Padding MUST be added to complete the 88-bit Sigfox downlink frame payload size.
 ```text
     
    |----- SCHC ACK Header ----|
-   + ------------------------ + ------- +
+   + ------------------------ + ------ +
    | RuleID |    W   | C=b'1 | b'0-pad |
    + ------ + ------ + ----- + ------- +
-   | 8 bits |  3 bits | 1 bit | 52 bits |
+   | 8 bits | 3 bits | 1 bit | 52 bits |
+
         Figure 14: SCHC Success ACK message format.  
 ```
 
@@ -282,7 +293,8 @@ The SCHC Compound ACK MUST be 0 padded (Padding bits must be 0).
    + ------------------------ + ------- + ... + ------- + ------- + ------- +
    | RuleID |  W=b'x  | C=b'0 |  Bitmap | ... | W=b'x+i |  Bitmap | b'0-pad |
    + ------ + ------- + ----- + ------- + ... | ------- + ------- + ------- +
-   | 8 bits |  3 bits | 1 bit | 15 bits | ... |  3 bits | 15 bits |
+   | 8 bits |  3 bits | 1 bit | 15 bits |     |  3 bits | 15 bits |
+
         Figure 15: SCHC Compound ACK message format. 
         On top are noted the window number of the corresponding bitmap. 
         Losses are found in windows x,...,x+i. 
