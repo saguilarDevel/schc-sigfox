@@ -1,17 +1,17 @@
 
 # Compound ACK
 
-In order to take an efficient use of the downlink channel, a SCHC Compound ACK (MAY or MUST)  be sent when SCHC bidirectional services (e.g., ACK-on-Error fragmentation mode) are used. 
-The SCHC Compound ACK is intended to reduce the number of downlink  transmissions (e.g., SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC message (i.e., the SCHC Compound ACK). 
+A SCHC Compound ACK MUST be sent when uplink fragmentation is used (i.e., Uplink ACK-on-Error mode), in order to take an efficient use of the downlink channel.
+The SCHC Compound ACK is intended to reduce the number of downlink transmissions (i.e., SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC message (i.e., the SCHC Compound ACK). 
 The SCHC Compound ACK extends the SCHC ACK message format so that it can contain several bitmaps, each bitmap being identified by its corresponding window number.
 
 The SCHC Compound ACK:
-* provides feedback only for windows with fragment losses,
- * has a variable size that depends on the number of windows with fragment losses being reported in the single Compound SCHC ACK,
- * includes the window number (i.e., W) of each bitmap,
- * has a format coincident with that of a SCHC ACK (RFC 8724) when only one window with losses is reported,
- * might not cover all windows with fragment losses of a SCHC Packet,
- * is distinguishable from the SCHC Receiver-Abort.
+   * provides feedback only for windows with fragment losses,
+   * has a variable size that depends on the number of windows with fragment losses being reported in the single Compound SCHC ACK,
+   * includes the window number (i.e., W) of each bitmap,
+   * has a format coincident with that of a SCHC ACK (RFC 8724) when only one window with losses is reported,
+   * might not cover all windows with fragment losses of a SCHC Packet,
+   * is distinguishable from the SCHC Receiver-Abort.
 
 The SCHC Compound ACK groups the window number (W) with its corresponding bitmap.
  The window number and its bitmap MUST be ordered from the lowest-numbered to the highest-numbered window. 
@@ -72,7 +72,7 @@ The SCHC Sender-Abort message header size is of 1 byte, with no padding bits.
 
 What happens with a payload of zeros (0) or ones (1) in All-1?
 For the All-1 message to be distinguishable from the Sender-Abort message, the Sender-Abort message MUST be of 1 byte (only header with no padding).
-This way, the minimum size of the All-1 is 3 bytes, and the Sender-Abort message is of 2 bytes.
+This way, the minimum size of the All-1 is 2 bytes, and the Sender-Abort message is of 1 bytes.
 
 #### SCHC ACK Format
 
