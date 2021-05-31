@@ -1,7 +1,9 @@
 
 # Compound ACK
 
-A SCHC Compound ACK MUST be sent when uplink fragmentation is used (i.e., Uplink ACK-on-Error mode), in order to take an efficient use of the downlink channel.
+When the ACK-on-Error mode is used for uplink fragmentation, SCHC Compound
+ACKs MUST be used instead of SCHC ACKs, in order to make an efficient use
+of the downlink channel.
 The SCHC Compound ACK is intended to reduce the number of downlink transmissions (i.e., SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC message (i.e., the SCHC Compound ACK). 
 The SCHC Compound ACK extends the SCHC ACK message format so that it can contain several bitmaps, each bitmap being identified by its corresponding window number.
 
