@@ -1,3 +1,4 @@
+import json
 import re
 import time
 import random
@@ -11,7 +12,7 @@ from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
 
-from function import *
+from schc_utils import *
 from firebase_utils import *
 
 
@@ -264,8 +265,7 @@ def hello_get(request):
                 print("Response content -> {}".format(response_json))
                 return response_json, 200
 
-            # If the ACK bitmap is complete and the fragment is an ALL-0, send an ACK
-            # This is to be modified, as ACK-on-Error does not need an ACK for every window.
+            # If the ACK bitmap is complete and the fragment is an ALL-0, don't send an ACK
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
                 print("[ALL0] All Fragments of current window received")
                 print("[ALL0] No need to send an ACK")
