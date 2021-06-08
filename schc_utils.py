@@ -1,5 +1,32 @@
-#  FUNCTIONS
 import json
+import logging as log
+
+
+def init_logging(logfile):
+    log.basicConfig(filename=logfile,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=log.DEBUG)
+
+
+def log_debug(text):
+    print(text)
+    log.debug(text)
+
+
+def log_info(text):
+    print(text)
+    log.info(text)
+
+
+def log_warning(text):
+    print(text)
+    log.warning(text)
+
+
+def log_error(text):
+    print(text)
+    log.error(text)
 
 
 def zfill(string, width):
@@ -24,7 +51,7 @@ def find(string, character):
 
 
 def bitstring_to_bytes(s):
-    return int(s, 2).to_bytes(len(s) // 8, byteorder='big')
+    return int(s, 2).to_bytes(len(s) // 8, 'big')
 
 
 def is_monochar(s):

@@ -2,7 +2,7 @@
 
 from math import ceil, floor
 from Messages.FragmentHeader import FragmentHeader
-from schc_utils import zfill
+from function import zfill
 
 
 class Fragmenter:

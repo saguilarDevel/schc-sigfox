@@ -4,22 +4,17 @@
 
 # Cloud Storage Bucket Name
 BUCKET_NAME = 'wyschc-2021'
+#
+CLIENT_SECRETS_FILE = './credentials/wyschc27-cc31b2bc6fbc.json'
 
 # File where we will store authentication credentials after acquiring them.
-CLIENT_SECRETS_FILE = './credentials/wyschc27-cc31b2bc6fbc.json'
-CREDENTIALS_FILE_FIREBASE = './credentials/wyschc27-firebase-adminsdk-oq835-1a99029948.json'
+CREDENTIALS_FILE = './credentials/wyschc27-cc31b2bc6fbc.json'
 
+CREDENTIALS_FILE_FIREBASE = './credentials/wyschc27-firebase-adminsdk-oq835-1a99029948.json'
 FIREBASE_RTDB_URL = 'https://wyschc27-default-rtdb.firebaseio.com/'
 
-# Loss mask path
-LOSS_MASK = './loss_masks/loss_mask_0.txt'
-LOSS_MASK_MODIFIED = './loss_masks/loss_mask_modified.txt'
-
-# Message to be fragmented
-MESSAGE = './comm/example.txt'
-PAYLOAD = './comm/PAYLOAD.txt'
-
-# GCP Cloud Functions URL
-SCHC_POST_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/schc_receiver"
-REASSEMBLER_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/reassemble"
-CLEANUP_URL = "https://southamerica-east1-wyschc-303621.cloudfunctions.net/cleanup"
+CLEAN_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/clean'
+RECEIVER_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/hello_get'
+REASSEMBLE_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/http_reassemble'
+TEST_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/test'
+CLEAN_WINDOW_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/clean_window'
