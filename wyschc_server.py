@@ -1,15 +1,12 @@
 import filecmp
-import os
-import random
 import re
 
 import requests
 from flask import Flask, request
 from flask import abort
 
-import config.config as config
 from Entities.Reassembler import Reassembler
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import SigfoxProfile
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
@@ -19,8 +16,8 @@ from schc_utils import *
 app = Flask(__name__)
 
 
-@app.route('/schc_receiver', methods=['GET', 'POST'])
-def schc_receiver():
+@app.route('/receiver', methods=['GET', 'POST'])
+def receiver():
     """HTTP Cloud Function.
     Args:
         request (flask.Request): The request object.
@@ -44,10 +41,6 @@ def schc_receiver():
         # Get data and Sigfox Sequence Number.
         fragment = request_dict["data"]
         sigfox_sequence_number = request_dict["seqNumber"]
-        ack_req = request_dict["ack"]
-
-        # Initialize Cloud Storage variables.
-        BUCKET_NAME = config.BUCKET_NAME
 
         header_first_hex = fragment[0]
 
@@ -66,7 +59,7 @@ def schc_receiver():
         data = [header, payload]
 
         # Initialize SCHC variables.
-        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", header_bytes)
         buffer_size = profile.UPLINK_MTU
         n = profile.N
         m = profile.M
@@ -93,7 +86,6 @@ def schc_receiver():
 
         # Get the current bitmap.
         bitmap = read_blob("all_windows/window_%d/bitmap_%d" % (current_window, current_window))
-
 
         if fragment_message.is_sender_abort():
             print("Sender-Abort received")
@@ -122,8 +114,8 @@ def schc_receiver():
             upload_blob(time_received, "timestamp")
 
             # Print some data for the user.
-            print("[RECV] This corresponds to the " + str(fragment_number) + "th fragment of the " + str(
-                current_window) + "th window.")
+            print("[RECV] This corresponds to the " + ordinal(fragment_number) + " fragment of the " + ordinal(
+                current_window) + "window.")
             print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
 
             # Update bitmap and upload it.
@@ -207,14 +199,7 @@ def schc_receiver():
             if fragment_message.is_all_0() and bitmap[0] == '1' and all(bitmap):
                 print("[ALL0] All Fragments of current window received")
                 print("[ALL0] No need to send an ACK")
-                # print("[ALLX] Sending ACK after window...")
-                # Create an ACK message and send it.
-                # ack = ACK(profile_downlink, rule_id, dtag, w, bitmap, '0')
-                # response_json = send_ack(request_dict, ack)
-                # print("200, Response content -> {}".format(response_json))
-                # Response to continue, no ACK is sent Back.
                 return '', 204
-                # return response_json, 200
 
             # If the fragment is an ALL-1
             if fragment_message.is_all_1():
@@ -238,7 +223,7 @@ def schc_receiver():
                                                                                              current_window))
                         try:
                             print('Activating reassembly process...')
-                            _ = requests.post(url=config.REASSEMBLE_URL,
+                            _ = requests.post(url=config.LOCAL_REASSEMBLE_URL,
                                               json={"last_index": last_index, "current_window": current_window,
                                                     "header_bytes": header_bytes},
                                               timeout=0.1)
@@ -303,11 +288,8 @@ def reassemble():
         last_index = int(request_dict["last_index"])
         header_bytes = int(request_dict["header_bytes"])
 
-        # Initialize Cloud Storage variables.
-        BUCKET_NAME = config.BUCKET_NAME
-
         # Initialize SCHC variables.
-        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", header_bytes)
 
         print("[RSMB] Loading fragments")
 
@@ -339,7 +321,7 @@ def reassemble():
             print("The reassembled file is corrupt.")
 
         try:
-            _ = requests.post(url=config.CLEAN_URL,
+            _ = requests.post(url=config.LOCAL_CLEAN_URL,
                               json={"header_bytes": header_bytes},
                               timeout=0.1)
         except requests.exceptions.ReadTimeout:
@@ -356,11 +338,12 @@ def clean():
         # Get request JSON.
         print("POST RECEIVED")
         request_dict = request.get_json()
+        print(request_dict)
         print('Received Sigfox message: {}'.format(request_dict))
 
         # Get data and Sigfox Sequence Number.
         header_bytes = int(request_dict["header_bytes"])
-        profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", header_bytes)
         bitmap = '0' * (2 ** profile.N - 1)
         for i in range(2 ** profile.M):
             upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
@@ -369,7 +352,7 @@ def clean():
 
             try:
                 _ = requests.post(
-                    url=config.CLEAN_WINDOW_URL,
+                    url=config.LOCAL_CLEAN_WINDOW_URL,
                     json={"header_bytes": header_bytes,
                           "window_number": i,
                           "clear": request_dict["clear"] if "clear" in request_dict else "False"},
@@ -403,13 +386,17 @@ def clean_window():
     request_dict = request.get_json()
     header_bytes = int(request_dict["header_bytes"])
     window_number = int(request_dict["window_number"])
-    profile = Sigfox("UPLINK", "ACK ON ERROR", header_bytes)
+    profile = SigfoxProfile("UPLINK", "ACK ON ERROR", header_bytes)
+
+    print(f"header_bytes: {header_bytes}, window_number: {window_number}")
 
     for j in range(2 ** profile.N - 1):
         if request_dict["clear"] == "False":
             upload_blob("", f"all_windows/window_{window_number}/fragment_{window_number}_{j}")
         else:
             delete_blob(f"all_windows/window_{window_number}/fragment_{window_number}_{j}")
+
+    return '', 204
 
 
 if __name__ == "__main__":

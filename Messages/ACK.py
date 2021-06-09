@@ -61,3 +61,21 @@ class ACK:
                    ack[ack_index_c],
                    ack[ack_index_bitmap:ack_index_padding],
                    ack[ack_index_padding:])
+
+    @staticmethod
+    def parse_from_bytes(profile, b):
+        ack = ''.join("{:08b}".format(int(byte)) for byte in b)
+
+        ack_index_dtag = profile.RULE_ID_SIZE
+        ack_index_w = ack_index_dtag + profile.T
+        ack_index_c = ack_index_w + profile.M
+        ack_index_bitmap = ack_index_c + 1
+        ack_index_padding = ack_index_bitmap + profile.BITMAP_SIZE
+
+        return ACK(profile,
+                   ack[:ack_index_dtag],
+                   ack[ack_index_dtag:ack_index_w],
+                   ack[ack_index_w:ack_index_c],
+                   ack[ack_index_c],
+                   ack[ack_index_bitmap:ack_index_padding],
+                   ack[ack_index_padding:])

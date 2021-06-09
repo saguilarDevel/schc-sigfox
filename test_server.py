@@ -11,7 +11,7 @@ from google.cloud import storage
 from function import *
 from blobHelperFunctions import *
 from Entities.Fragmenter import Fragmenter
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import Sigfox
 from Messages.Fragment import Fragment
 
 from Entities.Reassembler import Reassembler

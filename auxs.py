@@ -9,7 +9,7 @@ from flask import abort
 
 import config.config as config
 from Entities.Reassembler import Reassembler
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import Sigfox
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort

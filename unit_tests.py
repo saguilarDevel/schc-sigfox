@@ -1,6 +1,6 @@
 import unittest
 
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import Sigfox
 from Messages.ACK import ACK
 from Messages.ACKHeader import ACKHeader
 from Messages.Fragment import Fragment

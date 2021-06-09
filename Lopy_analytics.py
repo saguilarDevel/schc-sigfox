@@ -5,7 +5,7 @@ from math import ceil, isnan
 import openpyxl
 import pandas as pd
 
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import Sigfox
 
 
 def extract_data(file, output):

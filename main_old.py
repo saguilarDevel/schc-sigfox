@@ -4,7 +4,7 @@ import random
 import requests
 
 from flask import abort
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import Sigfox
 
 from Entities.Reassembler import Reassembler
 from Messages.ACK import ACK

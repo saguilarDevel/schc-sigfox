@@ -1,5 +1,6 @@
 import json
 import logging as log
+import os
 
 
 def init_logging(logfile):
@@ -65,3 +66,22 @@ def send_ack(request, ack):
     response_json = json.dumps(response_dict)
     print(f"response_json -> {response_json}")
     return response_json
+
+
+def generate_packet(byte_size):
+    if not os.path.isfile(f"Packets/{byte_size}"):
+        s = '0'
+        i = 0
+        while len(s) < byte_size:
+            i = (i + 1) % 10
+            s += str(i)
+        print(s)
+        with open(f"Packets/{byte_size}", 'w') as f:
+            f.write(s)
+
+
+def ordinal(n):
+    suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
+    if 11 <= (n % 100) <= 13:
+        suffix = 'th'
+    return f'{n}{suffix}'

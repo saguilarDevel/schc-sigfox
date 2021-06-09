@@ -13,8 +13,19 @@ CREDENTIALS_FILE = './credentials/wyschc27-cc31b2bc6fbc.json'
 CREDENTIALS_FILE_FIREBASE = './credentials/wyschc27-firebase-adminsdk-oq835-1a99029948.json'
 FIREBASE_RTDB_URL = 'https://wyschc27-default-rtdb.firebaseio.com/'
 
+# Endpoints in GCP
 CLEAN_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/clean'
 RECEIVER_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/hello_get'
 REASSEMBLE_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/http_reassemble'
 TEST_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/test'
 CLEAN_WINDOW_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/clean_window'
+
+# Local endpoints for offline testing
+LOCAL_CLEAN_URL = 'http://localhost:5000/clean'
+LOCAL_RECEIVER_URL = 'http://localhost:5000/receiver'
+LOCAL_REASSEMBLE_URL = 'http://localhost:5000/http_reassemble'
+LOCAL_TEST_URL = 'http://localhost:5000/test'
+LOCAL_CLEAN_WINDOW_URL = 'http://localhost:5000/clean_window'
+
+# Local variables:
+FILENAME = ''

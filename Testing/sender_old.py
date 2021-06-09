@@ -2,7 +2,7 @@ import requests
 import time
 
 from Entities.Fragmenter import Fragmenter
-from Entities.Sigfox import Sigfox
+from Entities.SigfoxProfile import Sigfox
 from Messages.Fragment import Fragment
 
 filename = "../comm/example.txt"

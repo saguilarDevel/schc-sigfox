@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
 from math import ceil, floor
 from Messages.FragmentHeader import FragmentHeader
-from function import zfill
+from schc_utils import zfill
 
 
 class Fragmenter:

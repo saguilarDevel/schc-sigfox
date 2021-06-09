@@ -1,5 +1,6 @@
 from Messages.FragmentHeader import FragmentHeader
 from schc_utils import zfill, is_monochar
+import binascii
 
 
 class Fragment:
@@ -30,10 +31,10 @@ class Fragment:
         return self.HEADER.to_bytes() + self.PAYLOAD
 
     def to_string(self):
-        return self.to_bytes().decode()
+        return str(self.to_bytes())
 
     def to_hex(self):
-        return self.to_bytes().hex()
+        return binascii.hexlify(self.to_bytes())
 
     def is_all_1(self):
         fcn = self.HEADER.FCN

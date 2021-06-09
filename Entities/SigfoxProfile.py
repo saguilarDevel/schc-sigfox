@@ -1,26 +1,17 @@
 from Entities.Protocol import Protocol
 
 
-# Glossary
-# T: DTag size
-# N: Fragment Compressed Number (FCN) size
-# M: Window identifier (present only if windows are used) size
-# U: Reassembly Check Sequence (RCS) size
-
-
-class Sigfox(Protocol):
+class SigfoxProfile(Protocol):
     direction = None
     mode = None
 
     def __init__(self, direction, mode, header_bytes):
 
-        # print("This protocol is in " + direction + " direction and " + mode + " mode.")
-
         self.NAME = "SIGFOX"
         self.direction = direction
         self.mode = mode
         self.RETRANSMISSION_TIMER_VALUE = 45  # (45) enough to let a downlink message to be sent if needed
-        self.INACTIVITY_TIMER_VALUE = 200  # (60) for demo purposes
+        self.INACTIVITY_TIMER_VALUE = 60  # (60) for demo purposes
 
         self.SIGFOX_DL_TIMEOUT = 20  # This is to be tested
 
@@ -47,27 +38,28 @@ class Sigfox(Protocol):
             if mode == "ACK ALWAYS":
                 pass  # TBD
 
-            if mode == "ACK ON ERROR" and header_bytes == 1:
-                self.HEADER_LENGTH = 8
-                self.RULE_ID_SIZE = 2
-                self.T = 1
-                self.N = 3
-                self.M = 2  # recommended to be single
-                self.WINDOW_SIZE = 2 ** self.N - 1
-                self.BITMAP_SIZE = 2 ** self.N - 1  # from excel
-                self.MAX_ACK_REQUESTS = 3  # SHOULD be 2
-                self.MAX_WIND_FCN = 6  # SHOULD be
+            if mode == "ACK ON ERROR":
+                if header_bytes == 1:
+                    self.HEADER_LENGTH = 8
+                    self.RULE_ID_SIZE = 2
+                    self.T = 1
+                    self.N = 3
+                    self.M = 2  # recommended to be single
+                    self.WINDOW_SIZE = 2 ** self.N - 1
+                    self.BITMAP_SIZE = 2 ** self.N - 1  # from excel
+                    self.MAX_ACK_REQUESTS = 3  # SHOULD be 2
+                    self.MAX_WIND_FCN = 6  # SHOULD be
 
-            if mode == "ACK ON ERROR" and header_bytes == 2:
-                self.HEADER_LENGTH = 16
-                self.RULE_ID_SIZE = 7
-                self.T = 1
-                self.N = 5
-                self.M = 3  # recommended to be single
-                self.WINDOW_SIZE = 2 ** self.N - 1
-                self.BITMAP_SIZE = 2 ** self.N - 1  # from excel
-                self.MAX_ACK_REQUESTS = 3  # SHOULD be 2
-                self.MAX_WIND_FCN = 6  # SHOULD be
+                elif header_bytes == 2:
+                    self.HEADER_LENGTH = 16
+                    self.RULE_ID_SIZE = 7
+                    self.T = 1
+                    self.N = 5
+                    self.M = 3  # recommended to be single
+                    self.WINDOW_SIZE = 2 ** self.N - 1
+                    self.BITMAP_SIZE = 2 ** self.N - 1  # from excel
+                    self.MAX_ACK_REQUESTS = 3  # SHOULD be 2
+                    self.MAX_WIND_FCN = 6  # SHOULD be
 
         if direction == "DOWNLINK":
             if mode == "NO ACK":
