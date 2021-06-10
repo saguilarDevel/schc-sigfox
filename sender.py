@@ -16,7 +16,9 @@ with open("Packets/300", "rb") as data:
 sender = SCHCSender()
 # sender.set_logging(filename="logs.log", json_file=filename_stats)
 sender.set_session("ACK ON ERROR", payload)
+sender.set_logging(None, None)
 sender.set_device("4d5a87")
+sender.set_loss_rate(20)
 
 _ = requests.post(url=config.LOCAL_CLEAN_URL, json={'header_bytes': sender.HEADER_BYTES,
                                                     'not_delete_dl_losses': "False",

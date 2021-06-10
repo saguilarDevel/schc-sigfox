@@ -120,28 +120,26 @@ def receiver():
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
-            upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
-
-            # Upload the fragment data.
-            upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                        "all_windows/window_%d/fragment_%d_%d" % (current_window, current_window, fragment_number))
 
         # If the FCN could not been found, it almost certainly is the final fragment.
         except KeyError:
             print("[RECV] This seems to be the final fragment.")
+            fragment_number = profile.WINDOW_SIZE - 1
             # Upload current timestamp.
             time_received = int(request_dict["time"])
             upload_blob(time_received, "timestamp")
             print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_1(), fragment_message.is_all_0()))
-            # print("RULE_ID: {}, W:{}, FCN:{}".format(fragment.header.RULE_ID, fragment.header.W, fragment.header.FCN))
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
-            upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (current_window, current_window))
+
+        # Upload the fragment data.
+        upload_blob(bitmap, f"all_windows/window_{current_window}/bitmap_{current_window}")
+        upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
+                    f"all_windows/window_{current_window}/fragment_{current_window}_{fragment_number}")
 
         # Get some SCHC values from the fragment.
         rule_id = fragment_message.HEADER.RULE_ID
         dtag = fragment_message.HEADER.DTAG
-        w = fragment_message.HEADER.W
 
         # Get last and current Sigfox sequence number (SSN)
         last_sequence_number = 0

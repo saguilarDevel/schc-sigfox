@@ -1,6 +1,7 @@
 import queue
 import socket as s
 import time
+import random
 
 import requests
 
@@ -36,6 +37,8 @@ class SCHCSender:
     BUFFER = None
     SEQNUM = None
 
+    LOSS_RATE = None
+
     def __init__(self):
         # self.PROTOCOL = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ4)
         # self.SOCKET = s.socket(s.AF_SIGFOX, s.SOCK_RAW)
@@ -52,6 +55,7 @@ class SCHCSender:
         self.TIMEOUT = 0
         self.SEQNUM = 0
         self.BUFFER = queue.Queue()
+        self.LOSS_RATE = 0
 
     def set_logging(self, filename, json_file):
         self.LOGGER = SCHCLogger(filename, json_file)
@@ -65,7 +69,10 @@ class SCHCSender:
     def set_timeout(self, timeout):
         self.TIMEOUT = timeout
 
-    def send(self, message):
+    def set_loss_rate(self, loss_rate):
+        self.LOSS_RATE = loss_rate
+
+    def send(self, message, loss=False):
         http_body = {
             'device': self.DEVICE,
             'data': message,
@@ -73,23 +80,31 @@ class SCHCSender:
             'seqNumber': self.SEQNUM
         }
 
-        print(f"sending {message}; time {int(time.time())}; seqnum {self.SEQNUM}; timeout {self.TIMEOUT}")
-        response = requests.post(url=config.LOCAL_RECEIVER_URL, json=http_body, timeout=self.TIMEOUT)
+        print(f"[SEND] sending {message}; time {int(time.time())}; seqnum {self.SEQNUM}; timeout {self.TIMEOUT}")
 
-        if response.status_code == 200 and self.DEVICE in response.json():
-            self.BUFFER.put(response.json()[self.DEVICE]["downlinkData"])
+        if loss and random.random() * 100 <= self.LOSS_RATE:
+            print("[SEND] Fragment lost")
+        else:
+            response = requests.post(url=config.LOCAL_RECEIVER_URL, json=http_body, timeout=self.TIMEOUT)
+            if response.status_code == 200 and self.DEVICE in response.json():
+                self.BUFFER.put(response.json()[self.DEVICE]["downlinkData"])
 
         self.SEQNUM += 1
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, loss=False):
         try:
+            print("receiving")
             received = self.BUFFER.get(timeout=self.TIMEOUT)
 
-            if len(received) > bufsize:
+            if len(received) / 2 > bufsize:
                 raise LengthMismatchError
 
-            self.BUFFER = None
-            return received
+            if loss and random.random() * 100 <= self.LOSS_RATE:
+                # return self.recv(bufsize, loss)
+                raise SCHCTimeoutError
+            else:
+                return received
+
         except queue.Empty:
             raise SCHCTimeoutError
 
@@ -116,7 +131,7 @@ class SCHCSender:
         total_size = len(self.MESSAGE)
         current_size = 0
 
-        logging = self.LOGGER is not None
+        logging = self.LOGGER is not None and self.LOGGER.JSON_FILE is not None
 
         if logging:
             self.LOGGER.START_SENDING_TIME = self.LOGGER.CHRONO.read()
@@ -160,7 +175,7 @@ class SCHCSender:
 
         ack = None
         current_fragment = {}
-        logging = self.LOGGER is not None
+        logging = self.LOGGER is not None and self.LOGGER.JSON_FILE is not None
         self.TIMER.wait(timeout=self.DELAY, raise_exception=False)
 
         if logging:
@@ -183,14 +198,12 @@ class SCHCSender:
                                 'receiver_abort_message': ""}
 
         if fragment_sent.is_all_0() and not retransmit:
-            if logging:
-                self.LOGGER.debug("[POST] This is an All-0. Using All-0 SIGFOX_DL_TIMEOUT.")
+            self.LOGGER.debug("[POST] This is an All-0. Using All-0 SIGFOX_DL_TIMEOUT.")
             self.set_timeout(self.PROFILE.SIGFOX_DL_TIMEOUT)
             if logging:
                 current_fragment["timeout"] = self.PROFILE.SIGFOX_DL_TIMEOUT
         elif fragment_sent.is_all_1():
-            if logging:
-                self.LOGGER.debug("[POST] This is an All-1. Using RETRANSMISSION_TIMER_VALUE. Increasing ACK attempts.")
+            self.LOGGER.debug("[POST] This is an All-1. Using RETRANSMISSION_TIMER_VALUE. Increasing ACK attempts.")
             self.ATTEMPTS += 1
             self.set_timeout(self.PROFILE.RETRANSMISSION_TIMER_VALUE)
             if logging:
@@ -203,9 +216,8 @@ class SCHCSender:
         # LoPy should use to_bytes()
         data = fragment_sent.to_hex().decode()
 
-        if logging:
-            self.LOGGER.info("[POST] Posting fragment {} ({})".format(fragment_sent.HEADER.to_string(),
-                                                                      fragment_sent.to_hex()))
+        self.LOGGER.info("[POST] Posting fragment {} ({})".format(fragment_sent.HEADER.to_string(),
+                                                                  fragment_sent.to_hex()))
 
         if fragment_sent.expects_ack() and not retransmit:
             current_fragment['downlink_enable'] = True
@@ -216,13 +228,13 @@ class SCHCSender:
             if logging:
                 current_fragment['sending_start'] = self.LOGGER.CHRONO.read()
 
-            self.send(data)
+            self.send(data, loss=True)
 
             if fragment_sent.expects_ack() and not retransmit:
                 if logging:
                     current_fragment['ack_received'] = False
 
-                ack = self.recv(self.PROFILE.DOWNLINK_MTU // 8)
+                ack = self.recv(self.PROFILE.DOWNLINK_MTU // 8, loss=True)
 
             if logging:
                 current_fragment['sending_end'] = self.LOGGER.CHRONO.read()
@@ -234,12 +246,12 @@ class SCHCSender:
                     self.LOGGER.debug('message RSSI: {}'.format(self.PROTOCOL.rssi()))
 
             if fragment_sent.is_sender_abort():
+                self.LOGGER.debug("--- senderAbort:{}".format(fragment_sent.to_string()))
+                self.LOGGER.debug("--- senderAbort:{}".format(fragment_sent.to_bytes()))
                 if logging:
-                    self.LOGGER.debug("--- senderAbort:{}".format(fragment_sent.to_string()))
-                    self.LOGGER.debug("--- senderAbort:{}".format(fragment_sent.to_bytes()))
                     current_fragment['abort'] = True
-                    self.LOGGER.error("Sent Sender-Abort. Goodbye")
-                    self.LOGGER.FRAGMENTS_INFO_ARRAY.append(current_fragment)
+                self.LOGGER.error("Sent Sender-Abort. Goodbye")
+                self.LOGGER.FRAGMENTS_INFO_ARRAY.append(current_fragment)
                 raise SenderAbortError
 
             if not fragment_sent.expects_ack():
@@ -253,11 +265,12 @@ class SCHCSender:
                 if logging:
                     current_fragment['ack'] = ack
                     current_fragment['ack_received'] = True
-                    self.LOGGER.info("[ACK] Bytes: {}. Ressetting attempts counter to 0.".format(ack))
+                self.LOGGER.info("[ACK] Bytes: {}. Ressetting attempts counter to 0.".format(ack))
                 self.ATTEMPTS = 0
 
                 # Parse ACK
-                ack_object = ACK.parse_from_bytes(self.PROFILE, ack)
+                # ack_object = ACK.parse_from_bytes(self.PROFILE, ack)
+                ack_object = ACK.parse_from_hex(self.PROFILE, ack)
 
                 if ack_object.is_receiver_abort():
                     if logging:
@@ -378,27 +391,23 @@ class SCHCSender:
             # If an ACK was expected
             if fragment_sent.is_all_1():
                 # If the attempts counter is strictly less than MAX_ACK_REQUESTS, try again
-                if logging:
-                    self.LOGGER.debug("attempts:{}".format(self.ATTEMPTS))
+                self.LOGGER.debug("attempts:{}".format(self.ATTEMPTS))
                 if self.ATTEMPTS < self.PROFILE.MAX_ACK_REQUESTS:
                     self.LOGGER.info("SCHC Timeout reached while waiting for an ACK. Sending the ACK Request again...")
                     self.schc_send(fragment_sent, retransmit=False)
                 # Else, exit with an error.
                 else:
-                    if logging:
-                        self.LOGGER.error("ERROR: MAX_ACK_REQUESTS reached. Sending Sender-Abort.")
+                    self.LOGGER.error("ERROR: MAX_ACK_REQUESTS reached. Sending Sender-Abort.")
                     abort = SenderAbort(self.PROFILE, fragment_sent.HEADER)
                     self.schc_send(abort)
 
             # If the ACK can be not sent (Sigfox only)
             if fragment_sent.is_all_0():
-                if logging:
-                    self.LOGGER.info("All-0 timeout reached. Proceeding to next window.")
+                self.LOGGER.info("All-0 timeout reached. Proceeding to next window.")
                 self.FRAGMENT_INDEX += 1
                 self.CURRENT_WINDOW += 1
 
             # Else, Sigfox communication failed.
             else:
-                if logging:
-                    self.LOGGER.error("ERROR: Timeout reached.")
+                self.LOGGER.error("ERROR: Timeout reached.")
                 raise NetworkDownError
