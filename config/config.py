@@ -28,4 +28,5 @@ LOCAL_TEST_URL = 'http://localhost:5000/test'
 LOCAL_CLEAN_WINDOW_URL = 'http://localhost:5000/clean_window'
 
 # Local variables:
-FILENAME = ''
+PAYLOAD = "Packets/300"
+RECEIVED = "received"

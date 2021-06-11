@@ -15,7 +15,7 @@ from Entities.exceptions import *
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.SenderAbort import SenderAbort
-from schc_utils import is_monochar, zfill, replace_bit
+from schc_utils import is_monochar, zfill, replace_bit, ordinal
 
 
 class SCHCSender:
@@ -183,7 +183,7 @@ class SCHCSender:
                 self.LOGGER.debug("laps - > {}".format(self.LOGGER.LAPS))
 
                 self.LOGGER.debug("--------------------------")
-                self.LOGGER.debug("{}th fragment:".format(self.FRAGMENT_INDEX))
+                self.LOGGER.debug("{} fragment:".format(ordinal(self.FRAGMENT_INDEX)))
                 self.LOGGER.debug("RuleID:{}, DTAG:{}, WINDOW:{}, FCN:{}".format(fragment.HEADER.RULE_ID,
                                                                                  fragment.HEADER.DTAG,
                                                                                  fragment.HEADER.W,
@@ -366,8 +366,8 @@ class SCHCSender:
                                 for j in range(len(last_bitmap)):
                                     # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                                     if last_bitmap[j] == '0':
-                                        self.LOGGER.info("The {}th ({} / {}) fragment was lost! "
-                                                         "Sending again...".format(j,
+                                        self.LOGGER.info("The {} ({} / {}) fragment was lost! "
+                                                         "Sending again...".format(ordinal(j),
                                                                                    self.PROFILE.WINDOW_SIZE * ack_window_number + j,
                                                                                    len(self.FRAGMENTS)))
                                         # Try sending again the lost fragment.
@@ -391,8 +391,8 @@ class SCHCSender:
                     for j in range(len(bitmap)):
                         # If the j-th bit of the bitmap is 0, then the j-th fragment was lost.
                         if bitmap[j] == '0':
-                            self.LOGGER.info("The {}th ({} / {}) fragment was lost! "
-                                             "Sending again...".format(j,
+                            self.LOGGER.info("The {} ({} / {}) fragment was lost! "
+                                             "Sending again...".format(ordinal(j),
                                                                        self.PROFILE.WINDOW_SIZE * ack_window_number + j,
                                                                        len(self.FRAGMENTS)))
                             # Try sending again the lost fragment.

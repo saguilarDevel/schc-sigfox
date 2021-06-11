@@ -12,21 +12,14 @@ class Reassembler:
 	def __init__(self, profile, schc_fragments):
 		self.PROFILE = profile
 
-		for fragment in schc_fragments:
-			if fragment != b'':
-				self.SCHC_FRAGMENTS.append(Fragment(self.PROFILE, fragment))
+		self.SCHC_FRAGMENTS = [Fragment(self.PROFILE, fragment) for fragment in schc_fragments]
 
-		for fragment in self.SCHC_FRAGMENTS:
-			self.rule_set.add(fragment.HEADER.RULE_ID)
-			self.dtag_set.add(fragment.HEADER.DTAG)
-			self.window_set.add(fragment.HEADER.W)
-			self.fcn_set.add(fragment.HEADER.FCN)
+		# for fragment in self.SCHC_FRAGMENTS:
+		# 	 self.rule_set.add(fragment.HEADER.RULE_ID)
+		# 	 self.dtag_set.add(fragment.HEADER.DTAG)
+		#  	 self.window_set.add(fragment.HEADER.W)
+		# 	 self.fcn_set.add(fragment.HEADER.FCN)
 
 	def reassemble(self):
-		fragments = self.SCHC_FRAGMENTS
-		payload_list = []
-
-		for fragment in fragments:
-			payload_list.append(fragment.PAYLOAD)
-
+		payload_list = [fragment.PAYLOAD for fragment in self.SCHC_FRAGMENTS]
 		return b"".join(payload_list)

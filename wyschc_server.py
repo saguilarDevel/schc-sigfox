@@ -218,8 +218,7 @@ def receiver():
                                                                                              current_window))
                         print('Activating reassembly process...')
                         start_request(url=config.LOCAL_REASSEMBLE_URL,
-                                      body={# "last_index": last_index,
-                                          # "current_window": current_window,
+                                      body={"current_window": current_window,
                                             "header_bytes": header_bytes})
 
                         # Send last ACK to end communication.
@@ -278,7 +277,7 @@ def reassemble():
         print('Received HTTP message: {}'.format(request_dict))
 
         current_window = int(request_dict["current_window"])
-        last_index = int(request_dict["last_index"])
+        # last_index = int(request_dict["last_index"])
         header_bytes = int(request_dict["header_bytes"])
 
         # Initialize SCHC variables.
@@ -290,7 +289,8 @@ def reassemble():
         fragments = []
 
         # For each window, load every fragment into the fragments array
-        for i in range(current_window):
+        # Note: This assumes all fragments are ordered
+        for i in range(current_window + 1):
             for j in range(profile.WINDOW_SIZE):
                 if not exists_blob(f"all_windows/window_{i}/fragment_{i}_{j}"):
                     continue
@@ -299,22 +299,23 @@ def reassemble():
                 payload = fragment_file[header_bytes:].encode()
                 fragment = [header, payload]
                 fragments.append(fragment)
-                if i == current_window:
-                    break
 
+        print(len(fragments))
         # Instantiate a Reassembler and start reassembling.
         reassembler = Reassembler(profile, fragments)
         payload = bytearray(reassembler.reassemble())
         # Upload the full message.
         upload_blob(payload.decode("utf-8"), "SCHC_PACKET")
+        with open(config.RECEIVED, "w") as f:
+            f.write(payload.decode())
 
-        if filecmp.cmp(config.PAYLOAD, config.MESSAGE):
+        if filecmp.cmp(config.PAYLOAD, config.RECEIVED):
             print("The reassembled file is equal to the original message.")
         else:
             print("The reassembled file is corrupt.")
 
-        start_request(url=config.LOCAL_CLEAN_URL,
-                      body={"header_bytes": header_bytes})
+        # start_request(url=config.LOCAL_CLEAN_URL,
+        #               body={"header_bytes": header_bytes})
 
         return '', 204
 
@@ -344,8 +345,8 @@ def clean():
                                 "window_number": i,
                                 "clear": request_dict["clear"] if "clear" in request_dict else "False"})
 
-        if exists_blob("Reassembled_Packet"):
-            delete_blob("Reassembled_Packet")
+        if exists_blob("SCHC_PACKET"):
+            delete_blob("SCHC_PACKET")
 
         upload_blob("", "SSN")
 
