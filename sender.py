@@ -18,7 +18,8 @@ sender = SCHCSender()
 sender.set_session("ACK ON ERROR", payload)
 sender.set_logging(None, None)
 sender.set_device("4d5a87")
-sender.set_loss_rate(20)
+# sender.set_loss_rate(20)
+sender.set_loss_mask("loss_masks/loss_mask_1.json")
 
 _ = requests.post(url=config.LOCAL_CLEAN_URL, json={'header_bytes': sender.HEADER_BYTES,
                                                     'not_delete_dl_losses': "False",

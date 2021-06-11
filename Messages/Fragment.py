@@ -7,6 +7,7 @@ class Fragment:
     PROFILE = None
     HEADER = None
     PAYLOAD = None
+    FRAGMENT_NUMBER = None
 
     def __init__(self, profile, fragment):
         self.PROFILE = profile
@@ -26,6 +27,14 @@ class Fragment:
 
         self.HEADER = FragmentHeader(self.PROFILE, rule_id, dtag, window, fcn)
         self.PAYLOAD = payload
+
+        n = profile.N
+        fcn_dict = {zfill(bin((2 ** n - 2) - (j % (2 ** n - 1)))[2:], n): j for j in range(2 ** n - 1)}
+        try:
+            self.FRAGMENT_NUMBER = fcn_dict[self.HEADER.FCN]
+        except KeyError:
+            self.FRAGMENT_NUMBER = -1
+
 
     def to_bytes(self):
         return self.HEADER.to_bytes() + self.PAYLOAD

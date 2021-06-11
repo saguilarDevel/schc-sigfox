@@ -1,3 +1,4 @@
+import json
 import queue
 import socket as s
 import time
@@ -14,7 +15,7 @@ from Entities.exceptions import *
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.SenderAbort import SenderAbort
-from schc_utils import is_monochar
+from schc_utils import is_monochar, zfill
 
 
 class SCHCSender:
@@ -38,6 +39,7 @@ class SCHCSender:
     SEQNUM = None
 
     LOSS_RATE = None
+    LOSS_MASK = None
 
     def __init__(self):
         # self.PROTOCOL = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ4)
@@ -56,6 +58,7 @@ class SCHCSender:
         self.SEQNUM = 0
         self.BUFFER = queue.Queue()
         self.LOSS_RATE = 0
+        self.LOSS_MASK = ''
 
     def set_logging(self, filename, json_file):
         self.LOGGER = SCHCLogger(filename, json_file)
@@ -71,6 +74,9 @@ class SCHCSender:
 
     def set_loss_rate(self, loss_rate):
         self.LOSS_RATE = loss_rate
+
+    def set_loss_mask(self, loss_mask):
+        self.LOSS_MASK = loss_mask
 
     def send(self, message, loss=False):
         http_body = {
@@ -91,6 +97,15 @@ class SCHCSender:
 
         self.SEQNUM += 1
 
+    def send_mask(self, fragment):
+        with open(self.LOSS_MASK, 'r') as f:
+            mask = json.load(f)
+
+        if mask["fragment"][str(fragment.HEADER.WINDOW_NUMBER)][fragment.FRAGMENT_NUMBER] == 0:
+            print("[SEND] Fragment lost")
+        else:
+            self.send(fragment.to_hex().decode())
+
     def recv(self, bufsize, loss=False):
         try:
             print("receiving")
@@ -100,13 +115,28 @@ class SCHCSender:
                 raise LengthMismatchError
 
             if loss and random.random() * 100 <= self.LOSS_RATE:
-                # return self.recv(bufsize, loss)
+                print("[RECV] Fragment lost")
                 raise SCHCTimeoutError
             else:
                 return received
 
         except queue.Empty:
             raise SCHCTimeoutError
+
+    def recv_mask(self):
+        with open(self.LOSS_MASK, 'r') as f:
+            mask = json.load(f)
+
+        received = self.recv(self.PROFILE.DOWNLINK_MTU // 8)
+        ack = ACK.parse_from_hex(self.PROFILE, received)
+
+        attempts = 1 if self.ATTEMPTS == 0 else self.ATTEMPTS
+
+        if mask["ack"][ack.HEADER.W][attempts] == 0:
+            print("[RECV] Fragment lost")
+            raise SCHCTimeoutError
+        else:
+            return received
 
     def set_session(self, mode, message):
         self.HEADER_BYTES = 1 if len(message) <= 300 else 2
@@ -228,13 +258,15 @@ class SCHCSender:
             if logging:
                 current_fragment['sending_start'] = self.LOGGER.CHRONO.read()
 
-            self.send(data, loss=True)
+            # self.send(data, loss=True)
+            self.send_mask(fragment_sent)
 
             if fragment_sent.expects_ack() and not retransmit:
                 if logging:
                     current_fragment['ack_received'] = False
 
-                ack = self.recv(self.PROFILE.DOWNLINK_MTU // 8, loss=True)
+                # ack = self.recv(self.PROFILE.DOWNLINK_MTU // 8, loss=True)
+                ack = self.recv_mask()
 
             if logging:
                 current_fragment['sending_end'] = self.LOGGER.CHRONO.read()

@@ -114,9 +114,9 @@ def receiver():
             upload_blob(time_received, "timestamp")
 
             # Print some data for the user.
-            print("[RECV] This corresponds to the " + ordinal(fragment_number) + " fragment of the " + ordinal(
-                current_window) + "window.")
-            print("[RECV] Sigfox sequence number: " + str(sigfox_sequence_number))
+            print(f"[RECV] This corresponds to the {ordinal(fragment_number)} fragment "
+                  f"of the {ordinal(current_window)} window.")
+            print(f"[RECV] Sigfox sequence number: {sigfox_sequence_number}")
 
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, fragment_number, '1')
@@ -128,7 +128,7 @@ def receiver():
             # Upload current timestamp.
             time_received = int(request_dict["time"])
             upload_blob(time_received, "timestamp")
-            print("is All-1:{}, is All-0:{}".format(fragment_message.is_all_1(), fragment_message.is_all_0()))
+            print(f"is All-1:{fragment_message.is_all_1()}, is All-0:{fragment_message.is_all_0()}")
             # Update bitmap and upload it.
             bitmap = replace_bit(bitmap, len(bitmap) - 1, '1')
 
