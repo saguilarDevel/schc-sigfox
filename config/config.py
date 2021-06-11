@@ -23,7 +23,7 @@ CLEAN_WINDOW_URL = 'https://southamerica-east1-wyschc27.cloudfunctions.net/clean
 # Local endpoints for offline testing
 LOCAL_CLEAN_URL = 'http://localhost:5000/clean'
 LOCAL_RECEIVER_URL = 'http://localhost:5000/receiver'
-LOCAL_REASSEMBLE_URL = 'http://localhost:5000/http_reassemble'
+LOCAL_REASSEMBLE_URL = 'http://localhost:5000/reassemble'
 LOCAL_TEST_URL = 'http://localhost:5000/test'
 LOCAL_CLEAN_WINDOW_URL = 'http://localhost:5000/clean_window'
 

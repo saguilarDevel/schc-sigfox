@@ -15,7 +15,7 @@ from Entities.exceptions import *
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.SenderAbort import SenderAbort
-from schc_utils import is_monochar, zfill
+from schc_utils import is_monochar, zfill, replace_bit
 
 
 class SCHCSender:
@@ -58,7 +58,7 @@ class SCHCSender:
         self.SEQNUM = 0
         self.BUFFER = queue.Queue()
         self.LOSS_RATE = 0
-        self.LOSS_MASK = ''
+        self.LOSS_MASK = {}
 
     def set_logging(self, filename, json_file):
         self.LOGGER = SCHCLogger(filename, json_file)
@@ -76,7 +76,8 @@ class SCHCSender:
         self.LOSS_RATE = loss_rate
 
     def set_loss_mask(self, loss_mask):
-        self.LOSS_MASK = loss_mask
+        with open(loss_mask, 'r') as f:
+            self.LOSS_MASK = json.load(f)
 
     def send(self, message, loss=False):
         http_body = {
@@ -98,17 +99,19 @@ class SCHCSender:
         self.SEQNUM += 1
 
     def send_mask(self, fragment):
-        with open(self.LOSS_MASK, 'r') as f:
-            mask = json.load(f)
-
-        if mask["fragment"][str(fragment.HEADER.WINDOW_NUMBER)][fragment.FRAGMENT_NUMBER] == 0:
+        window_mask = self.LOSS_MASK["fragment"][str(fragment.HEADER.WINDOW_NUMBER)]
+        if window_mask[fragment.FRAGMENT_NUMBER] != '0':
             print("[SEND] Fragment lost")
+            self.LOSS_MASK["fragment"][str(fragment.HEADER.WINDOW_NUMBER)] = replace_bit(window_mask,
+                                                                                         fragment.FRAGMENT_NUMBER,
+                                                                                         str(int(window_mask[fragment.FRAGMENT_NUMBER]) - 1))
+            print(f"loss_mask is now {self.LOSS_MASK}")
         else:
             self.send(fragment.to_hex().decode())
 
     def recv(self, bufsize, loss=False):
         try:
-            print("receiving")
+            print("[RECV] Receiving")
             received = self.BUFFER.get(timeout=self.TIMEOUT)
 
             if len(received) / 2 > bufsize:
@@ -124,16 +127,17 @@ class SCHCSender:
             raise SCHCTimeoutError
 
     def recv_mask(self):
-        with open(self.LOSS_MASK, 'r') as f:
-            mask = json.load(f)
-
         received = self.recv(self.PROFILE.DOWNLINK_MTU // 8)
         ack = ACK.parse_from_hex(self.PROFILE, received)
 
         attempts = 1 if self.ATTEMPTS == 0 else self.ATTEMPTS
 
-        if mask["ack"][ack.HEADER.W][attempts] == 0:
+        window_mask = self.LOSS_MASK["ack"][str(ack.HEADER.WINDOW_NUMBER)]
+        if window_mask[attempts - 1] != '0':
             print("[RECV] Fragment lost")
+            self.LOSS_MASK["ack"][str(ack.HEADER.WINDOW_NUMBER)] = replace_bit(window_mask,
+                                                                               attempts - 1,
+                                                                               str(int(window_mask[attempts - 1]) - 1))
             raise SCHCTimeoutError
         else:
             return received

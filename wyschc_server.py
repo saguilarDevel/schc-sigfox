@@ -213,16 +213,13 @@ def receiver():
                     print("SSN is {} and last SSN is {}".format(sigfox_sequence_number, last_sequence_number))
                     # If the last two received fragments are consecutive, accept the ALL-1 and start reassembling
                     if int(sigfox_sequence_number) - int(last_sequence_number) == 1:
-                        last_index = int(read_blob("fragment_number")) + 1
-                        upload_blob(data[0].decode("ISO-8859-1") + data[1].decode("utf-8"),
-                                    "all_windows/window_%d/fragment_%d_%d" % (
-                                        current_window, current_window, last_index))
+                        last_index = profile.WINDOW_SIZE - 1
                         print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,
                                                                                              current_window))
                         try:
                             print('Activating reassembly process...')
                             _ = requests.post(url=config.LOCAL_REASSEMBLE_URL,
-                                              json={"last_index": last_index, "current_window": current_window,
+                                              json={#"last_index": last_index, "current_window": current_window,
                                                     "header_bytes": header_bytes},
                                               timeout=0.1)
                         except requests.exceptions.ReadTimeout:
@@ -278,7 +275,7 @@ def reassemble():
 
     if request.method == "POST":
         # Get request JSON.
-        print("[REASSEMBLE] POST RECEIVED")
+        print("[RSMB] POST RECEIVED")
         request_dict = request.get_json()
         print('Received HTTP message: {}'.format(request_dict))
 
@@ -295,23 +292,23 @@ def reassemble():
         fragments = []
 
         # For each window, load every fragment into the fragments array
-        for i in range(current_window + 1):
+        for i in range(current_window):
             for j in range(profile.WINDOW_SIZE):
-                print("Loading fragment {}".format(j))
-                fragment_file = read_blob("all_windows/window_%d/fragment_%d_%d" % (i, i, j))
-                print(fragment_file)
-                header = fragment_file[:header_bytes]
-                payload = fragment_file[header_bytes:]
-                fragment = [header.encode(), payload.encode()]
+                if not exists_blob(f"all_windows/window_{i}/fragment_{i}_{j}"):
+                    continue
+                fragment_file = read_blob(f"all_windows/window_{i}/fragment_{i}_{j}")
+                header = fragment_file[:header_bytes].encode()
+                payload = fragment_file[header_bytes:].encode()
+                fragment = [header, payload]
                 fragments.append(fragment)
-                if i == current_window and j == last_index:
+                if i == current_window:
                     break
 
         # Instantiate a Reassembler and start reassembling.
         reassembler = Reassembler(profile, fragments)
         payload = bytearray(reassembler.reassemble())
         # Upload the full message.
-        upload_blob(payload.decode("utf-8"), "Reassembled_Packet")
+        upload_blob(payload.decode("utf-8"), "SCHC_PACKET")
 
         if filecmp.cmp(config.PAYLOAD, config.MESSAGE):
             print("The reassembled file is equal to the original message.")
