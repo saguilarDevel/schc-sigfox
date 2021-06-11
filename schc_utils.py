@@ -2,6 +2,8 @@ import json
 import logging as log
 import os
 
+import requests
+
 
 def init_logging(logfile):
     log.basicConfig(filename=logfile,
@@ -85,3 +87,12 @@ def ordinal(n):
     if 11 <= (n % 100) <= 13:
         suffix = 'th'
     return f'{n}{suffix}'
+
+
+def start_request(url, body):
+    try:
+        _ = requests.post(url=url,
+                          json=body,
+                          timeout=0.1)
+    except requests.exceptions.ReadTimeout:
+        pass

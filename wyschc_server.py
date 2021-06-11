@@ -216,14 +216,12 @@ def receiver():
                         last_index = profile.WINDOW_SIZE - 1
                         print("Info for reassemble: last_index:{}, current_window:{}".format(last_index,
                                                                                              current_window))
-                        try:
-                            print('Activating reassembly process...')
-                            _ = requests.post(url=config.LOCAL_REASSEMBLE_URL,
-                                              json={#"last_index": last_index, "current_window": current_window,
-                                                    "header_bytes": header_bytes},
-                                              timeout=0.1)
-                        except requests.exceptions.ReadTimeout:
-                            pass
+                        print('Activating reassembly process...')
+                        start_request(url=config.LOCAL_REASSEMBLE_URL,
+                                      body={# "last_index": last_index,
+                                          # "current_window": current_window,
+                                            "header_bytes": header_bytes})
+
                         # Send last ACK to end communication.
                         print("[ALL1] Reassembled: Sending last ACK")
                         bitmap = ''
@@ -315,12 +313,8 @@ def reassemble():
         else:
             print("The reassembled file is corrupt.")
 
-        try:
-            _ = requests.post(url=config.LOCAL_CLEAN_URL,
-                              json={"header_bytes": header_bytes},
-                              timeout=0.1)
-        except requests.exceptions.ReadTimeout:
-            pass
+        start_request(url=config.LOCAL_CLEAN_URL,
+                      body={"header_bytes": header_bytes})
 
         return '', 204
 
@@ -345,15 +339,10 @@ def clean():
             upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
             # For each fragment in the SCHC Profile, create its blob.
 
-            try:
-                _ = requests.post(
-                    url=config.LOCAL_CLEAN_WINDOW_URL,
-                    json={"header_bytes": header_bytes,
-                          "window_number": i,
-                          "clear": request_dict["clear"] if "clear" in request_dict else "False"},
-                    timeout=0.1)
-            except requests.ReadTimeout:
-                pass
+            start_request(url=config.LOCAL_CLEAN_WINDOW_URL,
+                          body={"header_bytes": header_bytes,
+                                "window_number": i,
+                                "clear": request_dict["clear"] if "clear" in request_dict else "False"})
 
         if exists_blob("Reassembled_Packet"):
             delete_blob("Reassembled_Packet")
