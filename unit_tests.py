@@ -1,6 +1,6 @@
 import unittest
 
-from Entities.SigfoxProfile import Sigfox
+from Entities.SigfoxProfile import SigfoxProfile
 from Messages.ACK import ACK
 from Messages.ACKHeader import ACKHeader
 from Messages.Fragment import Fragment
@@ -12,7 +12,7 @@ from schc_utils import bitstring_to_bytes, is_monochar
 
 class TestFragmentHeader(unittest.TestCase):
     def test_to_string(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         rule_id = "0" * profile.RULE_ID_SIZE
         dtag = "0" * profile.T
         w = "0" * profile.M
@@ -23,7 +23,7 @@ class TestFragmentHeader(unittest.TestCase):
         self.assertEqual(s, "00000000")
 
     def test_to_bytes(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         rule_id = "0" * profile.RULE_ID_SIZE
         dtag = "0" * profile.T
         w = "0" * profile.M
@@ -35,7 +35,7 @@ class TestFragmentHeader(unittest.TestCase):
 
 class TestACKHeader(unittest.TestCase):
     def test_to_string(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         rule_id = "0" * profile.RULE_ID_SIZE
         dtag = "0" * profile.T
         w = "0" * profile.M
@@ -48,7 +48,7 @@ class TestACKHeader(unittest.TestCase):
 
 class TestFragment(unittest.TestCase):
     def test_is_all_0(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         rule_id = "0" * profile.RULE_ID_SIZE
         dtag = "0" * profile.T
         w = "0" * profile.M
@@ -60,7 +60,7 @@ class TestFragment(unittest.TestCase):
         self.assertTrue(fragment.is_all_0())
 
     def test_is_all_1(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         rule_id = "0" * profile.RULE_ID_SIZE
         dtag = "0" * profile.T
         w = "0" * profile.M
@@ -74,7 +74,7 @@ class TestFragment(unittest.TestCase):
 
 class TestAck(unittest.TestCase):
     def test_from_hex(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         h = "0f08000000000000"
         ack = ACK.parse_from_hex(profile, h)
         self.assertEqual(ack.to_string(), "0000111100001000000000000000000000000000000000000000000000000000")
@@ -92,11 +92,11 @@ class TestSenderAbort(unittest.TestCase):
         header = bytes.fromhex(hex_data[:2])
         payload = bytearray.fromhex(hex_data[2:])
         data = [header, payload]
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         fragment = Fragment(profile, data)
         abort = SenderAbort(profile, fragment.HEADER)
 
-        self.assertEqual(type(abort.PROFILE), Sigfox)
+        self.assertEqual(type(abort.PROFILE), SigfoxProfile)
         self.assertEqual(abort.HEADER.RULE_ID, fragment.HEADER.RULE_ID)
         self.assertEqual(abort.HEADER.DTAG, fragment.HEADER.DTAG)
         self.assertEqual(abort.HEADER.W, fragment.HEADER.W)
@@ -111,10 +111,16 @@ class TestSenderAbort(unittest.TestCase):
         header = bytes.fromhex(hex_data[:2])
         payload = bytearray.fromhex(hex_data[2:])
         data = [header, payload]
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         fragment = Fragment(profile, data)
 
         self.assertFalse(fragment.is_sender_abort())
+
+        hex_string = "1f3030303030303030303030"
+        fragment_sent = Fragment.from_hex(SigfoxProfile("UPLINK", "ACK ON ERROR", 1), hex_string)
+        abort = SenderAbort(fragment_sent.PROFILE, fragment_sent.HEADER)
+
+        self.assertTrue(abort.is_sender_abort())
 
 
 class TestReceiverAbort(unittest.TestCase):
@@ -123,11 +129,11 @@ class TestReceiverAbort(unittest.TestCase):
         header = bytes.fromhex(hex_data[:2])
         payload = bytearray.fromhex(hex_data[2:])
         data = [header, payload]
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         fragment = Fragment(profile, data)
         abort = ReceiverAbort(profile, fragment.HEADER)
 
-        self.assertEqual(type(abort.PROFILE), Sigfox)
+        self.assertEqual(type(abort.PROFILE), SigfoxProfile)
         self.assertEqual(abort.HEADER.RULE_ID, fragment.HEADER.RULE_ID)
         self.assertEqual(abort.HEADER.DTAG, fragment.HEADER.DTAG)
         self.assertEqual(abort.HEADER.W, fragment.HEADER.W)
@@ -136,7 +142,7 @@ class TestReceiverAbort(unittest.TestCase):
         self.assertTrue(abort.is_receiver_abort())
 
     def test_receive(self):
-        profile = Sigfox("UPLINK", "ACK ON ERROR", 1)
+        profile = SigfoxProfile("UPLINK", "ACK ON ERROR", 1)
         ack = "0000111111111111100000000000000000000000000000000000000000000000"
         ack_index_dtag = profile.RULE_ID_SIZE
         ack_index_w = ack_index_dtag + profile.T
@@ -155,7 +161,7 @@ class TestReceiverAbort(unittest.TestCase):
         self.assertTrue(received_ack.is_receiver_abort())
 
     def test_from_hex(self):
-        ack = ACK.parse_from_hex(Sigfox("UPLINK", "ACK ON ERROR", 1), "07ff800000000000")
+        ack = ACK.parse_from_hex(SigfoxProfile("UPLINK", "ACK ON ERROR", 1), "07ff800000000000")
         self.assertEqual(ack.to_string(),
                          "0000011111111111100000000000000000000000000000000000000000000000")
         self.assertEqual(ack.HEADER.RULE_ID, "00")

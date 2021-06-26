@@ -35,7 +35,6 @@ class Fragment:
         except KeyError:
             self.FRAGMENT_NUMBER = -1
 
-
     def to_bytes(self):
         return self.HEADER.to_bytes() + self.PAYLOAD
 
@@ -44,6 +43,12 @@ class Fragment:
 
     def to_hex(self):
         return binascii.hexlify(self.to_bytes())
+
+    @staticmethod
+    def from_hex(profile, hex_string):
+        header = bytes.fromhex(hex_string[:2])
+        payload = bytearray.fromhex(hex_string[2:])
+        return Fragment(profile, [header, payload])
 
     def is_all_1(self):
         fcn = self.HEADER.FCN

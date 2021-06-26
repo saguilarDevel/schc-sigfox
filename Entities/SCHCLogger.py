@@ -32,6 +32,8 @@ class SCHCLogger:
         self.END_SENDING_TIME = 0
         self.LOGGING_TIME = 0
         self.FINISHED = False
+        self.SENDER_ABORTED = False
+        self.RECEIVER_ABORTED = False
 
         # with open(self.FILENAME, 'a') as f:
         #     f.write("====START LOGGING====\n\n")

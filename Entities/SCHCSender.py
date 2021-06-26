@@ -89,14 +89,17 @@ class SCHCSender:
 
         print(f"[SEND] sending {message}; time {int(time.time())}; seqnum {self.SEQNUM}; timeout {self.TIMEOUT}")
 
+        self.SEQNUM += 1
+
         if loss and random.random() * 100 <= self.LOSS_RATE:
             print("[SEND] Fragment lost")
         else:
-            response = requests.post(url=config.LOCAL_RECEIVER_URL, json=http_body, timeout=self.TIMEOUT)
-            if response.status_code == 200 and self.DEVICE in response.json():
-                self.BUFFER.put(response.json()[self.DEVICE]["downlinkData"])
-
-        self.SEQNUM += 1
+            try:
+                response = requests.post(url=config.LOCAL_RECEIVER_URL, json=http_body, timeout=self.TIMEOUT)
+                if response.status_code == 200 and self.DEVICE in response.json():
+                    self.BUFFER.put(response.json()[self.DEVICE]["downlinkData"])
+            except requests.exceptions.ReadTimeout:
+                raise SCHCTimeoutError
 
     def send_mask(self, fragment):
         window_mask = self.LOSS_MASK["fragment"][str(fragment.HEADER.WINDOW_NUMBER)]
@@ -262,15 +265,15 @@ class SCHCSender:
             if logging:
                 current_fragment['sending_start'] = self.LOGGER.CHRONO.read()
 
-            # self.send(data, loss=True)
-            self.send_mask(fragment_sent)
+            self.send(data, loss=True)
+            # self.send_mask(fragment_sent)
 
             if fragment_sent.expects_ack() and not retransmit:
                 if logging:
                     current_fragment['ack_received'] = False
 
-                # ack = self.recv(self.PROFILE.DOWNLINK_MTU // 8, loss=True)
-                ack = self.recv_mask()
+                ack = self.recv(self.PROFILE.DOWNLINK_MTU // 8, loss=True)
+                # ack = self.recv_mask()
 
             if logging:
                 current_fragment['sending_end'] = self.LOGGER.CHRONO.read()
@@ -286,8 +289,9 @@ class SCHCSender:
                 self.LOGGER.debug("--- senderAbort:{}".format(fragment_sent.to_bytes()))
                 if logging:
                     current_fragment['abort'] = True
+                    self.LOGGER.FRAGMENTS_INFO_ARRAY.append(current_fragment)
                 self.LOGGER.error("Sent Sender-Abort. Goodbye")
-                self.LOGGER.FRAGMENTS_INFO_ARRAY.append(current_fragment)
+                self.LOGGER.SENDER_ABORTED = True
                 raise SenderAbortError
 
             if not fragment_sent.expects_ack():
@@ -312,8 +316,9 @@ class SCHCSender:
                     if logging:
                         current_fragment['receiver_abort_message'] = ack
                         current_fragment['receiver_abort_received'] = True
+                        self.LOGGER.FRAGMENTS_INFO_ARRAY.append(current_fragment)
                     self.LOGGER.error("ERROR: Receiver Abort received. Aborting communication.")
-                    self.LOGGER.FRAGMENTS_INFO_ARRAY.append(current_fragment)
+                    self.LOGGER.RECEIVER_ABORTED = True
                     raise ReceiverAbortError
 
                 if not fragment_sent.expects_ack():
@@ -340,8 +345,7 @@ class SCHCSender:
                     # If the C bit is set, the sender MAY exit successfully.
                     if c == '1':
                         self.LOGGER.info("Last ACK received, fragments reassembled successfully. End of transmission.")
-                        if logging:
-                            self.LOGGER.FINISHED = True
+                        self.LOGGER.FINISHED = True
                         self.FRAGMENT_INDEX += 1
                         return
                     # Otherwise,

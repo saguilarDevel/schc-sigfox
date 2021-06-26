@@ -1,7 +1,6 @@
 import filecmp
 import re
 
-import requests
 from flask import Flask, request
 from flask import abort
 
@@ -10,8 +9,15 @@ from Entities.SigfoxProfile import SigfoxProfile
 from Messages.ACK import ACK
 from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
-from firebase_utils import *
+
 from schc_utils import *
+
+mode = 'filedir'
+
+if mode == 'firebase':
+    from firebase_utils import *
+elif mode == 'filedir':
+    from filedir_utils import *
 
 app = Flask(__name__)
 
