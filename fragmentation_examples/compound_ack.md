@@ -295,7 +295,7 @@ The SCHC Compound ACK MUST be 0 padded (Padding bits must be 0).
    + ------------------------ + ------- + ... + ------- + ------- + ------- +
    | RuleID |  W=b'x  | C=b'0 |  Bitmap | ... | W=b'x+i |  Bitmap | b'0-pad |
    + ------ + ------- + ----- + ------- + ... | ------- + ------- + ------- +
-   | 8 bits |  3 bits | 1 bit | 15 bits |     |  3 bits | 15 bits |
+   | 8 bits |  3 bits | 1 bit | 31 bits |     |  3 bits | 31 bits |
 
         Figure 15: SCHC Compound ACK message format. 
         On top are noted the window number of the corresponding bitmap. 
