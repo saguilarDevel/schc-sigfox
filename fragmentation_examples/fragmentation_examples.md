@@ -235,11 +235,6 @@ DL Enable |-----W=1, FCN=7, Seq=15---->|
 In this case, there are losses in both the first (W=0) and second (W=1) window.
 The retransmission cycles (after the All-1 is sent, not in intermediate windows)
 should always finish with an with an All-1, if the All-0 is lost, the All-1 is sent after, as it serves as an ACK Request message.
-This is required for the sender to open a reception window so the receiver
-can send an ACK. 
-Else there is no way for the Receiver to send an ACK,
-if All-1 message is lost, then an ACK timeout happen 
-and an ACK is resend.
 
 ```text
                  Sender                            Receiver
