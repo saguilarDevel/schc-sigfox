@@ -17,6 +17,12 @@ class SCHCLogger:
     END_SENDING_TIME = None
     LOGGING_TIME = None
     FINISHED = False
+    SEVERITY = None
+
+    DEBUG = 0
+    INFO = 1
+    WARNING = 2
+    ERROR = 3
 
     def __init__(self, filename, json_file):
 
@@ -38,8 +44,12 @@ class SCHCLogger:
         # with open(self.FILENAME, 'a') as f:
         #     f.write("====START LOGGING====\n\n")
 
+    def set_severity(self, severity):
+        self.SEVERITY = severity
+
     def debug(self, text):
-        print(self, "[DEBUG] {}".format(text))
+        if self.SEVERITY <= self.DEBUG:
+            print(self, "[DEBUG] {}".format(text))
 
         # t_i = 0
 
@@ -55,7 +65,8 @@ class SCHCLogger:
         #     self.LOGGING_TIME += t_f - t_i
 
     def info(self, text):
-        print(self, "[INFO] {}".format(text))
+        if self.SEVERITY <= self.INFO:
+            print(self, "[INFO] {}".format(text))
 
         # t_i = 0
 
@@ -71,7 +82,8 @@ class SCHCLogger:
         #     self.LOGGING_TIME += t_f - t_i
 
     def warning(self, text):
-        print(self, "[WARNING] {}".format(text))
+        if self.SEVERITY <= self.WARNING:
+            print(self, "[WARNING] {}".format(text))
 
         # t_i = 0
 
@@ -86,7 +98,8 @@ class SCHCLogger:
         #     self.LOGGING_TIME += t_f - t_i
 
     def error(self, text):
-        print(self, "[ERROR] {}".format(text))
+        if self.SEVERITY <= self.ERROR:
+            print(self, "[ERROR] {}".format(text))
 
         # t_i = 0
 

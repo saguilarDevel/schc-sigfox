@@ -59,9 +59,12 @@ class SCHCSender:
         self.BUFFER = queue.Queue()
         self.LOSS_RATE = 0
         self.LOSS_MASK = {}
+        self.SENT = 0
+        self.RECEIVED = 0
 
-    def set_logging(self, filename, json_file):
+    def set_logging(self, filename, json_file, severity):
         self.LOGGER = SCHCLogger(filename, json_file)
+        self.LOGGER.set_severity(severity)
 
     def set_delay(self, delay):
         self.DELAY = delay
@@ -94,6 +97,7 @@ class SCHCSender:
         if loss and random.random() * 100 <= self.LOSS_RATE:
             print("[SEND] Fragment lost")
         else:
+            self.SENT += 1
             try:
                 response = requests.post(url=config.LOCAL_RECEIVER_URL, json=http_body, timeout=self.TIMEOUT)
                 if response.status_code == 200 and self.DEVICE in response.json():
@@ -110,6 +114,7 @@ class SCHCSender:
                                                                                          str(int(window_mask[fragment.FRAGMENT_NUMBER]) - 1))
             print(f"loss_mask is now {self.LOSS_MASK}")
         else:
+            self.SENT += 1
             self.send(fragment.to_hex().decode())
 
     def recv(self, bufsize, loss=False):
@@ -124,6 +129,7 @@ class SCHCSender:
                 print("[RECV] Fragment lost")
                 raise SCHCTimeoutError
             else:
+                self.RECEIVED += 1
                 return received
 
         except queue.Empty:
@@ -143,6 +149,7 @@ class SCHCSender:
                                                                                str(int(window_mask[attempts - 1]) - 1))
             raise SCHCTimeoutError
         else:
+            self.RECEIVED += 1
             return received
 
     def set_session(self, mode, message):
@@ -265,8 +272,10 @@ class SCHCSender:
             if logging:
                 current_fragment['sending_start'] = self.LOGGER.CHRONO.read()
 
-            self.send(data, loss=True)
-            # self.send_mask(fragment_sent)
+            if self.LOSS_MASK != {}:
+                self.send_mask(fragment_sent)
+            else:
+                self.send(data, loss=True)
 
             if fragment_sent.expects_ack() and not retransmit:
                 if logging:

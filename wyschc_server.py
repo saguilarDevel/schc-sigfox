@@ -11,6 +11,7 @@ from Messages.Fragment import Fragment
 from Messages.ReceiverAbort import ReceiverAbort
 
 from schc_utils import *
+from config import config
 
 mode = 'filedir'
 
@@ -341,9 +342,15 @@ def clean():
         header_bytes = int(request_dict["header_bytes"])
         profile = SigfoxProfile("UPLINK", "ACK ON ERROR", header_bytes)
         bitmap = '0' * (2 ** profile.N - 1)
+
+        if not exists_folder("all_windows"):
+            create_folder("all_windows")
+            for i in range(2 ** profile.M):
+                create_folder(f"all_windows/window_{i}")
+
         for i in range(2 ** profile.M):
-            upload_blob(bitmap, "all_windows/window_%d/bitmap_%d" % (i, i))
-            upload_blob(bitmap, "all_windows/window_%d/losses_mask_%d" % (i, i))
+            upload_blob(bitmap, f"all_windows/window_{i}/bitmap_{i}")
+            upload_blob(bitmap, f"all_windows/window_{i}/losses_mask_{i}")
             # For each fragment in the SCHC Profile, create its blob.
 
             start_request(url=config.LOCAL_CLEAN_WINDOW_URL,

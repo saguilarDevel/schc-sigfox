@@ -2,12 +2,12 @@ import json
 import matplotlib.pyplot as plt
 from mpl_toolkits.axisartist import SubplotZero
 
-json_file = "results2.json"
+json_file = "recvd/results_3.json"
 
 with open(json_file, 'r') as f:
     json_dict = json.load(f)
 
-loss_rates = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+loss_rates = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 success = [None] * len(loss_rates)
 failed_reassembly = [None] * len(loss_rates)
 sender_aborted = [None] * len(loss_rates)
@@ -59,7 +59,7 @@ ax.set_ylabel("Occurrences / Total experiments")
 ax.set_xlim((0, 1))
 ax.set_ylim((0, 1))
 plt.legend(["Sender-Aborted", "Receiver-Aborted", "Failed reassembly"])
-plt.show()
+# plt.show()
 fig.savefig("failed_total.png")
 
 fail_rate = [None] * len(loss_rates)
@@ -82,5 +82,5 @@ ax.set_ylabel("Occurrences / (Correct + Failed)")
 ax.set_xlim((0, 1))
 ax.set_ylim((0, 1))
 plt.legend(["Failed reassembly"])
-plt.show()
+# plt.show()
 fig.savefig("failed_rate.png")
