@@ -1,6 +1,5 @@
 from Messages.Fragment import Fragment
-from Messages.FragmentHeader import FragmentHeader
-from function import bitstring_to_bytes
+from schc_utils import bitstring_to_bytes
 
 
 class SenderAbort(Fragment):
@@ -12,8 +11,9 @@ class SenderAbort(Fragment):
         fcn = "1" * profile.N
         new_header = rule_id + dtag + w + fcn
         payload = ''
+        payload_max_length = int((profile.UPLINK_MTU - profile.HEADER_LENGTH) / 8)
 
-        while len(new_header + payload) < profile.UPLINK_MTU:
+        while len(payload) < payload_max_length:
             payload += '0'
 
         super().__init__(profile, [bitstring_to_bytes(new_header), payload.encode()])

@@ -1,5 +1,4 @@
 from Messages.ACK import ACK
-from Messages.ACKHeader import ACKHeader
 
 
 class ReceiverAbort(ACK):
