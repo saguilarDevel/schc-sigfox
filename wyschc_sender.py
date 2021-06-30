@@ -10,7 +10,7 @@ from Entities.SCHCSender import SCHCSender
 from config import config
 
 loss_rates = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-repetitions = 500
+repetitions = 100
 json_filename = "recvd/results_3.json"
 
 print("This is the SENDER script for a SCHC transmission experiment")
