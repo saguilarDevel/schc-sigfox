@@ -8,6 +8,6 @@ requests~=2.22.0
 pandas == 1.1.4
 openpyxl
 xlsxwriter
-firebase-admin == 4.5.1
-google-cloud-firestore==0.29.0
-google-cloud-storage==1.10.0
+firebase-admin
+google-cloud-firestore
+google-cloud-storage
