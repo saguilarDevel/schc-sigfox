@@ -57,6 +57,9 @@ def hello_get(request):
             return 'wrong header', 204
 
         if bytearray.fromhex(fragment[2:]).decode() == "CLEAN":
+            print("CLEAN")
+            print(config.CLEAN_URL)
+            print(header_bytes)
             try:
                 _ = requests.post(
                     url=config.CLEAN_URL,
