@@ -600,7 +600,7 @@ def test(request):
     request_dict = request.get_json()
     print('Received Sigfox message: {}'.format(request_dict))
     if request_dict['ack'] == 'true':
-        response_dict = {request_dict["device"]: {'downlinkData': "0400000000000000"}}
+        response_dict = {request_dict["device"]: {'downlinkData': "0400000000000004"}}
         response_json = json.dumps(response_dict)
         print("200, Response content -> {}".format(response_json))
         return response_json, 200
