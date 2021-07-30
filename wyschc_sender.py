@@ -28,7 +28,6 @@ with open(json_filename, "w") as f:
     f.write(json.dumps(exp_dict))
 
 for loss_rate in loss_rates:
-# for loss_rate in [50]:
     with open(json_filename, "r+") as f:
         exp_dict = json.load(f)
         print(exp_dict)
