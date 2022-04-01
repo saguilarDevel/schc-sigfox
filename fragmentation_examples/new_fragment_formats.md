@@ -398,7 +398,7 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 ```text
      |- SCHC ACK Header -| W=b'w1 |...|--- W=b'wi ---|
      +-------------------+-------+...+-------+-------+-------+
-     |RuleID|W=b'w1 |C=b'0|Bitmap |...|W=b'wi|Bitmap |b'0-pad|
+     |RuleID|W=b'w1|C=b'0|Bitmap |...|W=b'wi |Bitmap |b'0-pad|
      +------+------+-----+-------+...|-------+-------+-------+
      |6 bits|2 bits|1 bit|15 bits|   | 2 bits|15 bits|
 
