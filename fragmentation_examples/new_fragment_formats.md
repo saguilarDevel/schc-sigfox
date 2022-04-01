@@ -79,6 +79,51 @@ Note that the RCS NOT is part of the SCHC Header.
 This section depicts the different formats of SCHC Fragment, SCHC ACK (including the SCHC Compound ACK defined in [I-D.ietf-lpwan-schc-compound-ack]), and SCHC Abort used in SCHC over Sigfox.
 
 ### Uplink No-ACK Mode: Single-byte SCHC Header
+#### Regular SCHC Fragment
+Figure A shows an example of a regular SCHC fragment for all
+   fragments except the last one.  As tiles are of 11 bytes, padding
+   MUST NOT be added.
+```text
+                |- SCHC Fragment Header -|
+                + ---------------------- + ------- +
+                |   RuleID   |    FCN    | Payload |
+                + ---------- + --------- + ------- +
+                |   3 bits   |  5 bits   | 88 bits |
+
+      Figure A: Regular SCHC Fragment format for all fragments except
+                                the last one
+```
+
+####  All-1 SCHC Fragment
+Figure B shows an example of the All-1 message.  The All-1 message
+   MUST contain the last tile of the SCHC Packet.  The last tile MUST be
+   of at least 1 byte (one L2 word).  Padding MUST NOT be added, as the
+   resulting size is L2-word-multiple.
+
+   The All-1 messages includes a 5-bit RCS, and 3 bits are added as padding to complete one byte. The payload size of the All-1 message ranges from 8 to 80 bits.
+```text
+
+              |--------  SCHC Fragment Header -------|
+              + ------------------------------------ + ------------ +
+              | RuleID | FCN=ALL-1 |  RCS   |   000  |   Payload    |
+              + ------ + --------- + ------ + ------ + ------------ +
+              | 3 bits |  5 bits   | 5 bits | 3 bits | 8 to 80 bits |
+
+             Figure B: All-1 SCHC Message format with last tile
+
+```
+#### SCHC Sender-Abort Message format
+
+```text
+                      |- Sender-Abort Header -|
+                      + --------------------- +
+                      | RuleID |   FCN=ALL-1  |
+                      + ------ + -- --------- +
+                      | 3 bits |     5 bits   |
+
+                Figure C: SCHC Sender-Abort message format
+
+```
 
 ### Uplink ACK-on-Error Mode: Single-byte SCHC Header
 
@@ -117,7 +162,7 @@ This section depicts the different formats of SCHC Fragment, SCHC ACK (including
               |-------------  SCHC Fragment Header -----------|
               + --------------------------------------------- + ------------ +
               | RuleID |   W    | FCN=ALL-1 |  RCS   |  00000 |   Payload    |
-              + ------ + ------ + --------- + ------ + --------------------- +
+              + ------ + ------ + --------- + ------ + ------ + ------------ +
               | 3 bits | 2 bits |  3 bits   | 3 bits | 5 bits | 8 to 80 bits |
 
              Figure 4: All-1 SCHC Message format with last tile
