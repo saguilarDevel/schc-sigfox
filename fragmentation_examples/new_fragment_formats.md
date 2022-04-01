@@ -290,7 +290,7 @@ REMOVE-->The window numbered 00, if present in the SCHC Compound ACK, MUST be pl
 ```text
                       |---- Sender-Abort Header ----|
                       + --------------------------- +
-                      | RuleID |   W    | FCN=ALL-1 |
+                      | RuleID | W=b'11 | FCN=ALL-1 |
                       + ------ + ------ + --------- +
                       | 3 bits | 2 bits |  3 bits   |
 
@@ -312,13 +312,13 @@ REMOVE-->The window numbered 00, if present in the SCHC Compound ACK, MUST be pl
 
 
 
-### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1 (including RCS)
+### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
 
 #### Regular SCHC Fragment
 
    Figure 14 shows an example of a regular SCHC fragment for all
-   fragments except the last one.  The penultimate tile of a SCHC Packet
-   is of the regular size.
+   fragments except the last one, while using Option 1.  
+   The penultimate tile of a SCHC Packet is of the regular size.
 
    The SCHC Fragment Header is 0-padded with 4 bits to complete the two-byte size.  
    ```text
@@ -339,10 +339,11 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 
 #### All-1 SCHC Fragment
 
-   Figure 15 shows an example of the All-1 message.  The All-1 message
-   MUST contain the last tile of the SCHC Packet.
+   Figure 15 shows an example of the All-1 message, for Option 1.  
+   The All-1 message MUST contain the last tile of the SCHC Packet.
 
-   The All-1 message contains a RCS of 4 bits. The size of the last tile ranges from 8 to 80 bits.
+   The All-1 message contains a RCS of 4 bits to complete the two-byte size.
+   The size of the last tile ranges from 8 to 80 bits.
    ```text
                  |--------- SCHC Fragment Header -------|
                  + ------------------------------------ + ------------ +
@@ -352,7 +353,6 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 
             Figure 15: All-1 SCHC message format with last tile
 ```
-                 
 
    As per [RFC8724] the All-1 must be distinguishable from the a SCHC
    Sender-Abort message (with same Rule ID, M and N values).  The All-1
@@ -413,7 +413,7 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 ```text
                    |---- Sender-Abort Header ----|
                    + --------------------------- +
-                   | RuleID |   W    | FCN=ALL-1 |
+                   | RuleID | W=b'11 | FCN=ALL-1 |
                    + ------ + ------ + --------- +
                    | 6 bits | 2 bits |  5 bits   |
 
@@ -432,12 +432,13 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 
 
 
-### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2 (excluding RCS)
+### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
 #### Regular SCHC Fragment
 
    Figure 20 shows an example of a regular SCHC fragment for all
-   fragments except the last one.  The penultimate tile of a SCHC Packet
+   fragments except the last one, while using Option 2.  
+   The penultimate tile of a SCHC Packet
    is of the regular size.
 
    ```text
@@ -461,7 +462,8 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
    Figure 21 shows an example of the All-1 message.  The All-1 message
    MAY contain the last tile of the SCHC Packet.
 
-   The All-1 message SCHC Fragment Header contains an RCS of 5 bits, and 3 padding bits. The size of the last tile ranges from 8 to 72 bits.
+   The All-1 message SCHC Fragment Header contains an RCS of 5 bits, and 3 padding bits to complete 3 bytes. 
+   The size of the last tile ranges from 8 to 72 bits.
    ```text
             |-------------- SCHC Fragment Header -----------|
             + --------------------------------------------- + ------------ +
@@ -528,10 +530,10 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 #### SCHC Sender-Abort Messages
 ```text
                    |---- Sender-Abort Header ----|
-                   + --------------------------- +
-                   | RuleID |   W    | FCN=ALL-1 |
-                   + ------ + ------ + --------- +
-                   | 8 bits | 3 bits |  5 bits   |
+                   + ---------------------------- +
+                   | RuleID | W=b'111 | FCN=ALL-1 |
+                   + ------ + ------- + --------- +
+                   | 8 bits |  3 bits |  5 bits   |
 
                 Figure 24: SCHC Sender-Abort message format
 ```
