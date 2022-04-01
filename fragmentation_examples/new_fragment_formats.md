@@ -38,7 +38,7 @@ Allowing transmission of packets/files up to 300 bytes long, the SCHC uplink Fra
 
 ## Two-byte SCHC Header for Uplink Fragmentation
 
-### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1 (including RCS)
+### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
 
 ACK-on-Error with two-byte header is RECOMMENDED for very large size packets that need to be sent reliably.  ACK-on-Error is optimal for Sigfox transmissions, since it leads to a reduced number of ACKs in the lower capacity downlink channel.  Also, downlink messages can be sent asynchronously and opportunistically.
 
@@ -57,7 +57,7 @@ In order to allow transmission of large packets/files up to 480 bytes long, the 
 
 Note that the RCS is part of the SCHC Header.
 
-### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2 (excluding RCS)
+### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
 In order to allow transmission of very large packets/files up to 2250 bytes long, the SCHC uplink Fragmentation Header size is RECOMMENDED to be 16 bits in size and composed as follows:
 
