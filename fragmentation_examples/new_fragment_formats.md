@@ -55,7 +55,7 @@ In order to allow transmission of large packets/files up to 480 bytes long, the 
    *  Inactivity Timer: Application-dependent
    *  RCS size: 4 bits
 
-Note that the RCS is part of the SCHC Header.
+
 
 ### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
@@ -72,7 +72,7 @@ In order to allow transmission of very large packets/files up to 2250 bytes long
    * Inactivity Timer: Application-dependent
    * RCS size: 5 bits
 
-Note that the RCS NOT is part of the SCHC Header.
+
 
 ## SCHC-over-Sigfox F/R Message Formats
 
