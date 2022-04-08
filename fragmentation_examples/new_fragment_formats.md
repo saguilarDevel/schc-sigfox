@@ -100,12 +100,12 @@ Figure B shows an example of the All-1 message.  The All-1 message
    of at least 1 byte (one L2 word).  Padding MUST NOT be added, as the
    resulting size is L2-word-multiple.
 
-   The All-1 messages includes a 5-bit RCS, and 3 bits are added as padding to complete one byte. The payload size of the All-1 message ranges from 8 to 80 bits.
+   The All-1 messages Fragment Header includes a 5-bit RCS, and 3 bits are added as padding to complete one byte. The payload size of the All-1 message ranges from 8 to 80 bits.
 ```text
 
               |--------  SCHC Fragment Header -------|
               + ------------------------------------ + ------------ +
-              | RuleID | FCN=ALL-1 |  RCS   |   000  |   Payload    |
+              | RuleID | FCN=ALL-1 |  RCS   |  b'000 |   Payload    |
               + ------ + --------- + ------ + ------ + ------------ +
               | 3 bits |  5 bits   | 5 bits | 3 bits | 8 to 80 bits |
 
@@ -156,12 +156,12 @@ Figure B shows an example of the All-1 message.  The All-1 message
    of at least 1 byte (one L2 word).  Padding MUST NOT be added, as the
    resulting size is L2-word-multiple.
 
-   The All-1 messages includes a 3-bit RCS, and 5 bits are added as padding to complete one byte. The payload size of the All-1 message ranges from 8 to 80 bits.
+   The All-1 message Fragment Header includes a 3-bit RCS, and 5 bits are added as padding to complete one byte. The payload size of the All-1 message ranges from 8 to 80 bits.
 ```text
 
               |-------------  SCHC Fragment Header -----------|
               + --------------------------------------------- + ------------ +
-              | RuleID |   W    | FCN=ALL-1 |  RCS   |  00000 |   Payload    |
+              | RuleID |   W    | FCN=ALL-1 |  RCS   |b'00000 |   Payload    |
               + ------ + ------ + --------- + ------ + ------ + ------------ +
               | 3 bits | 2 bits |  3 bits   | 3 bits | 5 bits | 8 to 80 bits |
 
@@ -310,6 +310,17 @@ REMOVE-->The window numbered 00, if present in the SCHC Compound ACK, MUST be pl
                Figure 13: SCHC Receiver-Abort message format
 ```
 
+```text
+        |- Receiver-Abort Header -|
+        + ------------------------------- + --------------- + ------- +
+        | RuleID | W=b'11 | C=b'1 |  b'11 |  0xFF (all 1's) | b'0-pad |
+        + ------ + ------ + ----- + ----- + --------------- + ------- +
+        | 3 bits | 2 bits | 1 bit | 2 bit |  8 bit          | 48 bits |
+                  next L2 Word boundary ->| <-- L2 Word --> |
+
+               Figure 13bis: SCHC Receiver-Abort message format
+```
+
 
 
 ### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
@@ -342,7 +353,7 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
    Figure 15 shows an example of the All-1 message, for Option 1.  
    The All-1 message MUST contain the last tile of the SCHC Packet.
 
-   The All-1 message contains a RCS of 4 bits to complete the two-byte size.
+   The All-1 message Fragment Header contains a RCS of 4 bits to complete the two-byte size.
    The size of the last tile ranges from 8 to 80 bits.
    ```text
                  |--------- SCHC Fragment Header -------|
@@ -430,7 +441,16 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
                Figure 19: SCHC Receiver-Abort message format
 ```
 
+```text
+        |- Receiver-Abort Header -|
+        + ------------------------------- + --------------- + ------- +
+        | RuleID | W=b'11 | C=b'1 |  0x7F |  0xFF (all 1's) | b'0-pad |
+        + ------ + ------ + ----- + ----- + --------------- + ------- +
+        | 6 bits | 2 bits | 1 bit | 7 bit |  8 bit          | 40 bits |
+                  next L2 Word boundary ->| <-- L2 Word --> |
 
+               Figure 19bis: SCHC Receiver-Abort message format
+```
 
 ### Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
@@ -462,8 +482,8 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
    Figure 21 shows an example of the All-1 message.  The All-1 message
    MAY contain the last tile of the SCHC Packet.
 
-   The All-1 message SCHC Fragment Header contains an RCS of 5 bits, and 3 padding bits to complete 3 bytes. 
-   The size of the last tile ranges from 8 to 72 bits.
+   The All-1 message Fragment Header contains an RCS of 5 bits, and 3 padding bits to complete a 3-byte Fragment Header. 
+   The size of the last tile, if present, ranges from 8 to 72 bits.
    ```text
             |-------------- SCHC Fragment Header -----------|
             + --------------------------------------------- + ------------ +
@@ -473,10 +493,12 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 
             Figure 21: All-1 SCHC message format with last tile
 ```
-   As per [RFC8724] the All-1 must be distinguishable from the a SCHC
+   As per [RFC8724] the All-1 MUST be distinguishable from the a SCHC
    Sender-Abort message (with same Rule ID, M and N values).  The All-1
-   MUST have the last tile of the SCHC Packet, that MUST be of at least
-   1 byte.  The SCHC Sender-Abort message header size is of 2 byte, with
+   MAY have the last tile of the SCHC Packet, that MUST be of at least
+   1 byte.
+   Therefore, the All-1 message size ranges from 3 bytes (without any tile), to 12 bytes (with a 9-byte tile).
+   The SCHC Sender-Abort message header size is of 2 byte, with
    no padding bits.
 
    For the All-1 message to be distinguishable from the Sender-Abort
@@ -539,14 +561,24 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
 ```
 #### SCHC Receiver-Abort Message
 ```text
-                 |- Receiver-Abort Header -|
-                 + ----------------------- + ------- +
-                 | RuleID | W=b'11 | C=b'1 | b'1-pad |
-                 + ------ + ------ + ----- + ------- +
-                 | 8 bits | 3 bits | 1 bit | 52 bits |
+                 |-- Receiver-Abort Header -|
+                 + ------------------------ + ------- +
+                 | RuleID | W=b'111 | C=b'1 | b'1-pad |
+                 + ------ + ------- + ----- + ------- +
+                 | 8 bits |  3 bits | 1 bit | 52 bits |
 
                Figure 25: SCHC Receiver-Abort message format
 ```
 
+```text
+        |-- Receiver-Abort Header -|
+        + --------------------------------- + --------------- + ------- +
+        | RuleID | W=b'111 | C=b'1 | b'1111 |  0xFF (all 1's) | b'0-pad |
+        + ------ + ------- + ----- + ------ + --------------- + ------- +
+        | 8 bits |  3 bits | 1 bit | 4 bit  |  8 bit          | 40 bits |
+                    next L2 Word boundary ->| <-- L2 Word --> |
+
+               Figure 25bis: SCHC Receiver-Abort message format
+```
 
 
