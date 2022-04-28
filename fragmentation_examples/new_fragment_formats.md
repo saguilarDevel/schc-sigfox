@@ -462,9 +462,9 @@ The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC
    is of the regular size.
 
    ```text
-                      |------- SCHC Fragment Header -------|
-                      + ----------------------- + -------- +
-                      | RuleID |    W   |  FCN   | Payload |
+                      |-- SCHC Fragment Header --|
+                      + ------------------------ + ------- +
+                      | RuleID |    W   |   FCN  | Payload |
                       + ------ + ------ + ------ + ------- +
                       | 8 bits | 3 bits | 5 bits | 80 bits |
    
