@@ -578,7 +578,10 @@ uplink transmission and requesting a downlink.</t>
 In order to avoid potentially high delay for fragmented datagram transmission in the downlink, the fragment receiver MAY perform an 
 uplink transmission as soon as possible after reception of a downlink fragment that is not the last one. Such uplink transmission 
 MAY be triggered by sending a SCHC message, such as a SCHC ACK. However, other data messages can equally be used to trigger DL 
-communications.</t>
+communications.
+It is RECOMMENDED for the fragment receiver to send an uplink transmission (e.g., empty message) and request a downlink every 24 hours when no SCHC session is started. The use or not of this uplink transmission will depend on application specific requirements.
+</t>
+
 
 <t>Sigfox downlink messages are fixed in size, and as described in <xref target="RFC8376"/> they can carry up to 8 bytes payload. Hence, a 
 single SCHC Tile size per mode can be defined so that every Sigfox message always carries one SCHC Tile. 
@@ -640,9 +643,9 @@ The penultimate tile of a SCHC Packet is of regular size.</t>
 <t><figure title="Regular SCHC Fragment format for all fragments except the last one" anchor="no-ack-reg-1byte-frag"><artwork><![CDATA[
 
                 |- SCHC Fragment Header -|
-                +------------------------+ --------+
+                +------------------------+---------+
                 |   RuleID   |    FCN    | Payload |
-                +------------+-----------+ --------+
+                +------------+-----------+---------+
                 |   3 bits   |  5 bits   | 88 bits |
 
 ]]></artwork></figure></t>
@@ -831,7 +834,7 @@ The penultimate tile of a SCHC Packet is of the regular size.</t>
         | 6 bits | 2 bits | 4 bits | 4 bits | 80 bits |
 ]]></artwork></figure></t>
 
-<t>The use of SCHC ACK is NOT RECOMMENDED, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
+<t>The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
 As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).</t>
 
 </section>
@@ -940,14 +943,14 @@ The penultimate tile of a SCHC Packet is of the regular size.</t>
 <t><figure title="Regular SCHC Fragment format for all fragments except the last one" anchor="opt-2-reg-2byte-frag"><artwork><![CDATA[
 
                 |-- SCHC Fragment Header --|
-                + ------------------------ + ------- +
+                +--------------------------+---------+
                 | RuleID |   W    | FCN    | Payload |
-                + ------ + ------ + ------ + ------- +
+                +--------+--------+--------+---------+
                 | 8 bits | 3 bits | 5 bits | 80 bits |
 		
 ]]></artwork></figure></t>
 
-<t>The use of SCHC ACK is NOT RECOMMENDED, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
+<t>The use of SCHC ACK REQ is NOT RECOMMENDED, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
 As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).</t>
 
 </section>
@@ -1048,6 +1051,122 @@ the Sigfox payload.</t>
 </section>
 
 </section>
+<section anchor="DL-ACK-Always" title="Downlink ACK-Always Mode: Single-byte SCHC Header">
+
+    <section anchor="DL-ACK-Always-1byte-schc-fragment" title="Regular SCHC Fragment">
+
+<t><xref target="DL-ACK-Always-1byte-frag"/> shows an example of a regular SCHC fragment for all fragments except the last one.
+The penultimate tile of a SCHC Packet is of the regular size.</t>
+
+<t><figure title="Regular SCHC Fragment format for all fragments except the last one" anchor="DL-ACK-Always-1byte-frag"><artwork><![CDATA[
+
+                   SCHC Fragment
+                |--    Header   --|
+                +-----------------+---------+
+                | RuleID |  FCN   | Payload |
+                +--------+--------+---------+
+                | 3 bits | 5 bits | 56 bits |
+
+]]></artwork></figure></t>
+
+<t>The use of SCHC ACK is NOT RECOMMENDED, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver.
+As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).</t>
+
+    </section>
+
+    <section anchor="DL-ACK-Always-1B-all-1-schc-fragment" title="All-1 SCHC Fragment">
+
+<t><xref target="DL-ACK-Always-1B-all-1"/> shows an example of the All-1 message.
+The All-1 message MAY contain the last tile of the SCHC Packet.</t>
+<t>The All-1 message Fragment Header contains an RCS of 5 bits, and 3 padding bits to complete a 2-byte Fragment Header.
+   The size of the last tile, if present, ranges from 8 to 48 bits.</t>
+
+<t><figure title="All-1 SCHC message format with last tile" anchor="DL-ACK-Always-1B-all-1"><artwork><![CDATA[
+
+ |--------- SCHC Fragment Header -------|
+ +--------------------------------------+--------------+
+ | RuleID | FCN=ALL-1 |  RCS   |  000   |    Payload   |
+ +--------+-----------+--------+--------+--------------+
+ | 3 bits |  5 bits   | 5 bits | 3 bits | 0 to 48 bits |
+
+]]></artwork></figure></t>
+
+<t>As per <xref target="RFC8724"/> the All-1 must be distinguishable from the a SCHC Sender-Abort message (with same Rule ID and N values).
+The SCHC Sender-Abort message header size is of 1 byte, with no padding bits.</t>
+
+<t>For the All-1 message to be distinguishable from the Sender-Abort message, the Sender-Abort message MUST be of 1 byte (only header with no padding).
+This way, the minimum size of the All-1 is 2 bytes, and the Sender-Abort message is 1 bytes.</t>
+
+</section>
+
+    <section anchor="DL-ACK-Always-1B-schc-ack-format" title="SCHC ACK Format">
+
+<t> <xref target="DL-ACK-Always-1B-success-ack"/> shows the SCHC ACK format when all fragments have been correctly received (C=1).
+Padding MUST be added to complete 2 bytes.</t>
+
+<t><figure title="SCHC Success ACK message format" anchor="DL-ACK-Always-1B-success-ack"><artwork><![CDATA[
+
+                      SCHC ACK
+                 |--   Header   --|
+                 +----------------+---------+
+                 | RuleID | C=b'1 | b'0-pad |
+                 +--------+-------+---------+
+                 | 3 bits | 1 bit |  4 bits |
+
+]]></artwork></figure></t>
+
+<t>
+The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-compound-ack"/>.
+</t>
+
+<t><figure title="SCHC Compound ACK message format" anchor="DL-ACK-Always-1B-schc-compound-ack"><artwork><![CDATA[
+  |---- SCHC ACK Header ----|
+  +--------+-------+--------+---------+
+  | RuleID | C=b'0 | Bitmap | b'0-pad |
+  +--------+-------+--------+---------+
+  | 3 bits | 1 bit | 31 bits|  5 bits |
+]]></artwork></figure></t>
+        <!--    End Section SCHC ACK Format-->
+</section>
+
+    <section anchor="DL-ACK-Always-1B-snd-abort-msg" title="SCHC Sender-Abort Messages">
+
+<t><figure title="SCHC Sender-Abort message format" anchor="DL-ACK-Always-1B-snd-abort-msg-format"><artwork><![CDATA[
+
+                     Sender-Abort
+                |----   Header   ----|
+                +--------------------+
+                | RuleID | FCN=ALL-1 |
+                +--------+-----------+
+                | 3 bits |  5 bits   |
+
+]]></artwork></figure></t>
+
+<!-- End Section SCHC Sender-Abort Messages-->
+</section>
+
+<section anchor="DL-ACK-Always-1B-rcv-abort-msg" title="SCHC Receiver-Abort Message">
+
+<t><figure title="SCHC Receiver-Abort message format" anchor="DL-ACK-Always-1B-rcv-abort-msg-format"><artwork><![CDATA[
+
+          Receiver-Abort
+        |---  Header  ---|
+        +----------------+--------+-----------------+
+        | RuleID | C=b'1 | b'1111 |  0xFF (all 1's) |
+        +--------+-------+--------+-----------------+
+        | 3 bits | 1 bit | 4 bit  |  8 bit          |
+
+]]></artwork></figure></t>
+
+<!-- End Section SCHC Receiver-Abort Message-->
+</section>
+
+
+
+<!--    End Section Downlink ACK-ALways Mode-->
+</section>
+
+<!--    End of Section SCHC Fragment Message Formats-->
 </section>
 
 <section anchor="schc_sender_abort" title="SCHC-Sender Abort">
@@ -1292,7 +1411,7 @@ DL Enable |-----W=1, FCN=7, Seq=16---->|
 
 <t>In the next examples, there are fragment losses in both the first (W=0) and second (W=1) windows.
 The retransmission cycles after the All-1 is sent (i.e., not in intermediate windows) should 
-always finish with an with an All-1, as it serves as an ACK Request message to confirm the correct reception 
+always finish with an All-1, as it serves as an ACK Request message to confirm the correct reception
 of the retransmitted fragments. </t>
 
 <figure title="UL ACK-on-Error All-0 and other Fragments Lost on First and Second Windows (1)" anchor="UL-ACKoE-LFW12-1"><artwork><![CDATA[
@@ -1324,7 +1443,7 @@ DL enable |-----W=1, FCN=7 (111), Seq=18---->|
 		
 ]]></artwork></figure>
 
-<t>Similar case as above, but with less fragments in the second window (W=1)</t>
+<t>Similar case as above, but with fewer fragments in the second window (W=1)</t>
 
 <figure title="UL ACK-on-Error All-0 and other Fragments Lost on First and Second Windows (2)" anchor="UL-ACKoE-LFW12-2"><artwork><![CDATA[
 
@@ -1354,7 +1473,7 @@ DL enable |-----W=1, FCN=7 (111), Seq=14---->|
 
 <t>Case SCHC ACK is lost</t>
 
-<t>SCHC over Sigfox does not implement the SCHC ACK REQ message. Instead it uses the SCHC All-1 message to request a SCHC ACK, when required.</t>
+<t>SCHC over Sigfox does not implement the SCHC ACK REQ message. Instead, it uses the SCHC All-1 message to request a SCHC ACK, when required.</t>
 
 
 <figure title="UL ACK-on-Error ACK Lost" anchor="UL-ACKoE-ACKL"><artwork><![CDATA[
@@ -1383,7 +1502,7 @@ DL Enable |-----W=1, FCN=7, Seq=13---->| RESEND ACK
 
 <t>Case SCHC Compound ACK at the end</t>
 
-<t>In this example, SCHC Fragment losses are found in both windows 0 and 1. However, the sender does not send a 
+<t>In this example, SCHC Fragment losses are found in both window 0 and 1. However, the sender does not send a
 SCHC ACK after the All-0 of window 0. Instead, it sends a SCHC Compound ACK notifying losses of both 
 windows. 
 </t>
