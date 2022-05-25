@@ -708,7 +708,7 @@ As tiles are of 11 bytes, padding MUST NOT be added.</t>
 
              |-- SCHC Fragment Header --|
              +--------------------------+---------+
-             | RuleID |   W    | FCN    | Payload |
+             | RuleID |   W    |  FCN   | Payload |
              +--------+--------+--------+---------+
              | 3 bits | 2 bits | 3 bits | 88 bits |
 
@@ -871,8 +871,8 @@ Padding MUST be added to complete the 64-bit Sigfox downlink frame payload size.
 
 <t><figure title="SCHC Success ACK message format" anchor="opt-1-success-ack-2B"><artwork><![CDATA[
 
-                 |----- SCHC ACK Header ----|
-                 +--------------------------+--------+
+                 |---- SCHC ACK Header ----|
+                 +-------------------------+---------+
                  | RuleID |    W   | C=b'1 | b'0-pad |
                  +--------+--------+-------+---------+
                  | 6 bits | 2 bits | 1 bit | 55 bits |
@@ -989,8 +989,8 @@ Padding MUST be added to complete the 64-bit Sigfox downlink frame payload size.
 
 <t><figure title="SCHC Success ACK message format" anchor="opt-2-success-ack-2B"><artwork><![CDATA[
 
-                 |----- SCHC ACK Header ----|
-                 +--------------------------+--------+
+                 |---- SCHC ACK Header ----|
+                 +-------------------------+---------+
                  | RuleID |    W   | C=b'1 | b'0-pad |
                  +--------+--------+-------+---------+
                  | 8 bits | 3 bits | 1 bit | 52 bits |
