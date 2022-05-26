@@ -89,7 +89,11 @@ Table of Contents
      3.7.  SCHC-over-Sigfox F/R Message Formats  . . . . . . . . . .  13
        3.7.1.  Uplink No-ACK Mode: Single-byte SCHC Header . . . . .  13
        3.7.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header . .  14
-       3.7.3.  Downlink ACK-Always Mode: Single-byte SCHC Header . .  21
+       3.7.3.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
+               1 . . . . . . . . . . . . . . . . . . . . . . . . . .  16
+       3.7.4.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
+               2 . . . . . . . . . . . . . . . . . . . . . . . . . .  19
+       3.7.5.  Downlink ACK-Always Mode: Single-byte SCHC Header . .  21
      3.8.  SCHC-Sender Abort . . . . . . . . . . . . . . . . . . . .  24
      3.9.  SCHC-Receiver Abort . . . . . . . . . . . . . . . . . . .  24
      3.10. Padding . . . . . . . . . . . . . . . . . . . . . . . . .  25
@@ -102,10 +106,6 @@ Table of Contents
    7.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  37
      7.1.  Normative References  . . . . . . . . . . . . . . . . . .  37
      7.2.  Informative References  . . . . . . . . . . . . . . . . .  37
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  37
-
-
-
 
 
 
@@ -113,6 +113,8 @@ Zuniga, et al.           Expires August 25, 2022                [Page 2]
 
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
+
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  37
 
 1.  Introduction
 
@@ -159,8 +161,6 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    Figure 1 represents the architecture for compression/decompression
    (C/D) and fragmentation/reassembly (F/R) based on the terminology
    defined in [RFC8376], where the Radio Gateway (RG) is a Sigfox Base
-   Station and the Network Gateway (NGW) is the Sigfox cloud-based
-   Network.
 
 
 
@@ -168,6 +168,11 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 Zuniga, et al.           Expires August 25, 2022                [Page 3]
 
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
+
+
+   Station and the Network Gateway (NGW) is the Sigfox cloud-based
+   Network.
+
 
 
    Sigfox Device                                           Application
@@ -214,17 +219,15 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    the packet can be forwarded over the Internet to one (or several)
    LPWAN Application Server(s) (App).
 
-   The SCHC C/D + F/R processes are bidirectional, so the same
-   principles are applicable on both uplink (UL) and downlink (DL).
-
-
-
 
 
 Zuniga, et al.           Expires August 25, 2022                [Page 4]
 
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
+
+   The SCHC C/D + F/R processes are bidirectional, so the same
+   principles are applicable on both uplink (UL) and downlink (DL).
 
 3.2.  Uplink
 
@@ -272,15 +275,15 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    and Device Battery Voltage are metadata parameters provided by the
    Network.
 
-   A detailed description of the Sigfox callbacks/APIs can be found in
-   [sigfox-callbacks].
-
 
 
 Zuniga, et al.           Expires August 25, 2022                [Page 5]
 
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
+
+   A detailed description of the Sigfox callbacks/APIs can be found in
+   [sigfox-callbacks].
 
    Only messages that have passed the L2 Cyclic Redundancy Check (CRC)
    at network reception are delivered by the Sigfox Network to the
@@ -325,9 +328,6 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    A detailed description of the Sigfox Radio Protocol can be found in
    [sigfox-spec] and a detailed description of the Sigfox callbacks/APIs
    can be found in [sigfox-callbacks].
-
-
-
 
 
 
@@ -877,9 +877,9 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                Figure 11: SCHC Receiver-Abort message format
 
-3.7.2.6.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
+3.7.3.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
 
-3.7.2.6.1.  Regular SCHC Fragment
+3.7.3.1.  Regular SCHC Fragment
 
    Figure 12 shows an example of a regular SCHC fragment for all
    fragments except the last one.  The penultimate tile of a SCHC Packet
@@ -912,7 +912,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    (Network SCHC).  As per [RFC8724], the All-0 message is
    distinguishable from the SCHC ACK REQ (All-1 message).
 
-3.7.2.6.2.  All-1 SCHC Fragment
+3.7.3.2.  All-1 SCHC Fragment
 
    Figure 13 shows an example of the All-1 message.  The All-1 message
    MUST contain the last tile of the SCHC Packet.
@@ -954,7 +954,7 @@ Zuniga, et al.           Expires August 25, 2022               [Page 17]
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
 
-3.7.2.6.3.  SCHC ACK Format
+3.7.3.3.  SCHC ACK Format
 
    Figure 14 shows the SCHC ACK format when all fragments have been
    correctly received (C=1).  Padding MUST be added to complete the
@@ -990,7 +990,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                 Figure 15: SCHC Compound ACK message format
 
-3.7.2.6.4.  SCHC Sender-Abort Messages
+3.7.3.4.  SCHC Sender-Abort Messages
 
 
                    |---- Sender-Abort Header ----|
@@ -1010,7 +1010,7 @@ Zuniga, et al.           Expires August 25, 2022               [Page 18]
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
 
-3.7.2.6.5.  SCHC Receiver-Abort Message
+3.7.3.5.  SCHC Receiver-Abort Message
 
 
          |- Receiver-Abort Header -|
@@ -1023,9 +1023,9 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                Figure 17: SCHC Receiver-Abort message format
 
-3.7.2.7.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
+3.7.4.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
-3.7.2.7.1.  Regular SCHC Fragment
+3.7.4.1.  Regular SCHC Fragment
 
    Figure 18 shows an example of a regular SCHC fragment for all
    fragments except the last one.  The penultimate tile of a SCHC Packet
@@ -1047,7 +1047,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    (Network SCHC).  As per [RFC8724], the All-0 message is
    distinguishable from the SCHC ACK REQ (All-1 message).
 
-3.7.2.7.2.  All-1 SCHC Fragment
+3.7.4.2.  All-1 SCHC Fragment
 
    Figure 19 shows an example of the All-1 message.  The All-1 message
    MAY contain the last tile of the SCHC Packet.
@@ -1084,7 +1084,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    no padding).  This way, the minimum size of the All-1 is 3 bytes, and
    the Sender-Abort message is 2 bytes.
 
-3.7.2.7.3.  SCHC ACK Format
+3.7.4.3.  SCHC ACK Format
 
    Figure 20 shows the SCHC ACK format when all fragments have been
    correctly received (C=1).  Padding MUST be added to complete the
@@ -1133,7 +1133,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                 Figure 21: SCHC Compound ACK message format
 
-3.7.2.7.4.  SCHC Sender-Abort Messages
+3.7.4.4.  SCHC Sender-Abort Messages
 
 
                    |---- Sender-Abort Header ----|
@@ -1145,7 +1145,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                 Figure 22: SCHC Sender-Abort message format
 
-3.7.2.7.5.  SCHC Receiver-Abort Message
+3.7.4.5.  SCHC Receiver-Abort Message
 
 
         |-- Receiver-Abort Header -|
@@ -1158,9 +1158,9 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                Figure 23: SCHC Receiver-Abort message format
 
-3.7.3.  Downlink ACK-Always Mode: Single-byte SCHC Header
+3.7.5.  Downlink ACK-Always Mode: Single-byte SCHC Header
 
-3.7.3.1.  Regular SCHC Fragment
+3.7.5.1.  Regular SCHC Fragment
 
    Figure 24 shows an example of a regular SCHC fragment for all
    fragments except the last one.  The penultimate tile of a SCHC Packet
@@ -1194,7 +1194,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    per [RFC8724], the All-0 message is distinguishable from the SCHC ACK
    REQ (All-1 message).
 
-3.7.3.2.  All-1 SCHC Fragment
+3.7.5.2.  All-1 SCHC Fragment
 
    Figure 25 shows an example of the All-1 message.  The All-1 message
    MAY contain the last tile of the SCHC Packet.
@@ -1234,7 +1234,7 @@ Zuniga, et al.           Expires August 25, 2022               [Page 22]
 Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
 
-3.7.3.3.  SCHC ACK Format
+3.7.5.3.  SCHC ACK Format
 
    Figure 26 shows the SCHC ACK format when all fragments have been
    correctly received (C=1).  Padding MUST be added to complete 2 bytes.
@@ -1260,7 +1260,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                 Figure 27: SCHC Compound ACK message format
 
-3.7.3.4.  SCHC Sender-Abort Messages
+3.7.5.4.  SCHC Sender-Abort Messages
 
 
                         Sender-Abort
@@ -1273,7 +1273,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
 
                 Figure 28: SCHC Sender-Abort message format
 
-3.7.3.5.  SCHC Receiver-Abort Message
+3.7.5.5.  SCHC Receiver-Abort Message
 
 
 
