@@ -819,7 +819,7 @@ The SCHC Compound ACK message format is shown in <xref target="compound-ack-1byt
 </section>
 
 
-
+</section>
 <section anchor="UL-ACKoE-two-byte-opt-1" title="Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1">
     <section anchor="opt-1-regular-2byte-schc-fragment" title="Regular SCHC Fragment">
 
@@ -1050,7 +1050,7 @@ the Sigfox payload.</t>
 
 </section>
 
-</section>
+
 <section anchor="DL-ACK-Always" title="Downlink ACK-Always Mode: Single-byte SCHC Header">
 
     <section anchor="DL-ACK-Always-1byte-schc-fragment" title="Regular SCHC Fragment">
