@@ -402,7 +402,7 @@ mode can be defined so that every Sigfox message always carries one SCHC Tile.</
 This mode can be used by uplink-only devices that do not support downlink communications, or by bidirectional devices when they send non-critical
 data.</t>
 
-<t>Since there are no multiple windows in the No-ACK mode, the W bit is not present. However it is RECOMMENDED to use the FCN field to indicate the 
+<t>Since there are no multiple windows in the No-ACK mode, the W bit is not present. However, it is RECOMMENDED to use the FCN field to indicate the
 size of the data packet. In this sense, the data packet would need to be splitted into X fragments and, similarly to the other fragmentation modes, 
 the first transmitted fragment would need to be marked with FCN = X-1. Consecutive fragments MUST be marked with decreasing FCN values, having the 
 last fragment marked with FCN = (All-1). Hence, even though the No-ACK mode does not allow recovering missing fragments, it allows indicating implicitly 
@@ -420,6 +420,10 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <t>As per <xref target="RFC8724"/>, in the No-ACK mode the W (window) field is not present. </t>
 
+<t>Regular tile size: 11 bytes</t>
+
+<t>All-1 tile size: 0 to 10 bytes</t>
+
 <t>RCS size: 5 bits </t>
 
 </list></t>
@@ -428,7 +432,7 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <section anchor="ack-on-error-mode-1" title="Uplink ACK-on-Error Mode: Single-byte SCHC Header">
 
-<t>ACK-on-Error with single-byte header is RECOMMENDED for medium to large size packets that need to be sent
+<t>ACK-on-Error with single-byte header is RECOMMENDED for short to medium size packets that need to be sent
    reliably. ACK-on-Error is optimal for Sigfox transmissions, since it leads to a reduced number of ACKs 
    in the lower capacity downlink channel. Also, downlink messages can be sent asynchronously and opportunistically. 
 </t>
@@ -458,7 +462,9 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <t>WINDOW_SIZE: 7 (with a maximum value of FCN=0b110)</t>
 
-<t>Tile size: 11 bytes</t>
+<t>Regular tile size: 11 bytes</t>
+
+<t>All-1 tile size: 0 to 10 bytes</t>
 
 <t>Retransmission Timer: Application-dependent</t>
 
@@ -474,17 +480,18 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <section anchor="two-byte-schc-header" title="Two-byte SCHC Header for Uplink Fragmentation">
 
-<section anchor="ack-on-error-mode-2" title="Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1">
-
-
-<t>ACK-on-Error with two-byte header is RECOMMENDED for very large size packets that need to be sent
+<t>ACK-on-Error with two-byte header is RECOMMENDED for medium-large size packets that need to be sent
    reliably.  ACK-on-Error is optimal for Sigfox transmissions, since it
    leads to a reduced number of ACKs in the lower capacity downlink
    channel. Also, downlink messages can be sent asynchronously and
-   opportunistically. 
+   opportunistically.
 </t>
+<section anchor="ack-on-error-mode-2" title="Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1">
 
-<t>In order to allow transmission of large packets/files up to 480 bytes long, the SCHC uplink Fragmentation Header size is 
+
+
+
+<t>In order to allow transmission of medium-large packets/files up to 480 bytes long, the SCHC uplink Fragmentation Header size is
 RECOMMENDED to be 16 bits in size and composed as follows:</t>
 
 <t><list style="symbols">
@@ -501,7 +508,9 @@ RECOMMENDED to be 16 bits in size and composed as follows:</t>
 
 <t>WINDOW_SIZE: 12 (with a maximum value of FCN=0b1011)</t>
 
-<t>Tile size: 10 bytes</t>
+<t>Regular tile size: 10 bytes</t>
+
+<t>All-1 tile size: 1 to 10 bytes</t>
 
 <t>Retransmission Timer: Application-dependent</t>
 
@@ -511,11 +520,14 @@ RECOMMENDED to be 16 bits in size and composed as follows:</t>
 
 </list></t>
 
+<t>Note that WINDOW_SIZE is limited to 12. This because, 4 windows (M = 2) with bitmaps of size 12 can be fitted in a
+single SCHC Compound ACK.</t>
+
 </section>
 
 <section anchor="ack-on-error-mode-3" title="Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2">
 
-<t>In order to allow transmission of very large packets/files up to 2250 bytes long, the SCHC uplink Fragmentation Header size is 
+<t>In order to allow transmission of very large packets/files up to 2400 bytes long, the SCHC uplink Fragmentation Header size is
 RECOMMENDED to be 16 bits in size and composed as follows:</t>
 
 <t><list style="symbols">
@@ -532,7 +544,9 @@ RECOMMENDED to be 16 bits in size and composed as follows:</t>
 
 <t>WINDOW_SIZE: 31 (with a maximum value of FCN=0b11110)</t>
 
-<t>Tile size: 10 bytes</t>
+<t>Regular tile size: 10 bytes</t>
+
+<t>All-1 tile size: 0 to 9 bytes</t>
 
 <t>Retransmission Timer: Application-dependent</t>
 
@@ -552,8 +566,8 @@ RECOMMENDED to be 16 bits in size and composed as follows:</t>
 
 <t>For ACK-on-Error, as defined in <xref target="RFC8724"/>, it is expected that the last SCHC fragment of the last window will always be delivered 
 with an All-1 FCN. Since this last window may not be full (i.e. it may be comprised of less than WINDOW_SIZE fragments), an All-1 fragment 
-may follow a value of FCN higher than 1 (0b01). In this case, the receiver could not derive from the FCN values alone whether there are any missing 
-fragments right before the All-1 fragment or not. 
+may follow a value of FCN higher than 1 (0b01). In this case, the receiver cannot determine from the FCN values alone
+whether there are or not any missing fragments right before the All-1 fragment.
 </t>
 
 <t>For Rules where the number of fragments in the last window is unknown, an RCS field MUST be used, indicating the number of fragments 
@@ -604,7 +618,9 @@ single SCHC Tile size per mode can be defined so that every Sigfox message alway
 
 <t>WINDOW_SIZE: 31 (with a maximum value of FCN=0b11110)</t>
 
-<t>Tile size: 7 bytes</t>
+<t>Regular tile size: 7 bytes</t>
+
+<t>All-1 tile size: 0 to 6 bytes</t>
 
 <t>Retransmission Timer: Application-dependent</t>
 
@@ -657,7 +673,8 @@ The penultimate tile of a SCHC Packet is of regular size.</t>
 The All-1 message MAY contain the last tile of the SCHC Packet.
 Padding MUST NOT be added, as the resulting size is L2-word-multiple.</t>
 <t>
-   The All-1 messages Fragment Header includes a 5-bit RCS, and 3 bits are added as padding to complete two bytes. The payload size of the All-1 message ranges from 0 to 80 bits.
+   The All-1 messages Fragment Header includes a 5-bit RCS, and 3 bits are added as padding to complete two bytes.
+    The payload size of the All-1 message ranges from 0 to 80 bits.
 </t>
 
 <t><figure title="All-1 SCHC Message format with last tile" anchor="no-ack-all-1-1byte"><artwork><![CDATA[
@@ -682,12 +699,12 @@ This way, the minimum size of the All-1 is 2 bytes, and the Sender-Abort message
 <section anchor="no-ack-snd-abort-msg-format" title="SCHC Sender-Abort Message format">
 
 <t><figure title="SCHC Sender-Abort message format" anchor="no-ack-snd-abort-msg"><artwork><![CDATA[
-
-                   |---- Sender-Abort Header ----|
-                   +-----------------------------+
-                   | RuleID |   W    | FCN=ALL-1 |
-                   +--------+--------+-----------+
-                   | 3 bits | 2 bits |  3 bits   |
+                        Sender-Abort
+                   |------ Header ------|
+                   +--------------------+
+                   | RuleID | FCN=ALL-1 |
+                   +--------+-----------+
+                   | 3 bits |  5 bits   |
 
 ]]></artwork></figure></t>
 
@@ -881,7 +898,7 @@ Padding MUST be added to complete the 64-bit Sigfox downlink frame payload size.
 
 <t>The SCHC Compound ACK message MUST be used in case SCHC fragment losses are found in any window of the SCHC Packet (C=0).
 The SCHC Compound ACK message format is shown in <xref target="opt-1-schc-compound-ack-2B"/>.
-The SCHC Compound ACK can report up to 3 windows with losses.</t>
+The SCHC Compound ACK can report up to 4 windows with losses. as shown in <xref target="opt-1-schc-compound-ack-2B-example-losses-all-windows"/>.</t>
 
 <t>When sent in the downlink, the SCHC Compound ACK MUST be 0 padded (Padding bits must be 0) to complement the 64 bits required by the Sigfox payload.</t>
 
@@ -890,11 +907,24 @@ The SCHC Compound ACK can report up to 3 windows with losses.</t>
   +--------+--------+-------+--------+...+--------+--------+------+-------+
   | RuleID | W=b'w1 | C=b'0 | Bitmap |...| W=b'wi | Bitmap |  00  |b'0-pad|
   +--------+--------+-------+--------+...+--------+--------+------+-------+
-  | 8 bits | 2 bits | 1 bit | 31 bits|...| 2 bits | 31 bits|2 bits|
+  | 6 bits | 2 bits | 1 bit | 12 bits|...| 2 bits | 12 bits|2 bits|
                                  next L2 Word boundary ->|<-- L2 Word --->|
      Losses are found in windows W = w1,...,wi; where w1<w2<...<wi
 
 ]]></artwork></figure></t>
+
+<t><figure title="SCHC Compound ACK message format example with losses in all windows" anchor="opt-1-schc-compound-ack-2B-example-losses-all-windows"><artwork><![CDATA[
+  |--- SCHC ACK Header ---|- W=00 -|      |- W=01 -|      |- W=10 -|      |- W=11 -|
+  +--------+------+-------+--------+------+--------+------+--------+------+--------+---+
+  | RuleID | W=00 | C=b'0 | Bitmap | W=01 | Bitmap | W=10 | Bitmap | W=11 | Bitmap | 0 |
+  +--------+------+-------+--------+------+--------+------+--------+------+--------+---+
+  | 6 bits |2 bits| 1 bit | 12 bits|2 bits| 12 bits|2 bits| 12 bits|2 bits| 12 bits|
+
+     Losses are found in windows W = w1,...,wi; where w1<w2<...<wi
+
+]]></artwork></figure></t>
+
+
 
 </section>
 <section anchor="opt-1-snd-abort-msg-2B" title="SCHC Sender-Abort Messages">
@@ -905,7 +935,7 @@ The SCHC Compound ACK can report up to 3 windows with losses.</t>
                 +-----------------------------+
                 | RuleID |   W    | FCN=ALL-1 |
                 +--------+--------+-----------+
-                | 6 bits | 2 bits |  5 bits   |
+                | 6 bits | 2 bits |  4 bits   |
 
 ]]></artwork></figure></t>
 
@@ -1175,7 +1205,7 @@ The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-comp
 <t>As defined in <xref target="RFC8724"/>, a SCHC-Sender Abort can be triggered when the number of SCHC ACK REQ attempts is greater than or equal to MAX_ACK_REQUESTS. 
 In the case of SCHC/Sigfox, a SCHC-Sender Abort MUST be sent if the number of repeated All-1s (i.e., with the same bitmap) sent in sequence is greater than or equal to MAX_ACK_REQUESTS. </t>
 
-<t>The MAX_ACK_REQUEST counter MUST be reset when a SCHC ACK is successfully received.</t>
+<!--<t>The Attempts counter MUST be reset when a SCHC ACK is successfully received.</t>-->
 </list></t>
 
 </section>
@@ -1190,9 +1220,9 @@ at a certain time and a new one is requested, or if the RuleID of the fragment i
 
 <t>A SCHC-Receiver Abort MUST be triggered when the Inactivity Timer expires. </t>
 
-<t>A SCHC-Receiver Abort can be triggered when the number of ACK attempts is not strictly less than MAX_ACK_REQUESTS. In the case of SCHC/Sigfox, 
-a SCHC-Receiver Abort MUST be sent if the number of repeated SCHC ACKs sent in a row (i.e., synchronized with the ACK REQ case, and with identical bitmaps) 
-is greater than or equal to MAX_ACK_REQUESTS.</t>
+<!--<t>A SCHC-Receiver Abort can be triggered when the number of ACK attempts is not strictly less than MAX_ACK_REQUESTS. In the case of SCHC/Sigfox, -->
+<!--a SCHC-Receiver Abort MUST be sent if the number of repeated SCHC ACKs sent in a row (i.e., synchronized with the ACK REQ case, and with identical bitmaps) -->
+<!--is greater than or equal to MAX_ACK_REQUESTS.</t>-->
 
 <t>Although a SCHC-Receiver Abort can be triggered at any point in time, a SCHC-Receiver Abort downlink message MUST only be sent when there is a downlink transmission opportunity.</t>
 </list></t>
@@ -1238,13 +1268,13 @@ Last packet fragment is marked with the FCN = All-1 (1111). </t>
 
 
         Sender                              Receiver
-          |-------FCN=6 (0110), Seq=1-------->|
-          |-------FCN=5 (0101), Seq=2-------->|
-          |-------FCN=4 (0100), Seq=3-------->|
-          |-------FCN=3 (0011), Seq=4-------->|
-          |-------FCN=2 (0010), Seq=5-------->|
-          |-------FCN=1 (0001), Seq=6-------->|
-          |-------FCN=15 (1111), Seq=7------->| All fragments received
+          |-------FCN=6 (00110), Seq=1-------->|
+          |-------FCN=5 (00101), Seq=2-------->|
+          |-------FCN=4 (00100), Seq=3-------->|
+          |-------FCN=3 (00011), Seq=4-------->|
+          |-------FCN=2 (00010), Seq=5-------->|
+          |-------FCN=1 (00001), Seq=6-------->|
+          |-------FCN=31 (11111), Seq=7------->| All fragments received
         (End)
 		
 		
@@ -1269,7 +1299,7 @@ FCN equal to 15).</t>
           |-------FCN=3, Seq=4-------->|
           |-------FCN=2, Seq=5-------->|
           |-------FCN=1, Seq=6-------->|
-          |-------FCN=15, Seq=7------->| Missing Fragment - Unable to reassemble
+          |-------FCN=31, Seq=7------->| Missing Fragment - Unable to reassemble
         (End)
 		
 		
