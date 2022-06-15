@@ -1354,6 +1354,8 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    o  A SCHC-Receiver Abort MUST be triggered when the Inactivity Timer
       expires.
 
+   o  MAX_ACK_REQUESTS can be increase when facing high error rates.
+
    o  Although a SCHC-Receiver Abort can be triggered at any point in
       time, a SCHC-Receiver Abort downlink message MUST only be sent
       when there is a downlink transmission opportunity.
@@ -1392,8 +1394,6 @@ Internet-Draft           SCHC over Sigfox LPWAN            February 2022
    (1111).
 
    Case No losses - All fragments are sent and received successfully.
-
-
 
 
 
