@@ -1220,6 +1220,8 @@ at a certain time and a new one is requested, or if the RuleID of the fragment i
 
 <t>A SCHC-Receiver Abort MUST be triggered when the Inactivity Timer expires. </t>
 
+<t>MAX_ACK_REQUESTS can be increase when facing high error rates. </t>
+
 <!--<t>A SCHC-Receiver Abort can be triggered when the number of ACK attempts is not strictly less than MAX_ACK_REQUESTS. In the case of SCHC/Sigfox, -->
 <!--a SCHC-Receiver Abort MUST be sent if the number of repeated SCHC ACKs sent in a row (i.e., synchronized with the ACK REQ case, and with identical bitmaps) -->
 <!--is greater than or equal to MAX_ACK_REQUESTS.</t>-->
