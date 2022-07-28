@@ -1284,14 +1284,14 @@ Last packet fragment is marked with the FCN = All-1 (1111). </t>
 <figure title="Uplink No-ACK No-Losses" anchor="UL-No-ACK-NL"><artwork><![CDATA[
 
 
-        Sender                              Receiver
-          |-------FCN=6, Seq=1-------->|
-          |-------FCN=5, Seq=2-------->|
-          |-------FCN=4, Seq=3-------->|
-          |-------FCN=3, Seq=4-------->|
-          |-------FCN=2, Seq=5-------->|
-          |-------FCN=1, Seq=6-------->|
-          |-------FCN=31, Seq=7------->| All fragments received
+        Sender                     Receiver
+          |-------FCN=6,Seq=1-------->|
+          |-------FCN=5,Seq=2-------->|
+          |-------FCN=4,Seq=3-------->|
+          |-------FCN=3,Seq=4-------->|
+          |-------FCN=2,Seq=5-------->|
+          |-------FCN=1,Seq=6-------->|
+          |-------FCN=31,Seq=7------->| All fragments received
         (End)
 		
 		
@@ -1308,14 +1308,14 @@ FCN equal to 15).</t>
 
 <figure title="Uplink No-ACK Losses (scenario 1)" anchor="UL-No-ACK-L-1"><artwork><![CDATA[
 
-Sender                      Receiver
-  |-------FCN=6, Seq=1-------->|
-  |-------FCN=5, Seq=2----X--->|
-  |-------FCN=4, Seq=3-------->|
-  |-------FCN=3, Seq=4-------->|
-  |-------FCN=2, Seq=5-------->|
-  |-------FCN=1, Seq=6-------->|
-  |-------FCN=31, Seq=7------->| Missing Fragment Unable to reassemble
+Sender                     Receiver
+  |-------FCN=6,Seq=1-------->|
+  |-------FCN=5,Seq=2----X--->|
+  |-------FCN=4,Seq=3-------->|
+  |-------FCN=3,Seq=4-------->|
+  |-------FCN=2,Seq=5-------->|
+  |-------FCN=1,Seq=6-------->|
+  |-------FCN=31,Seq=7------->| Missing Fragment Unable to reassemble
 (End)
 
 		
@@ -1338,20 +1338,20 @@ wait for an ACK.</t>
 <figure title="Uplink ACK-on-Error No-Losses" anchor="UL-ACKoE-NL"><artwork><![CDATA[
 
 
-        Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2----->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->|
-DL Enable |-----W=0, FCN=0, Seq=7----->|
+        Sender                    Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2----->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4----->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->|
+DL Enable |-----W=0,FCN=0,Seq=7----->|
       (no ACK)
-          |-----W=1, FCN=6, Seq=8----->|
-          |-----W=1, FCN=5, Seq=9----->|
-          |-----W=1, FCN=4, Seq=10---->|
-DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
-          |<- Compound ACK, W=1, C=1 --| C=1
+          |-----W=1,FCN=6,Seq=8----->|
+          |-----W=1,FCN=5,Seq=9----->|
+          |-----W=1,FCN=4,Seq=10---->|
+DL Enable |-----W=1,FCN=7,Seq=11---->| All fragments received
+          |<- Compound ACK,W=1,C=1 --| C=1
         (End)
 		
 		
@@ -1372,22 +1372,22 @@ Note that the SCHC Compound ACK also uses a Sequence Number. </t>
 <figure title="Uplink ACK-on-Error Losses on First Window" anchor="UL-ACKoE-LW1"><artwork><![CDATA[
 
 
-        Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2--X-->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5--X-->|                    __
-          |-----W=0, FCN=1, Seq=6----->|                   | W=0
-DL Enable |-----W=0, FCN=0, Seq=7----->| Missing Fragments<- FCN=5,Seq=2
-          |<- Compound ACK, W=0, C=0 --| Bitmap:1011011    | FCN=2,Seq=5
-          |-----W=0, FCN=5, Seq=9----->|                    --
-          |-----W=0, FCN=2, Seq=10---->|
-          |-----W=1, FCN=6, Seq=11---->|
-          |-----W=1, FCN=5, Seq=12---->|
-          |-----W=1, FCN=4, Seq=13---->|
-DL Enable |-----W=1, FCN=7, Seq=14---->| All fragments received
-          |<-Compound ACK, W=1, C=1 ---| C=1
+        Sender                    Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2--X-->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4----->|
+          |-----W=0,FCN=2,Seq=5--X-->|                    __
+          |-----W=0,FCN=1,Seq=6----->|                   | W=0
+DL Enable |-----W=0,FCN=0,Seq=7----->| Missing Fragments<- FCN=5,Seq=2
+          |<- Compound ACK,W=0,C=0 --| Bitmap:1011011    | FCN=2,Seq=5
+          |-----W=0,FCN=5,Seq=9----->|                    --
+          |-----W=0,FCN=2,Seq=10---->|
+          |-----W=1,FCN=6,Seq=11---->|
+          |-----W=1,FCN=5,Seq=12---->|
+          |-----W=1,FCN=4,Seq=13---->|
+DL Enable |-----W=1,FCN=7,Seq=14---->| All fragments received
+          |<-Compound ACK,W=1,C=1 ---| C=1
         (End)
 		
 		
@@ -1406,23 +1406,23 @@ fragment from window 0) without opening a reception opportunity.</t>
 <figure title="Uplink ACK-on-Error All-0 Lost on First Window" anchor="UL-ACKoE-LA0W1"><artwork><![CDATA[
 	
 		
-        Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2----->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->| DL Enable 
-		  |-----W=0, FCN=0, Seq=7--X-->|
+        Sender                    Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2----->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4----->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->| DL Enable
+		  |-----W=0,FCN=0,Seq=7--X-->|
       (no ACK)
-          |-----W=1, FCN=6, Seq=8----->|
-          |-----W=1, FCN=5, Seq=9----->|                    __
-          |-----W=1, FCN=4, Seq=10---->|                   |W=0
-DL Enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment<- FCN=0,Seq=7
-          |<------ ACK, W=0, C=0 ------| Bitmap:1111110    |__
-          |-----W=0, FCN=0, Seq=13---->| All fragments received
-DL Enable |-----W=1, FCN=7, Seq=14---->|
-          |<------ ACK, W=1, C=1 ------| C=1
+          |-----W=1,FCN=6,Seq=8----->|
+          |-----W=1,FCN=5,Seq=9----->|                    __
+          |-----W=1,FCN=4,Seq=10---->|                   |W=0
+DL Enable |-----W=1,FCN=7,Seq=11---->| Missing Fragment<- FCN=0,Seq=7
+          |<-Compound ACK,W=0,C=0 ---| Bitmap:1111110    |__
+          |-----W=0,FCN=0,Seq=13---->| All fragments received
+DL Enable |-----W=1,FCN=7,Seq=14---->|
+          |<-Compound ACK,W=1,C=1 ---| C=1
         (End)
 
 		
@@ -1433,25 +1433,25 @@ DL Enable |-----W=1, FCN=7, Seq=14---->|
 <figure title="Uplink ACK-on-Error All-0 and other Fragments Lost on First Window" anchor="UL-ACKoE-LA0FW1"><artwork><![CDATA[
 
 		
-        Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2--X-->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4--X-->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->| 
-DL Enable |-----W=0, FCN=0, Seq=7--X-->|
+        Sender                    Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2--X-->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4--X-->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->|
+DL Enable |-----W=0,FCN=0,Seq=7--X-->|
       (no ACK)
-          |-----W=1, FCN=6, Seq=8----->|
-          |-----W=1, FCN=5, Seq=9----->|                    __
-          |-----W=1, FCN=4, Seq=10---->|                   |W=0
-DL Enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment<- FCN=5,Seq=2
-          |<------ ACK, W=0, C=0 ------| Bitmap:1010110    |FCN=3,Seq=4
-          |-----W=0, FCN=5, Seq=13---->|                   |FCN=0,Seq=7
-          |-----W=0, FCN=3, Seq=14---->|                    --
-          |-----W=0, FCN=0, Seq=15---->| All fragments received
-DL Enable |-----W=1, FCN=7, Seq=16---->|          
-          |<------ ACK, W=1, C=1 ------| C=1
+          |-----W=1,FCN=6,Seq=8----->|
+          |-----W=1,FCN=5,Seq=9----->|                    __
+          |-----W=1,FCN=4,Seq=10---->|                   |W=0
+DL Enable |-----W=1,FCN=7,Seq=11---->| Missing Fragment<- FCN=5,Seq=2
+          |<--Compound ACK,W=0,C=0 --| Bitmap:1010110    |FCN=3,Seq=4
+          |-----W=0,FCN=5,Seq=13---->|                   |FCN=0,Seq=7
+          |-----W=0,FCN=3,Seq=14---->|                    --
+          |-----W=0,FCN=0,Seq=15---->| All fragments received
+DL Enable |-----W=1,FCN=7,Seq=16---->|
+          |<-Compound ACK,W=1,C=1 ---| C=1
         (End)
 		
 
@@ -1465,27 +1465,27 @@ of the retransmitted fragments. </t>
 <figure title="Uplink ACK-on-Error All-0 and other Fragments Lost on First and Second Windows (1)" anchor="UL-ACKoE-LFW12-1"><artwork><![CDATA[
 
 
-        Sender                            Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2--X-->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4--X-->|                    __
-          |-----W=0, FCN=2, Seq=5----->|                   |W=0
-          |-----W=0, FCN=1, Seq=6----->|                   |FCN=5,Seq=2
-DL enable |-----W=0, FCN=0, Seq=7--X-->|                   |FCN=3,Seq=4
-     (no ACK)                                              |FCN=0,Seq=7
-          |-----W=1, FCN=6, Seq=8--X-->|                   |W=1
-          |-----W=1, FCN=5, Seq=9----->|                   |FCN=6,Seq=8
-          |-----W=1, FCN=4, Seq=10-X-->|                   |FCN=4,Seq=10
-DL enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment<-|__
-          |<- Compound ACK, W=0,1, C=0-| Bitmap W=0:1010110
-          |-----W=0, FCN=5, Seq=13---->|        W=1:0100001
-          |-----W=0, FCN=3, Seq=14---->|
-          |-----W=0, FCN=0, Seq=15---->|
-          |-----W=1, FCN=6, Seq=16---->|
-          |-----W=1, FCN=4, Seq=17---->| All fragments received
-DL enable |-----W=1, FCN=7, Seq=18---->|
-          |<----- ACK, W=1, C=1 -------| C=1
+        Sender                    Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2--X-->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4--X-->|                    __
+          |-----W=0,FCN=2,Seq=5----->|                   |W=0
+          |-----W=0,FCN=1,Seq=6----->|                   |FCN=5,Seq=2
+DL enable |-----W=0,FCN=0,Seq=7--X-->|                   |FCN=3,Seq=4
+     (no ACK)                                            |FCN=0,Seq=7
+          |-----W=1,FCN=6,Seq=8--X-->|                   |W=1
+          |-----W=1,FCN=5,Seq=9----->|                   |FCN=6,Seq=8
+          |-----W=1,FCN=4,Seq=10-X-->|                   |FCN=4,Seq=10
+DL enable |-----W=1,FCN=7,Seq=11---->| Missing Fragment<-|__
+          |<-Compoud ACK,W=0,1, C=0--| Bitmap W=0:1010110
+          |-----W=0,FCN=5,Seq=13---->|        W=1:0100001
+          |-----W=0,FCN=3,Seq=14---->|
+          |-----W=0,FCN=0,Seq=15---->|
+          |-----W=1,FCN=6,Seq=16---->|
+          |-----W=1,FCN=4,Seq=17---->| All fragments received
+DL enable |-----W=1,FCN=7,Seq=18---->|
+          |<-Compoud ACK,W=1,C=1 ----| C=1
         (End)
 		
 		
@@ -1496,24 +1496,24 @@ DL enable |-----W=1, FCN=7, Seq=18---->|
 <figure title="Uplink ACK-on-Error All-0 and other Fragments Lost on First and Second Windows (2)" anchor="UL-ACKoE-LFW12-2"><artwork><![CDATA[
 
 
-        Sender                            Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2--X-->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4--X-->|
-          |-----W=0, FCN=2, Seq=5----->|                     __
-          |-----W=0, FCN=1, Seq=6----->|                    |W=0
-DL enable |-----W=0, FCN=0, Seq=7--X-->|                    |FCN=5,Seq=2
-       (no ACK)                                             |FCN=3,Seq=4
-          |-----W=1, FCN=6, Seq=8--X-->|                    |FCN=0,Seq=7
-DL enable |-----W=1, FCN=7, Seq=9----->| Missing Fragment--> W=1
-          |<- Compound ACK, W=0,1, C=0-| Bitmap W=0:1010110,|FCN=6,Seq=8
-          |-----W=0, FCN=5, Seq=10---->|        W=1:0000001 |__
-          |-----W=0, FCN=3, Seq=11---->|
-          |-----W=0, FCN=0, Seq=12---->|
-          |-----W=1, FCN=6, Seq=13---->| All fragments received
-DL enable |-----W=1, FCN=7, Seq=14---->|
-          |<----- ACK, W=1, C=1 -------| C=1
+        Sender                    Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2--X-->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4--X-->|
+          |-----W=0,FCN=2,Seq=5----->|                     __
+          |-----W=0,FCN=1,Seq=6----->|                    |W=0
+DL enable |-----W=0,FCN=0,Seq=7--X-->|                    |FCN=5,Seq=2
+       (no ACK)                                           |FCN=3,Seq=4
+          |-----W=1,FCN=6,Seq=8--X-->|                    |FCN=0,Seq=7
+DL enable |-----W=1,FCN=7,Seq=9----->| Missing Fragment--> W=1
+          |<-Compound ACK,W=0,1, C=0-| Bitmap W=0:1010110,|FCN=6,Seq=8
+          |-----W=0,FCN=5,Seq=11---->|        W=1:0000001 |__
+          |-----W=0,FCN=3,Seq=12---->|
+          |-----W=0,FCN=0,Seq=13---->|
+          |-----W=1,FCN=6,Seq=14---->| All fragments received
+DL enable |-----W=1,FCN=7,Seq=15---->|
+          |<-Compound ACK, W=1,C=1---| C=1
         (End)
 		
 		
@@ -1527,22 +1527,22 @@ DL enable |-----W=1, FCN=7, Seq=14---->|
 <figure title="Uplink ACK-on-Error ACK Lost" anchor="UL-ACKoE-ACKL"><artwork><![CDATA[
  
 
-       Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2----->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->|
-DL Enable |-----W=0, FCN=0, Seq=7----->|
+       Sender                     Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2----->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4----->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->|
+DL Enable |-----W=0,FCN=0,Seq=7----->|
       (no ACK)
-          |-----W=1, FCN=6, Seq=8----->|
-          |-----W=1, FCN=5, Seq=9----->|
-          |-----W=1, FCN=4, Seq=10---->|
-DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |-----W=1, FCN=7, Seq=13---->| RESEND ACK
-          |<------ ACK, W=1, C=1 ------| C=1
+          |-----W=1,FCN=6,Seq=8----->|
+          |-----W=1,FCN=5,Seq=9----->|
+          |-----W=1,FCN=4,Seq=10---->|
+DL Enable |-----W=1,FCN=7,Seq=11---->| All fragments received
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |-----W=1,FCN=7,Seq=13---->| RESEND ACK
+          |<-Compound ACK,W=1,C=1 ---| C=1
         (End)
 		
 		
@@ -1559,22 +1559,22 @@ windows.
 
 
         Sender                            Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2--X-->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4--X-->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->|                     __
-DL enable |-----W=0, FCN=0, Seq=7----->| Waits for          |W=0
-       (no ACK)                         next DL opportunity |FCN=5,Seq=2
-          |-----W=1, FCN=6, Seq=8--X-->|                    |FCN=3,Seq=4
-DL enable |-----W=1, FCN=7, Seq=9----->| Missing Fragment<-- W=1
-          |<- Compound ACK, W=0,1, C=0-| Bitmap W=0:1010110 |FCN=6,Seq=8
-          |-----W=0, FCN=5, Seq=10---->|        W=1:0000001  --
-          |-----W=0, FCN=3, Seq=11---->|
-          |-----W=1, FCN=6, Seq=12---->| All fragments received
-DL enable |-----W=1, FCN=7, Seq=13---->|
-          |<----- ACK, W=1, C=1 -------| C=1
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2--X-->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4--X-->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->|                     __
+DL enable |-----W=0,FCN=0,Seq=7----->| Waits for          |W=0
+       (no ACK)                       next DL opportunity |FCN=5,Seq=2
+          |-----W=1,FCN=6,Seq=8--X-->|                    |FCN=3,Seq=4
+DL enable |-----W=1,FCN=7,Seq=9----->| Missing Fragment<-- W=1
+          |<-Compound ACK,W=0,1, C=0-| Bitmap W=0:1010110 |FCN=6,Seq=8
+          |-----W=0,FCN=5,Seq=11---->|        W=1:0000001  --
+          |-----W=0,FCN=3,Seq=12---->|
+          |-----W=1,FCN=6,Seq=13---->| All fragments received
+DL enable |-----W=1,FCN=7,Seq=14---->|
+          |<-Compound ACK, W=1, C=1 -| C=1
         (End)
 		
 		
@@ -1597,31 +1597,31 @@ This may happen, for example, if the All-1 has been sent MAX_ACK_REQUESTS times.
 <figure title="Uplink ACK-on-Error Sender-Abort" anchor="UL-ACKoE-SndAbt"><artwork><![CDATA[
 
 
-        Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2----->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->|
-DL Enable |-----W=0, FCN=0, Seq=7----->|
+        Sender                     Receiver
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2----->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4----->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->|
+DL Enable |-----W=0,FCN=0,Seq=7----->|
       (no ACK)
-          |-----W=1, FCN=6, Seq=8----->|
-          |-----W=1, FCN=5, Seq=9----->|
-          |-----W=1, FCN=4, Seq=10---->|
-DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |-----W=1, FCN=7, Seq=14---->| RESEND ACK  (1)
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |-----W=1, FCN=7, Seq=15---->| RESEND ACK  (2)
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |-----W=1, FCN=7, Seq=16---->| RESEND ACK  (3)
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |-----W=1, FCN=7, Seq=17---->| RESEND ACK  (4)
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |-----W=1, FCN=7, Seq=18---->| RESEND ACK  (5) 
-          |<------ ACK, W=1, C=1 ---X--| C=1
-DL Enable |----Sender-Abort, Seq=19--->| exit with error condition
+          |-----W=1,FCN=6,Seq=8----->|
+          |-----W=1,FCN=5,Seq=9----->|
+          |-----W=1,FCN=4,Seq=10---->|
+DL Enable |-----W=1,FCN=7,Seq=11---->| All fragments received
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |-----W=1,FCN=7,Seq=13---->| RESEND ACK  (1)
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |-----W=1,FCN=7,Seq=15---->| RESEND ACK  (2)
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |-----W=1,FCN=7,Seq=17---->| RESEND ACK  (3)
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |-----W=1,FCN=7,Seq=18---->| RESEND ACK  (4)
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |-----W=1,FCN=7,Seq=19---->| RESEND ACK  (5)
+          |<-Compound ACK,W=1,C=1 -X-| C=1
+DL Enable |----Sender-Abort,Seq=20-->| exit with error condition
         (End)
 		
 		
@@ -1636,14 +1636,14 @@ This message can only be sent after a Downlink enable.</t>
 
 
         Sender                      Receiver
-          |-----W=0, FCN=6, Seq=1----->|
-          |-----W=0, FCN=5, Seq=2----->|
-          |-----W=0, FCN=4, Seq=3----->|
-          |-----W=0, FCN=3, Seq=4----->|
-          |-----W=0, FCN=2, Seq=5----->|
-          |-----W=0, FCN=1, Seq=6----->|
-DL Enable |-----W=0, FCN=0, Seq=7----->| 
-          |<-------  RECV ABORT -------| under-resourced
+          |-----W=0,FCN=6,Seq=1----->|
+          |-----W=0,FCN=5,Seq=2----->|
+          |-----W=0,FCN=4,Seq=3----->|
+          |-----W=0,FCN=3,Seq=4----->|
+          |-----W=0,FCN=2,Seq=5----->|
+          |-----W=0,FCN=1,Seq=6----->|
+DL Enable |-----W=0,FCN=0,Seq=7----->|
+          |<------  RECV ABORT ------| under-resourced
        (Error)
 	   
 	   
