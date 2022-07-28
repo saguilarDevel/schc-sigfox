@@ -2,14 +2,19 @@ import requests
 import json
 import time
 
+from config import config
+
 
 def send_request(sendData, timeout):
     url = 'http://localhost:5000/wyschc_get'
     url_ngrok = 'https://d347a0efcb92.ngrok.io/wyschc_get'
-    url_cloud = 'https://us-central1-schc-sigfox-upc.cloudfunctions.net/hello_get'
+    url_cloud = config.RECEIVER_URL
     headers = {'content-type': 'application/json'}
     print('sendData -> {}'.format(sendData))
-    response = requests.post(url, data=json.dumps(sendData), headers=headers, timeout=timeout)
+    response = requests.post(url_cloud,
+                             data=json.dumps(sendData),
+                             headers=headers,
+                             timeout=timeout)
     # print('response -> {}'.format(response))
     return response
 

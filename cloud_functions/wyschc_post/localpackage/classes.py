@@ -1,4 +1,4 @@
-from function import bitstring_to_bytes, is_monochar, zfill
+from schc_utils import bitstring_to_bytes, is_monochar, zfill
 
 
 # ====== CLASSES ======

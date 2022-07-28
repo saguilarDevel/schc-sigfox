@@ -1,29 +1,19 @@
-from Entities.Sigfox import Sigfox
 from Messages.Fragment import Fragment
-from Messages.Header import Header
-from function import bitstring_to_bytes
+from schc_utils import bitstring_to_bytes
 
 
 class SenderAbort(Fragment):
-    profile = None
-    header_length = 0
-    rule_id_size = 0
-    t = 0
-    n = 0
-    window_size = 0
-
-    header = None
-    padding = ''
 
     def __init__(self, profile, header):
-        self.profile = profile
         rule_id = header.RULE_ID
         dtag = header.DTAG
         w = header.W
         fcn = "1" * profile.N
-        self.header = Header(profile, rule_id, dtag, w, fcn)
+        new_header = rule_id + dtag + w + fcn
+        payload = ''
+        payload_max_length = int((profile.UPLINK_MTU - profile.HEADER_LENGTH) / 8)
 
-        while len(self.header.string + self.padding) < profile.UPLINK_MTU:
-            self.padding += '0'
+        while len(payload) < payload_max_length:
+            payload += '0'
 
-        super().__init__(profile, [bitstring_to_bytes(rule_id + dtag + w + fcn), self.padding.encode()])
+        super().__init__(profile, [bitstring_to_bytes(new_header), payload.encode()])
