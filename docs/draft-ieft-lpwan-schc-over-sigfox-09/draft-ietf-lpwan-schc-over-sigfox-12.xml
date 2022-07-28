@@ -1351,7 +1351,7 @@ DL Enable |-----W=0, FCN=0, Seq=7----->|
           |-----W=1, FCN=5, Seq=9----->|
           |-----W=1, FCN=4, Seq=10---->|
 DL Enable |-----W=1, FCN=7, Seq=11---->| All fragments received
-          |<------ ACK, W=1, C=1 ------| C=1
+          |<- Compound ACK, W=1, C=1 --| C=1
         (End)
 		
 		
@@ -1366,7 +1366,8 @@ leverages the opportunity and sends a SCHC ACK with the corresponding bitmap and
 
 <t>After the loss fragments from the first window (W=0) are resent, the sender continues 
 transmitting the fragments of the following window (W=1) without opening a reception opportunity.
-Finally, the All-1 fragment is sent, the Downlink is enabled, and the SCHC ACK is received with C=1.</t>
+Finally, the All-1 fragment is sent, the Downlink is enabled, and the SCHC ACK is received with C=1.
+Note that the SCHC Compound ACK also uses a Sequence Number. </t>
 
 <figure title="Uplink ACK-on-Error Losses on First Window" anchor="UL-ACKoE-LW1"><artwork><![CDATA[
 
@@ -1379,14 +1380,14 @@ Finally, the All-1 fragment is sent, the Downlink is enabled, and the SCHC ACK i
           |-----W=0, FCN=2, Seq=5--X-->|                    __
           |-----W=0, FCN=1, Seq=6----->|                   | W=0
 DL Enable |-----W=0, FCN=0, Seq=7----->| Missing Fragments<- FCN=5,Seq=2
-          |<------ ACK, W=0, C=0 ------| Bitmap:1011011    | FCN=2,Seq=5
-          |-----W=0, FCN=5, Seq=8----->|                    --
-          |-----W=0, FCN=2, Seq=9----->|
-          |-----W=1, FCN=6, Seq=10---->|
-          |-----W=1, FCN=5, Seq=11---->|
-          |-----W=1, FCN=4, Seq=12---->|
-DL Enable |-----W=1, FCN=7, Seq=13---->| All fragments received
-          |<------ ACK, W=1, C=1 ------| C=1
+          |<- Compound ACK, W=0, C=0 --| Bitmap:1011011    | FCN=2,Seq=5
+          |-----W=0, FCN=5, Seq=9----->|                    --
+          |-----W=0, FCN=2, Seq=10---->|
+          |-----W=1, FCN=6, Seq=11---->|
+          |-----W=1, FCN=5, Seq=12---->|
+          |-----W=1, FCN=4, Seq=13---->|
+DL Enable |-----W=1, FCN=7, Seq=14---->| All fragments received
+          |<-Compound ACK, W=1, C=1 ---| C=1
         (End)
 		
 		
@@ -1417,10 +1418,10 @@ fragment from window 0) without opening a reception opportunity.</t>
           |-----W=1, FCN=6, Seq=8----->|
           |-----W=1, FCN=5, Seq=9----->|                    __
           |-----W=1, FCN=4, Seq=10---->|                   |W=0
-DL Enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment<- FCN=0, Seq=7
+DL Enable |-----W=1, FCN=7, Seq=11---->| Missing Fragment<- FCN=0,Seq=7
           |<------ ACK, W=0, C=0 ------| Bitmap:1111110    |__
           |-----W=0, FCN=0, Seq=13---->| All fragments received
-DL Enable |-----W=1, FCN=7, Seq=14---->|          
+DL Enable |-----W=1, FCN=7, Seq=14---->|
           |<------ ACK, W=1, C=1 ------| C=1
         (End)
 
