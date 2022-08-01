@@ -10,6 +10,7 @@ Expires: 28 January 2023                                      S. Aguilar
                                                               L. Toutain
                                                           IMT-Atlantique
                                                              S. Cespedes
+                                                    Concordia University
                                                               D. Wistuba
                                           NIC Labs, Universidad de Chile
                                                                 J. Boite
@@ -49,7 +50,6 @@ Status of This Memo
    material or to cite them other than as "work in progress."
 
    This Internet-Draft will expire on 28 January 2023.
-
 
 
 
@@ -1963,11 +1963,11 @@ Internet-Draft           SCHC over Sigfox LPWAN                July 2022
 
 
    Sandra Cespedes
-   NIC Labs, Universidad de Chile
-   Av. Almte. Blanco Encalada 1975
-   Santiago
-   Chile
-   Email: scespedes@niclabs.cl
+   Concordia University
+   1455 De Maisonneuve Blvd. W.
+   Montreal QC, H3G 1M8
+   Canada
+   Email: sandra.cespedes@concordia.ca
 
 
    Diego Wistuba
