@@ -64,14 +64,15 @@
       </address>
     </author>
 
-   <author initials="S." surname="Cespedes" fullname="Sandra Cespedes">
-         <organization>NIC Labs, Universidad de Chile</organization>
+  <author initials="S." surname="Cespedes" fullname="Sandra Cespedes">
+         <organization>Concordia University</organization>
       <address>
         <postal>
-          <street>Av. Almte. Blanco Encalada 1975</street> <street>Santiago</street>
-          <country>Chile</country>
+          <street>1455 De Maisonneuve Blvd. W.</street>
+            <city>Montreal QC, H3G 1M8</city>
+          <country>Canada</country>
         </postal>
-        <email>scespedes@niclabs.cl</email>
+        <email>sandra.cespedes@concordia.ca</email>
       </address>
    </author>
 
