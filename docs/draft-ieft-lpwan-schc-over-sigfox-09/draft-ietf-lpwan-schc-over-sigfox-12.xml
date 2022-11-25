@@ -89,7 +89,7 @@
 
     <author fullname="Julien Boite" initials="J." surname="Boite">
       <organization abbrev="SIGFOX">
-        SIGFOX
+        Unabiz - Sigfox is now a Unabiz technology
       </organization>
       <address>
 	    <postal>
@@ -97,12 +97,12 @@
           <city>Labege</city>
           <country>France</country>
         </postal>
-        <email>julien.boite@sigfox.com</email>
+        <email>julien.boite@unabiz.com</email>
         <uri>http://www.sigfox.com/</uri>
       </address>
     </author>
 
-    <date year="2022" month="August" day="1"/>
+    <date year="2022" month="October" day="11"/>
 
     
     <workgroup>lpwan Working Group</workgroup>
