@@ -53,16 +53,16 @@ New code:
 
 The result of the configuration should look as follows:
 
-![callback_setup](images/callback-setup-sigfox-1.png)
+![callback_setup](../images/callback-setup-sigfox-1.png)
 
 7.  Save the callback configuration by clicking OK.
 8. Verify the correct creation of the callback in the callback page, as follows: 
 
-![callback_setup2](images/callback-setup-sigfox-2.png)
+![callback_setup2](../images/callback-setup-sigfox-2.png)
 
 The callback can be enable and disable with the Enable checkbox. 
 Check that the callback is enable with a SubType BIDIR.
 Click the Downlink circle to enable downlink traffic (if not enable, no traffic will be deliver to the end-device)
 
 
-Continue with the end-to-end test in [Tutorial 5](/docs/Tutorial-5-test-end-to-end.md).
+Continue with the end-to-end test in [Tutorial 5](/docs/Tutorials/Tutorial-5-test-end-to-end.md-to-end.md).

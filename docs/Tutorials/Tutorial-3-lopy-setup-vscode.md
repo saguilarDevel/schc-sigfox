@@ -26,46 +26,46 @@ Please follow these steps to install [the Pymakr VSCode Extension](https://marke
 
 9. Note that the LoPy4 is connected to the expansion board previously as follows: 
 
-![lopy-connection-diagram](images/LoPy4-connection-expantion-board.png)
+![lopy-connection-diagram](../images/LoPy4-connection-expantion-board.png)
 
 10. Connect the antenna to the corresponding port of the LoPy4. 
 
-![lopy-connection-antenna](images/lopy4-connection-antenna-1.png)
+![lopy-connection-antenna](../images/lopy4-connection-antenna-1.png)
 
 
 12. Connect the LoPy4 device to your computer using the USB Port.
 
 13. Ensure that the Pymakr Plugin has correctly installed.
 
-![pymark-configuration-ok](images/pymar-configuration-ok.png)
+![pymark-configuration-ok](../images/pymar-configuration-ok.png)
 
 14. Generally, your device will be auto-detected. If this does not work, click All commands on the bottom of the Visual Studio Code window.
 
-![pymark-menu](images/pymark-configuration-menu.png)
+![pymark-menu](../images/pymark-configuration-menu.png)
 
 15. In the list that appears, click Pymakr > Extra > List Serial Ports.
 
-![pymark-menu-open](images/pymark-configuration-menu-2.png)
+![pymark-menu-open](../images/pymark-configuration-menu-2.png)
 
 16. This will list the available serial ports. If Pymakr is able to auto-detect which to use, this will be copied to your clipboard. If not please manually copy the correct serial port in Project Settings. Example of serials ports shown below.
 
-![pymark-device-port](images/pymark-configuration-device-1.png)
+![pymark-device-port](../images/pymark-configuration-device-1.png)
 
 17. Open check_sigfox.py from /Testing folder.
 
 
-![vscode-setup-lopy](images/check-sigfox-Lopy-id-1.png)
+![vscode-setup-lopy](../images/check-sigfox-Lopy-id-1.png)
 
 
 17. Run the check_sigfox.py file in the LoPy4 by clicking in the menu below and click Run current file.
 
 
-![vscode-setup-lopy](images/check-sigfox-Lopy-id-2.png)
+![vscode-setup-lopy](../images/check-sigfox-Lopy-id-2.png)
 
 
 18. The file will be executed.
-![vscode-setup-lopy](images/check-sigfox-Lopy-id-3.png)
+![vscode-setup-lopy](../images/check-sigfox-Lopy-id-3.png)
 
 19. It should print the Sigfox Device ID and the Sigfox PAC number. This information is latter required to create the Sigfox Backend account.
 
-Continue with the Sigfox Callback configuration in [Tutorial 4](/docs/Tutorial-4-Sigfox-callback_setup.md).
+Continue with the Sigfox Callback configuration in [Tutorial 4](/docs/Tutorials/Tutorial-4-Sigfox-callback_setup.mdk_setup.md).

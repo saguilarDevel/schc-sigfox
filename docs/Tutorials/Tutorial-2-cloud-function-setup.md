@@ -23,7 +23,7 @@ Create a google cloud account, can be with a gmail address. More information fro
 
 3. Give Bucket Name ex. ```sigfoxschc``` (save name for latter) and complete the creation form.
 
-![create-bucket](images/create-bucket-google-cloud-1.png)
+![create-bucket](../images/create-bucket-google-cloud-1.png)
 
 ### Create Cloud Function
 
@@ -31,7 +31,7 @@ Create a google cloud account, can be with a gmail address. More information fro
 2. Click on the Create Function button.
 3. Give the Cloud Function a name. Ex. ``` schc_sigfox```
 
-![create-function](images/create-cloud-function-1.png)
+![create-function](../images/create-cloud-function-1.png)
 
 4. Complete creation form, with region.
 5. Set HTTP trigger.
@@ -71,7 +71,7 @@ def schc_sigfox(request):
 11. Change the Entry Point to ```schc_sigfox```
 11. Click Deploy and wait for the function to be deploy.
 
-![create-function](images/create-cloud-function-2.png)
+![create-function](../images/create-cloud-function-2.png)
 
 The code deploy in the Cloud Function will process the message received from Sigfox Cloud (with a certain format). If the POST json message format is incorrect, a 404 error message will be returned. 
 If the json message format is correct, the data received will be printed. Likewise, if the ack flag is set to true, which means that the device is waiting for a response, a downlink message is sent back to the Sigfox Cloud in the response, that will redirect the message to device that init the communication.
@@ -84,7 +84,7 @@ To test the GCF, a plugin for chrome called Advance Rest Client is required. Fur
 
 * Open Advance REST Client (app for Chrome browser for send html requests).
 
-![test-cloud-function](images/test-cloud-function-0.png)
+![test-cloud-function](../images/test-cloud-function-0.png)
 
 * Set the method to POST. 
 * Set Resquest URL to your GFC (you can check in the Google Console): ```http://your-cloud-function-url/schc_sigfox```
@@ -108,7 +108,7 @@ Header Value: application/json
 ``` 
 * Click send.
 
-![test-cloud-function-no-ack](images/test-cloud-function-1.png)
+![test-cloud-function-no-ack](../images/test-cloud-function-1.png)
 
 * The result is a 204 with no content.
 
@@ -129,10 +129,10 @@ Header Value: application/json
 ```
 * Keep the same configuration and click send.
 
-![test-cloud-function-ack](images/test-cloud-function-2.png)
+![test-cloud-function-ack](../images/test-cloud-function-2.png)
 
 Now the response is a 200 OK with a json response. In this case, the device id is indicated with some downlink data.
 
 
-Continue withe the LoPy setup in [Tutorial 3](/docs/Tutorial-3-lopy-setup-vscode.md).
+Continue withe the LoPy setup in [Tutorial 3](/docs/Tutorials/Tutorial-3-lopy-setup-vscode.md-vscode.md).
 

@@ -42,7 +42,7 @@ Wait until the database is created.
 
 Copy the Realtime database URL.
 
-![firebase-RTDB-url](images/firebase-RTDB-url.png)
+![firebase-RTDB-url](../images/firebase-RTDB-url.png)
  
 Paste the Realtime database URL in the config.py file, using the FIREBASE_RTDB_URL variable.
 
@@ -53,7 +53,7 @@ The main node will have the same of the BUCKET_NAME variable from config.py.
 
 The all_windows node, will have the information of each window.
 
-![firebase-RTDB-structure](images/firebase-RTDB-structure.png)
+![firebase-RTDB-structure](../images/firebase-RTDB-structure.png)
 
 To check if everything is configured correctly, run test_database.py.
 This script will init the database class, save some example data to the database,

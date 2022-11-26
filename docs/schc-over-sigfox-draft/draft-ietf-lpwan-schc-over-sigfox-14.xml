@@ -11,7 +11,7 @@
 <?rfc compact="yes"?>
 <?rfc toc="yes"?>
 
-<rfc ipr="trust200902" docName="draft-ietf-lpwan-schc-over-sigfox-13" category="std">
+<rfc ipr="trust200902" docName="draft-ietf-lpwan-schc-over-sigfox-14" category="std">
 
   <front>
    <title abbrev="SCHC over Sigfox LPWAN">
@@ -102,7 +102,7 @@
       </address>
     </author>
 
-    <date year="2022" month="October" day="11"/>
+    <date year="2022" month="December" day="11"/>
 
     
     <workgroup>lpwan Working Group</workgroup>
@@ -207,7 +207,7 @@ Sigfox cloud-based Network. </t>
         $   |         |     |              |     | Network |    .
         +~~ |Sigfox BS|     |Sigfox Network|     |  SCHC   |    .
             |  (RGW)  | === |    (NGW)     | === |C/D & F/R|.....
-            +---------+     +--------------+     +---------+   IPv6-based
+            +---------+     +--------------+     +---------+  IPv6-based
                                                                 network
 
 Legend:
@@ -1984,9 +1984,9 @@ format, which is intended to reduce the number of Downlink transmissions (i.e., 
 
 </front>
 
-<seriesInfo name='Internet-Draft' value='draft-ietf-lpwan-schc-compound-ack-06' />
+<seriesInfo name='Internet-Draft' value='draft-ietf-lpwan-schc-compound-ack-07' />
 <format type='TXT'
-        target='http://www.ietf.org/internet-drafts/draft-ietf-lpwan-schc-compound-ack-06.txt' />
+        target='http://www.ietf.org/internet-drafts/draft-ietf-lpwan-schc-compound-ack-07.txt' />
 </reference>
 
     </references>

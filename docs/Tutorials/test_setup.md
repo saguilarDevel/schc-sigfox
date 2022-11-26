@@ -10,7 +10,7 @@ The final goal is to connect a device (LoPy4) thru the Sigfox Cloud to a server 
 
 To enable SCHC connectivity over Sigfox, the device is connected to the Sigfox network. The messages sent by the device arrive to the Sigfox Cloud that retransmit the message payload and other information, such as the sequence number, timestamp and device type, device ID and ACK flag.
 
-![example request](images/schc_sigfox_diagrams_1.png)
+![example request](../images/schc_sigfox_diagrams_1.png)
 
 Example of Sigfox Cloud message send to Google Cloud Function.
 
@@ -28,7 +28,7 @@ Example of Sigfox Cloud message send to Google Cloud Function.
 Furthermore, the Sigfox Cloud endopoint can be configure to a Private Cloud, running a Flask Server.
 
 
-![example request](images/schc_sigfox_diagrams_1_local.png)
+![example request](../images/schc_sigfox_diagrams_1_local.png)
 
 ## Testing SCHC over Sigfox
 
@@ -39,7 +39,7 @@ To accomplish the final configuration, different test cases have been analyzed.
 The SCHC over Sigfox implementation was tested in local mode, using http sockets in localhost. 
 This test setup allows a rapid implementation of the python code, as test are run locally.
 
-![example request](images/schc_sigfox_diagrams_5.png)
+![example request](../images/schc_sigfox_diagrams_5.png)
 
 ### Test case 2 - Testing Server Code Locally
 
@@ -47,26 +47,26 @@ To test the code that will run on the server (Google Cloud or Private Cloud), th
 
 A Flask server is run in localhost (port 5000), and messages are send to an endpoint in /post/messages. The messages are take from real messages send from the Sigfox Cloud.
 
-![example request](images/schc_sigfox_diagrams_3.png)
+![example request](../images/schc_sigfox_diagrams_3.png)
 
 ### Test case 3 - Testing Server Code Locally Programmatically
 
 To simulate the sending of messages more programmatically, a python script with a series of messages is configure to send the messages to the Flask server locally. 
 
-![example request](images/schc_sigfox_diagrams_4.png)
+![example request](../images/schc_sigfox_diagrams_4.png)
 
 
 ### Test case 4 - Testing Google Cloud Function
 
 Once the test in local provide good results, the server can be deploy to Google Cloud as a Function. To test the function without the need of the Sigfox Cloud, the Advanced REST Client can be use to send the messages. Also the Python script can be use to send the messages programmatically.
 
-![example request](images/schc_sigfox_diagrams_2.png)
+![example request](../images/schc_sigfox_diagrams_2.png)
 
 ### Test case 5 - Testing LoPy, Sigfox Cloud and Google Cloud Function
 
 With the Google Cloud Function (GCF) properly working, is possible to test the communication between the LoPy4 and the GCF, using the Sigfox Cloud as the LPWAN Radio GW.
 
-![example request](images/schc_sigfox_diagrams_1.png)
+![example request](../images/schc_sigfox_diagrams_1.png)
 
 The SCHC fragments are send from the LoPy to the Sigfox Cloud using the Sigfox radio network. Then, the Sigfox Cloud routes the messages to the end point previously configured (the Google Cloud Function URL). The messages arrive to the GCF that responds accordingly. If an ACK needs to be sent (in case of uplink communication), then the GCF will respond with a JSON file that contains the information required by the Sigfox Cloud to route the answer back to the device.
 
@@ -139,7 +139,7 @@ The Message Timestamp, Device Geolocation, RSSI, Device Temperature and Device B
 For further testing of the cloud function locally, or if the function runs in a private server, the end point can be exposed using ngrok.
 Ngrok creates a secure tunnel between a public end point and the flask server running locally, and can be used to enable communication from the Sigfox Cloud to the local Flask Server as shown in the image below.
 
-![example request](images/schc_sigfox_diagrams_6.png)
+![example request](../images/schc_sigfox_diagrams_6.png)
 
 To perform this test you must have an ngrok account and properly setup. More information [here](https://ngrok.com).
 
@@ -151,7 +151,7 @@ ngrok http 5000
 
 This will start the ngrok service and show the url you need to configure in the sigfox cloud. Check the enable and Downlink in the callback. The callback should look as follows:
 
-![sigfox_ngrox_configuration](images/sigfox-ngrok-configuration.png)
+![sigfox_ngrox_configuration](../images/sigfox-ngrok-configuration.png)
 
 Now the messages send from the LoPy are forwarded from the Sigfox Cloud to the local Flask server.
 
