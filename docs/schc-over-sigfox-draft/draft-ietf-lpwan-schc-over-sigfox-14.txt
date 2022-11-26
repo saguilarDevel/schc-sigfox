@@ -5,7 +5,7 @@
 lpwan Working Group                                           JC. Zuniga
 Internet-Draft                                                          
 Intended status: Standards Track                                C. Gomez
-Expires: 14 April 2023                                        S. Aguilar
+Expires: 14 June 2023                                         S. Aguilar
                                     Universitat Politecnica de Catalunya
                                                               L. Toutain
                                                           IMT-Atlantique
@@ -15,24 +15,20 @@ Expires: 14 April 2023                                        S. Aguilar
                                           NIC Labs, Universidad de Chile
                                                                 J. Boite
                               Unabiz - Sigfox is now a Unabiz technology
-                                                         11 October 2022
+                                                        11 December 2022
 
 
                          SCHC over Sigfox LPWAN
-                  draft-ietf-lpwan-schc-over-sigfox-13
+                  draft-ietf-lpwan-schc-over-sigfox-14
 
 Abstract
 
-   The Generic Framework for Static Context Header Compression and
-   Fragmentation (SCHC) specification describes two mechanisms: i) an
-   application header compression scheme, and ii) a frame fragmentation
-   and loss recovery functionality.  SCHC offers a great level of
-   flexibility that can be tailored for different Low Power Wide Area
-   Network (LPWAN) technologies.
-
-   The present document provides the optimal parameters and modes of
-   operation when SCHC is implemented over a Sigfox LPWAN.  This set of
-   parameters are also known as a "SCHC over Sigfox profile."
+   The Static Context Header Compression and fragmentation (SCHC)
+   specificaton (RFC8724) describes a generic framework for application
+   header compression and fragmentation modes designed for Low Power
+   Wide Area Network (LPWAN) technologies.  The present document defines
+   a profile of SCHC (RFC8724) over Sigfox LPWAN, and provides optimal
+   parameter values and modes of operation.
 
 Status of This Memo
 
@@ -49,13 +45,17 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 April 2023.
+   This Internet-Draft will expire on 14 June 2023.
 
 
 
-Zuniga, et al.            Expires 14 April 2023                 [Page 1]
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                  [Page 1]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
 Copyright Notice
@@ -84,37 +84,35 @@ Table of Contents
      3.5.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . . . .   7
      3.6.  Fragmentation . . . . . . . . . . . . . . . . . . . . . .   8
        3.6.1.  Uplink Fragmentation  . . . . . . . . . . . . . . . .   8
-       3.6.2.  Downlink Fragmentation  . . . . . . . . . . . . . . .  12
+       3.6.2.  Downlink Fragmentation  . . . . . . . . . . . . . . .  13
      3.7.  SCHC-over-Sigfox F/R Message Formats  . . . . . . . . . .  14
        3.7.1.  Uplink No-ACK Mode: Single-byte SCHC Header . . . . .  14
-       3.7.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header . .  15
+       3.7.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header . .  16
        3.7.3.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
-               1 . . . . . . . . . . . . . . . . . . . . . . . . . .  17
+               1 . . . . . . . . . . . . . . . . . . . . . . . . . .  18
        3.7.4.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
                2 . . . . . . . . . . . . . . . . . . . . . . . . . .  20
-       3.7.5.  Downlink ACK-Always Mode: Single-byte SCHC Header . .  22
-     3.8.  SCHC-Sender Abort . . . . . . . . . . . . . . . . . . . .  24
-     3.9.  SCHC-Receiver Abort . . . . . . . . . . . . . . . . . . .  24
-     3.10. Padding . . . . . . . . . . . . . . . . . . . . . . . . .  24
+       3.7.5.  Downlink ACK-Always Mode: Single-byte SCHC Header . .  23
+     3.8.  Padding . . . . . . . . . . . . . . . . . . . . . . . . .  25
    4.  Fragmentation Sequence Examples . . . . . . . . . . . . . . .  25
      4.1.  Uplink No-ACK Examples  . . . . . . . . . . . . . . . . .  25
      4.2.  Uplink ACK-on-Error Examples: Single-byte SCHC Header . .  26
-     4.3.  SCHC Abort Examples . . . . . . . . . . . . . . . . . . .  32
-   5.  Security considerations . . . . . . . . . . . . . . . . . . .  33
-   6.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  33
-   7.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  34
-   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  34
-     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  34
-     8.2.  Informative References  . . . . . . . . . . . . . . . . .  35
+     4.3.  SCHC Abort Examples . . . . . . . . . . . . . . . . . . .  33
+   5.  Security considerations . . . . . . . . . . . . . . . . . . .  34
+   6.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  34
+   7.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  35
+   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  35
+     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  35
+     8.2.  Informative References  . . . . . . . . . . . . . . . . .  36
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  36
 
 
 
-Zuniga, et al.            Expires 14 April 2023                 [Page 2]
+
+Zuniga, et al.            Expires 14 June 2023                  [Page 2]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
-
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  35
 
 1.  Introduction
 
@@ -156,8 +154,8 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    Contexts need to be stored and pre-configured on both ends.  This can
    be done either by using a provisioning protocol, by out of band
-   means, or by pre-provisioning them (e.g. at manufacturing time).  The
-   way contexts are configured and stored on both ends is out of the
+   means, or by pre-provisioning them (e.g., at manufacturing time).
+   The way contexts are configured and stored on both ends is out of the
    scope of this document.
 
 
@@ -165,42 +163,45 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                 [Page 3]
+
+
+Zuniga, et al.            Expires 14 June 2023                  [Page 3]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
 3.1.  Network Architecture
 
-   Figure 1 represents the architecture for compression/decompression
-   (C/D) and fragmentation/reassembly (F/R) based on the terminology
+   Figure 1 represents the architecture for Compression/Decompression
+   (C/D) and Fragmentation/Reassembly (F/R) based on the terminology
    defined in [RFC8376], where the Radio Gateway (RGW) is a Sigfox Base
    Station and the Network Gateway (NGW) is the Sigfox cloud-based
    Network.
 
-   Sigfox Device                                           Application
- +----------------+                                     +--------------+
- | APP1 APP2 APP3 |                                     |APP1 APP2 APP3|
- +----------------+                                     +--------------+
- |   UDP  |       |                                     |     |  UDP   |
- |  IPv6  |       |                                     |     | IPv6   |
- +--------+       |                                     |     +--------+
- | SCHC C/D & F/R |                                     |              |
- |                |                                     |              |
- +-------+--------+                                     +--------+-----+
-         $                                                       .
-         $   +---------+     +--------------+     +---------+    .
-         $   |         |     |              |     | Network |    .
-         +~~ |Sigfox BS|     |Sigfox Network|     |  SCHC   |    .
-             |  (RGW)  | === |    (NGW)     | === |C/D & F/R|.....
-             +---------+     +--------------+     +---------+
+  Sigfox Device                                           Application
++----------------+                                     +--------------+
+| APP1 APP2 APP3 |                                     |APP1 APP2 APP3|
++----------------+                                     +--------------+
+|   UDP  |       |                                     |     |  UDP   |
+|  IPv6  |       |                                     |     | IPv6   |
++--------+       |                                     |     +--------+
+| SCHC C/D & F/R |                                     |              |
+|                |                                     |              |
++-------+--------+                                     +--------+-----+
+        $                                                       .
+        $   +---------+     +--------------+     +---------+    .
+        $   |         |     |              |     | Network |    .
+        +~~ |Sigfox BS|     |Sigfox Network|     |  SCHC   |    .
+            |  (RGW)  | === |    (NGW)     | === |C/D & F/R|.....
+            +---------+     +--------------+     +---------+  IPv6-based
+                                                                network
 
- Legend:
- $, ~ : Radio link
- = : Internal Sigfox Network
- . : External Network
+Legend:
+$, ~ : Radio link
+= : Internal Sigfox Network
+. : External Network
 
-                     Figure 1: Network Architecture
+                    Figure 1: Network Architecture
 
    In the case of the global Sigfox Network, RGWs (or Base Stations) are
    distributed over multiple countries wherever the Sigfox LPWAN service
@@ -209,21 +210,20 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    world, providing hence a global single star network topology.
 
    The Sigfox Device sends application packets that are compressed and/
-   or fragmented by a SCHC Compressor/Decompressor (SCHC C/D + F/R) to
-   reduce headers size and/or fragment the packet.  The resulting SCHC
-   Message is sent over a layer two (L2) Sigfox frame to the Sigfox Base
-   Stations, which then forward the SCHC Message to the Network Gateway
-   (NGW).  The NGW then delivers the SCHC Message and associated
-   gathered metadata to the Network SCHC C/D + F/R.
+   or fragmented by a SCHC C/D + F/R to reduce headers size and/or
+   fragment the packet.  The resulting SCHC Message is sent over a layer
+   two (L2) Sigfox frame to the Sigfox Base Stations, which then forward
+   the SCHC Message to the Network Gateway (NGW).  The NGW then delivers
+   the SCHC Message and associated gathered metadata to the Network SCHC
+   C/D + F/R.
 
 
 
 
 
-
-Zuniga, et al.            Expires 14 April 2023                 [Page 4]
+Zuniga, et al.            Expires 14 June 2023                  [Page 4]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
    The Sigfox Network (NGW) communicates with the Network SCHC C/D + F/R
@@ -277,9 +277,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                 [Page 5]
+Zuniga, et al.            Expires 14 June 2023                  [Page 5]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
    The Device ID is a globally unique identifier assigned to the Device,
@@ -300,17 +300,17 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    at network reception are delivered by the Sigfox Network to the
    Network SCHC C/D + F/R.
 
-                  +---------------+-----------------+
+   The L2 Word Size used by Sigfox is 1 byte (8 bits).
+
                   | Sigfox Header | Sigfox payload  |
                   +---------------+---------------- +
                                   |   SCHC message  |
-                                  +-----------------+
 
                       Figure 2: SCHC Message in Sigfox
 
    Figure 2 shows a SCHC Message sent over Sigfox, where the SCHC
-   Message could be a full SCHC Packet (e.g. compressed) or a SCHC
-   Fragment (e.g. a piece of a bigger SCHC Packet).
+   Message could be a full SCHC Packet (e.g., compressed) or a SCHC
+   Fragment (e.g., a piece of a bigger SCHC Packet).
 
 3.3.  Downlink
 
@@ -323,7 +323,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    transmission, the Device opens a fixed window for Downlink reception.
    The delay and duration of the reception opportunity window have fixed
    values.  If there is a Downlink message to be sent for this given
-   Device (e.g. either a response to the Uplink message or queued
+   Device (e.g., either a response to the Uplink message or queued
    information waiting to be transmitted), the network transmits this
    message to the Device during the reception window.  If no message is
    received by the Device after the reception opportunity window has
@@ -333,9 +333,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                 [Page 6]
+Zuniga, et al.            Expires 14 June 2023                  [Page 6]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
    When a Downlink message is sent to a Device, a reception
@@ -354,24 +354,28 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    As explained previously, Downlink transmissions are Device-driven and
    can only take place following a specific Uplink transmission that
    indicates and allows a following Downlink opportunity.  For this
-   reason, when SCHC bi-directional services are used (e.g.  Ack-on-
+   reason, when SCHC bi-directional services are used (e.g., Ack-on-
    Error fragmentation mode) the SCHC protocol implementation needs to
-   consider the times when a Downlink message (e.g.  SCHC-ACK) can be
+   consider the times when a Downlink message (e.g., SCHC-ACK) can be
    sent and/or received.
 
    For the Uplink ACK-on-Error fragmentation mode, a Downlink
-   opportunity MUST be indicated by the last fragment of every window
-   (i.e.  FCN = All-0, or FCN = All-1).  The Device sends the fragments
-   in sequence and, after transmitting the FCN = All-0 or FCN = All-1,
-   it opens up a reception opportunity.  The Network SCHC can then
-   decide to respond at that opportunity (or wait for a further one)
-   with a SCHC-ACK indicating in case there are missing fragments from
-   the current or previous windows.  If there is no SCHC-ACK to be sent,
-   or if the network decides to wait for a further Downlink transmission
-   opportunity, then no Downlink transmission takes place at that
-   opportunity and after a timeout the Uplink transmissions continue.
-   Intermediate SCHC fragments with FCN different from All-0 or All-1
-   MUST NOT use the Downlink request flag to request a SCHC-ACK.
+   opportunity MUST be indicated by the last fragment of every window,
+   which is signal by a specific the Fragment Compressed Number (FCN)
+   value, i.e., FCN = All-0, or FCN = All-1.  The FCN is the tile index
+   in an specific window.  FCN and window number combination allows to
+   uniquely identified a SCHC Fragment as explained in [RFC8724].  The
+   Device sends the fragments in sequence and, after transmitting the
+   FCN = All-0 or FCN = All-1, it opens up a reception opportunity.  The
+   Network SCHC can then decide to respond at that opportunity (or wait
+   for a further one) with a SCHC-ACK indicating in case there are
+   missing fragments from the current or previous windows.  If there is
+   no SCHC-ACK to be sent, or if the network decides to wait for a
+   further Downlink transmission opportunity, then no Downlink
+   transmission takes place at that opportunity and after a timeout the
+   Uplink transmissions continue.  Intermediate SCHC fragments with FCN
+   different from All-0 or All-1 MUST NOT use the Downlink request flag
+   to request a SCHC-ACK.
 
 3.5.  SCHC Rules
 
@@ -381,18 +385,19 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    reason, it is recommended to keep the number of rules that are
    defined for a specific device to the minimum possible.
 
-   RuleIDs can be used to differentiate data traffic classes (e.g.  QoS,
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                  [Page 7]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
+
+   RuleIDs can be used to differentiate data traffic classes (e.g., QoS,
    control vs. data, etc.), and data sessions.  They can also be used to
    interleave simultaneous fragmentation sessions between a Device and
    the Network.
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                 [Page 7]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
 
 3.6.  Fragmentation
 
@@ -411,15 +416,13 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    As described in section 8.2.3 of [RFC8724], the integrity of the
    fragmentation-reassembly process of a SCHC Packet MUST be checked at
-   the receive end.  Since only Uplink messages/fragments that have
-   passed the Sigfox CRC-check are delivered to the Network SCHC C/D +
-   F/R, integrity can be guaranteed when no consecutive messages are
-   missing from the sequence and all FCN bitmaps are complete.  With
-   this functionality in mind, and in order to save protocol and
-   processing overhead, the use of a Reassembly Check Sequence (RCS) as
-   described in Section 3.6.1.3 is RECOMMENDED.
-
-   The L2 Word Size used by Sigfox is 1 byte (8 bits).
+   the receive end.  Since only Uplink/Downlink messages/fragments that
+   have passed the Sigfox CRC-check are delivered to the Network/Sigfox
+   Device SCHC C/D + F/R, integrity can be guaranteed when no
+   consecutive messages are missing from the sequence and all FCN
+   bitmaps are complete.  With this functionality in mind, and in order
+   to save protocol and processing overhead, the use of a Reassembly
+   Check Sequence (RCS) as described in Section 3.6.1.5 is RECOMMENDED.
 
 3.6.1.  Uplink Fragmentation
 
@@ -427,11 +430,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    place in any random frequency of the allowed Uplink bandwidth
    allocation.  In addition, devices may go to deep sleep mode, and then
    wake up and transmit whenever there is a need to send information to
-   the network.  Data packets are self-contained (aka "message in a
-   bottle") with all the required information for the network to process
-   them accordingly.  Hence, there is no need to perform any network
-   attachment, synchronization, or other procedure before transmitting a
-   data packet.
+   the network, as there is no need to perform any network attachment,
+   synchronization, or other procedure before transmitting a data
+   packet.
 
    Since Uplink transmissions are asynchronous, a SCHC fragment can be
    transmitted at any given time by the Device.  Sigfox Uplink messages
@@ -444,19 +445,45 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-
-Zuniga, et al.            Expires 14 April 2023                 [Page 8]
+Zuniga, et al.            Expires 14 June 2023                  [Page 8]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
    When the ACK-on-Error mode is used for Uplink fragmentation, the SCHC
    Compound ACK defined in [I-D.ietf-lpwan-schc-compound-ack]) MUST be
    used in the Downlink responses.
 
-3.6.1.1.  Single-byte SCHC Header for Uplink Fragmentation
+3.6.1.1.  SCHC-Sender Abort
 
-3.6.1.1.1.  Uplink No-ACK Mode: Single-byte SCHC Header
+   As defined in [RFC8724], a SCHC Sender-Abort can be triggered when
+   the number of SCHC ACK REQ attempts is greater than or equal to
+   MAX_ACK_REQUESTS.  In the case of SCHC/Sigfox, a SCHC-Sender Abort
+   MUST be sent if the number of repeated All-1s (i.e., with the same
+   bitmap) sent in sequence is greater than or equal to
+   MAX_ACK_REQUESTS.
+
+3.6.1.2.  SCHC Receiver-Abort
+
+   As defined in [RFC8724], a SCHC Receiver-Abort is triggered when the
+   receiver has no RuleID and DTag pairs available for a new session.
+   In the case of SCHC/Sigfox a SCHC Receiver-Abort MUST be sent if, for
+   a single device, all the RuleIDs are being processed by the receiver
+   (i.e., have an active session) at a certain time and a new one is
+   requested, or if the RuleID of the fragment is not valid.
+
+   A SCHC Receiver-Abort MUST be triggered when the Inactivity Timer
+   expires.
+
+   MAX_ACK_REQUESTS can be increase when facing high error rates.
+
+   Although a SCHC Receiver-Abort can be triggered at any point in time,
+   a SCHC Receiver-Abort Downlink message MUST only be sent when there
+   is a Downlink transmission opportunity.
+
+3.6.1.3.  Single-byte SCHC Header for Uplink Fragmentation
+
+3.6.1.3.1.  Uplink No-ACK Mode: Single-byte SCHC Header
 
    Single-byte SCHC Header No-ACK mode is RECOMMENDED to be used for
    transmitting short, non-critical packets that require fragmentation
@@ -471,6 +498,14 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    other fragmentation modes, the first transmitted fragment would need
    to be marked with FCN = X-1.  Consecutive fragments MUST be marked
    with decreasing FCN values, having the last fragment marked with FCN
+
+
+
+Zuniga, et al.            Expires 14 June 2023                  [Page 9]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
+
    = (All-1).  Hence, even though the No-ACK mode does not allow
    recovering missing fragments, it allows indicating implicitly the
    size of the expected packet to the Network and hence detect at the
@@ -481,7 +516,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  RuleID size: 3 bits
 
-   *  DTag size (T): 0 bits
+   *  DTag size (T): 0 bit
 
    *  Fragment Compressed Number (FCN) size (N): 5 bits
 
@@ -499,14 +534,11 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    The maximum SCHC Packet size is of 340 bytes.
 
+   Section Section 3.7.1 presents SCHC Fragment format examples and
+   Section Section 4.1 provides fragmentation examples, using Single-
+   byte SCHC Header No-ACK mode.
 
-
-Zuniga, et al.            Expires 14 April 2023                 [Page 9]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
-3.6.1.1.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header
+3.6.1.3.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header
 
    ACK-on-Error with single-byte header is RECOMMENDED for short to
    medium size packets that need to be sent reliably.  ACK-on-Error is
@@ -520,7 +552,15 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  Rule ID size: 3 bits
 
-   *  DTag size (T): 0 bits
+   *  DTag size (T): 0 bit
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 10]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
    *  Window index (W) size (M): 2 bits
 
@@ -542,7 +582,11 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  RCS size: 3 bits
 
-3.6.1.2.  Two-byte SCHC Header for Uplink Fragmentation
+   Section Section 3.7.2 presents SCHC Fragment format examples and
+   Section Section 4.2 provides fragmentation examples, using ACK-on-
+   Error with single-byte header.
+
+3.6.1.4.  Two-byte SCHC Header for Uplink Fragmentation
 
    ACK-on-Error with two-byte header is RECOMMENDED for medium-large
    size packets that need to be sent reliably.  ACK-on-Error is optimal
@@ -550,19 +594,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    in the lower capacity Downlink channel.  Also, Downlink messages can
    be sent asynchronously and opportunistically.
 
-
-
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 10]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
-3.6.1.2.1.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
+3.6.1.4.1.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1
 
    In order to allow transmission of medium-large packets/files up to
    480 bytes long, the SCHC Uplink Fragmentation Header size is
@@ -570,13 +602,21 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  Rule ID size is: 6 bits
 
-   *  DTag size (T) is: 0 bits
+   *  DTag size (T) is: 0 bit
 
    *  Window index (W) size (M): 2 bits
 
    *  Fragment Compressed Number (FCN) size (N): 4 bits.
 
    *  MAX_ACK_REQUESTS: 5
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 11]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
    *  WINDOW_SIZE: 12 (with a maximum value of FCN=0b1011)
 
@@ -596,7 +636,10 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    2) with bitmaps of size 12 can be fitted in a single SCHC Compound
    ACK.
 
-3.6.1.2.2.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
+   Section Section 3.7.3 presents SCHC Fragment format examples, using
+   ACK-on-Error with two-byte header Option 1.
+
+3.6.1.4.2.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
    In order to allow transmission of very large packets/files up to 2400
    bytes long, the SCHC Uplink Fragmentation Header size is RECOMMENDED
@@ -604,19 +647,11 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  Rule ID size is: 8 bits
 
-   *  DTag size (T) is: 0 bits
+   *  DTag size (T) is: 0 bit
 
    *  Window index (W) size (M): 3 bits
 
    *  Fragment Compressed Number (FCN) size (N): 5 bits.
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 11]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
 
    *  MAX_ACK_REQUESTS: 5
 
@@ -632,15 +667,25 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    *  Inactivity Timer: Application-dependent.  The RECOMMENDED value is
       12 hours.
 
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 12]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
+
    *  RCS size: 5 bits
 
-3.6.1.3.  All-1 and RCS behaviour
+   Section Section 3.7.4 presents SCHC Fragment format examples, using
+   ACK-on-Error with two-byte header Option 1.
+
+3.6.1.5.  All-1 and RCS behaviour
 
    For ACK-on-Error, as defined in [RFC8724], it is expected that the
    last SCHC fragment of the last window will always be delivered with
-   an All-1 FCN.  Since this last window may not be full (i.e. it may be
-   comprised of less than WINDOW_SIZE fragments), an All-1 fragment may
-   follow a value of FCN higher than 1 (0b01).  In this case, the
+   an All-1 FCN.  Since this last window may not be full (i.e., it may
+   be comprised of less than WINDOW_SIZE fragments), an All-1 fragment
+   may follow a value of FCN higher than 1 (0b01).  In this case, the
    receiver cannot determine from the FCN values alone whether there are
    or not any missing fragments right before the All-1 fragment.
 
@@ -666,14 +711,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    to avoid potentially high delay for fragmented datagram transmission
    in the Downlink, the fragment receiver MAY perform an Uplink
    transmission as soon as possible after reception of a Downlink
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 12]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    fragment that is not the last one.  Such Uplink transmission MAY be
    triggered by sending a SCHC message, such as a SCHC ACK.  However,
    other data messages can equally be used to trigger Downlink
@@ -682,6 +719,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    every 24 hours when no SCHC session is started.  The use or not of
    this Uplink transmission will depend on application specific
    requirements.
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 13]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
    Sigfox Downlink messages are fixed in size, and as described in
    [RFC8376] they can carry up to 8 bytes payload.  Hence, a single SCHC
@@ -696,9 +743,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  RuleID size: 3 bits
 
-   *  DTag size (T): 0 bits
+   *  DTag size (T): 0 bit
 
-   *  Window index (W) size (M) is: 0 bits
+   *  Window index (W) size (M) is: 0 bit
 
    *  Fragment Compressed Number (FCN) size (N): 5 bits
 
@@ -718,18 +765,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
    *  RCS size: 5 bits
 
-
-
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 13]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
 3.7.  SCHC-over-Sigfox F/R Message Formats
 
    This section depicts the different formats of SCHC Fragment, SCHC ACK
@@ -738,6 +773,18 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    Sigfox.
 
 3.7.1.  Uplink No-ACK Mode: Single-byte SCHC Header
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 14]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
 3.7.1.1.  Regular SCHC Fragment
 
@@ -778,20 +825,22 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    MAY have the last tile of the SCHC Packet.  The SCHC Sender-Abort
    message header size is of 1 byte, with no padding bits.
 
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 14]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    For the All-1 message to be distinguishable from the Sender-Abort
    message, the Sender-Abort message MUST be of 1 byte (only header with
    no padding).  This way, the minimum size of the All-1 is 2 bytes, and
    the Sender-Abort message is 1 byte.
 
 3.7.1.3.  SCHC Sender-Abort Message format
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 15]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
                    Sender-Abort
               |------ Header ------|
@@ -831,17 +880,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    MAY contain the last tile of the SCHC Packet.  Padding MUST NOT be
    added, as the resulting size is L2-word-multiple.
 
-
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 15]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
      |-------------  SCHC Fragment Header -----------|
      +-----------------------------------------------+--------------+
      | RuleID |   W    | FCN=ALL-1 |  RCS   |b'00000 |   Payload    |
@@ -849,6 +887,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
      | 3 bits | 2 bits |  3 bits   | 3 bits | 5 bits | 0 to 80 bits |
 
              Figure 7: All-1 SCHC Message format with last tile
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 16]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
    As per [RFC8724] the All-1 must be distinguishable from a SCHC
    Sender-Abort message (with same Rule ID, M, and N values).  The All-1
@@ -889,15 +937,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
                Figure 9: SCHC Compound ACK message format
 
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 16]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
 3.7.2.4.  SCHC Sender-Abort Message format
 
                    |---- Sender-Abort Header ----|
@@ -907,6 +946,13 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
                    | 3 bits | 2 bits |  3 bits   |
 
                 Figure 10: SCHC Sender-Abort message format
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 17]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
 3.7.2.5.  SCHC Receiver-Abort Message format
 
@@ -946,14 +992,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    Figure 13 shows an example of the All-1 message.  The All-1 message
    MUST contain the last tile of the SCHC Packet.
 
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 17]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    The All-1 message Fragment Header contains a RCS of 4 bits to
    complete the two-byte size.  The size of the last tile ranges from 8
    to 80 bits.
@@ -963,6 +1001,14 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
            | RuleID |    W   | FCN=ALL-1 |  RCS   |    Payload   |
            +--------+--------+-----------+--------+--------------+
            | 6 bits | 2 bits |  4 bits   | 4 bits | 8 to 80 bits |
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 18]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
             Figure 13: All-1 SCHC message format with last tile
 
@@ -1000,16 +1046,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    (Padding bits must be 0) to complement the 64 bits required by the
    Sigfox payload.
 
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 18]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    |--- SCHC ACK Header ---|- W=w1 -|...|---- W=wi -----|
    +--------+------+-------+--------+...+------+--------+------+-------+
    | RuleID |W=b'w1| C=b'0 | Bitmap |...|W=b'wi| Bitmap | b'00 |b'0-pad|
@@ -1019,6 +1055,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
       Losses are found in windows W = w1,...,wi; where w1<w2<...<wi
 
                 Figure 15: SCHC Compound ACK message format
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 19]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
        |- SCHC ACK Header -|- W=0 -|      |- W=1 -|...
        +------+------+-----+-------+------+-------+...
@@ -1058,14 +1104,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
                Figure 18: SCHC Receiver-Abort message format
 
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 19]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
 3.7.4.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2
 
 3.7.4.1.  Regular SCHC Fragment
@@ -1073,6 +1111,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    Figure 19 shows an example of a regular SCHC fragment for all
    fragments except the last one.  The penultimate tile of a SCHC Packet
    is of the regular size.
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 20]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
               |-- SCHC Fragment Header --|
               +--------------------------+---------+
@@ -1114,19 +1162,21 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    no padding).  This way, the minimum size of the All-1 is 3 bytes, and
    the Sender-Abort message is 2 bytes.
 
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 20]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
 3.7.4.3.  SCHC ACK Format
 
    Figure 21 shows the SCHC ACK format when all fragments have been
    correctly received (C=1).  Padding MUST be added to complete the
    64-bit Sigfox Downlink frame payload size.
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 21]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
                |---- SCHC ACK Header ----|
                +-------------------------+---------+
@@ -1167,17 +1217,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 3.7.4.5.  SCHC Receiver-Abort Message
 
-
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 21]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
      |-- Receiver-Abort Header -|
      +-----------------------------------+-----------------+---------+
      | RuleID | W=b'111 | C=b'1 | b'1111 |  0xFF (all 1's) | b'0-pad |
@@ -1186,6 +1225,14 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
                  next L2 Word boundary ->| <-- L2 Word --> |
 
                Figure 24: SCHC Receiver-Abort message format
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 22]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
 3.7.5.  Downlink ACK-Always Mode: Single-byte SCHC Header
 
@@ -1227,13 +1274,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
             Figure 26: All-1 SCHC message format with last tile
 
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 22]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    As per [RFC8724] the All-1 must be distinguishable from the a SCHC
    Sender-Abort message (with same Rule ID and N values).  The SCHC
    Sender-Abort message header size is of 1 byte, with no padding bits.
@@ -1242,6 +1282,13 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    message, the Sender-Abort message MUST be of 1 byte (only header with
    no padding).  This way, the minimum size of the All-1 is 2 bytes, and
    the Sender-Abort message is 1 bytes.
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 23]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
 
 3.7.5.3.  SCHC ACK Format
 
@@ -1280,16 +1327,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 3.7.5.5.  SCHC Receiver-Abort Message
 
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 23]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
          Receiver-Abort
        |---  Header  ---|
        +----------------+--------+-----------------+
@@ -1299,63 +1336,31 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
                Figure 30: SCHC Receiver-Abort message format
 
-3.8.  SCHC-Sender Abort
 
-   *  As defined in [RFC8724], a SCHC-Sender Abort can be triggered when
-      the number of SCHC ACK REQ attempts is greater than or equal to
-      MAX_ACK_REQUESTS.  In the case of SCHC/Sigfox, a SCHC-Sender Abort
-      MUST be sent if the number of repeated All-1s (i.e., with the same
-      bitmap) sent in sequence is greater than or equal to
-      MAX_ACK_REQUESTS.
 
-3.9.  SCHC-Receiver Abort
 
-   *  As defined in [RFC8724], a SCHC-Receiver Abort is triggered when
-      the receiver has no RuleID and DTag pairs available for a new
-      session.  In the case of SCHC/Sigfox a SCHC-Receiver Abort MUST be
-      sent if, for a single device, all the RuleIDs are being processed
-      by the receiver (i.e., have an active session) at a certain time
-      and a new one is requested, or if the RuleID of the fragment is
-      not valid.
 
-   *  A SCHC-Receiver Abort MUST be triggered when the Inactivity Timer
-      expires.
 
-   *  MAX_ACK_REQUESTS can be increase when facing high error rates.
+Zuniga, et al.            Expires 14 June 2023                 [Page 24]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
-   *  Although a SCHC-Receiver Abort can be triggered at any point in
-      time, a SCHC-Receiver Abort Downlink message MUST only be sent
-      when there is a Downlink transmission opportunity.
 
-3.10.  Padding
+3.8.  Padding
 
    The Sigfox payload fields have different characteristics in Uplink
    and Downlink.
 
-
-
-
-
-
-
-
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 24]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    Uplink frames can contain a payload size from 0 to 12 bytes.  The
    Sigfox radio protocol allows sending zero bits, one single bit of
-   information for binary applications (e.g. status), or an integer
+   information for binary applications (e.g., status), or an integer
    number of bytes.  Therefore, for 2 or more bits of payload it is
    required to add padding to the next integer number of bytes.  The
    reason for this flexibility is to optimize transmission time and
    hence save battery consumption at the device.
 
    Downlink frames on the other hand have a fixed length.  The payload
-   length MUST be 64 bits (i.e. 8 bytes).  Hence, if less information
+   length MUST be 64 bits (i.e., 8 bytes).  Hence, if less information
    bits are to be transmitted, padding MUST be used with bits equal to
    0.
 
@@ -1389,24 +1394,25 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
                      Figure 31: Uplink No-ACK No-Losses
 
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 25]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
+
    When the first SCHC fragment is received, the Receiver can calculate
    the total number of SCHC fragments that the SCHC Packet is composed
    of.  For example, if the first fragment is numbered with FCN=6, the
    receiver can expect six more messages/fragments (i.e., with FCN going
    from 5 downwards, and the last fragment with a FCN equal to 15).
 
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 25]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    Case losses on any fragment except the first.
 
    Sender                     Receiver
      |-------FCN=6,Seq=1-------->|
-     |-------FCN=5,Seq=2----X--->|
+     |-------FCN=5,Seq=2----X    |
      |-------FCN=4,Seq=3-------->|
      |-------FCN=3,Seq=4-------->|
      |-------FCN=2,Seq=5-------->|
@@ -1432,6 +1438,26 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    the figures shows where the sender should enable the Downlink, and
    wait for an ACK.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 26]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
+
            Sender                    Receiver
              |-----W=0,FCN=6,Seq=1----->|
              |-----W=0,FCN=5,Seq=2----->|
@@ -1451,13 +1477,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
                   Figure 33: Uplink ACK-on-Error No-Losses
 
-
-
-Zuniga, et al.            Expires 14 April 2023                [Page 26]
-
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
-
-
    Case Fragment losses in first window
 
    In this case, fragments are lost in the first window (W=0).  After
@@ -1472,12 +1491,35 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    received with C=1.  Note that the SCHC Compound ACK also uses a
    Sequence Number.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 27]
+
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
+
+
           Sender                    Receiver
             |-----W=0,FCN=6,Seq=1----->|
-            |-----W=0,FCN=5,Seq=2--X-->|
+            |-----W=0,FCN=5,Seq=2--X   |
             |-----W=0,FCN=4,Seq=3----->|
             |-----W=0,FCN=3,Seq=4----->|
-            |-----W=0,FCN=2,Seq=5--X-->|                    __
+            |-----W=0,FCN=2,Seq=5--X   |                    __
             |-----W=0,FCN=1,Seq=6----->|                   | W=0
   DL Enable |-----W=0,FCN=0,Seq=7----->| Missing Fragments<- FCN=5,Seq=2
             |<- Compound ACK,W=0,C=0 --| Bitmap:1011011    | FCN=2,Seq=5
@@ -1509,9 +1551,23 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 27]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 14 June 2023                 [Page 28]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
            Sender                    Receiver
@@ -1521,7 +1577,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
              |-----W=0,FCN=3,Seq=4----->|
              |-----W=0,FCN=2,Seq=5----->|
              |-----W=0,FCN=1,Seq=6----->| DL Enable
-                     |-----W=0,FCN=0,Seq=7--X-->|
+                     |-----W=0,FCN=0,Seq=7--X   |
          (no ACK)
              |-----W=1,FCN=6,Seq=8----->|
              |-----W=1,FCN=5,Seq=9----->|                    __
@@ -1542,12 +1598,12 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
            Sender                    Receiver
              |-----W=0,FCN=6,Seq=1----->|
-             |-----W=0,FCN=5,Seq=2--X-->|
+             |-----W=0,FCN=5,Seq=2--X   |
              |-----W=0,FCN=4,Seq=3----->|
-             |-----W=0,FCN=3,Seq=4--X-->|
+             |-----W=0,FCN=3,Seq=4--X   |
              |-----W=0,FCN=2,Seq=5----->|
              |-----W=0,FCN=1,Seq=6----->|
-   DL Enable |-----W=0,FCN=0,Seq=7--X-->|
+   DL Enable |-----W=0,FCN=0,Seq=7--X   |
          (no ACK)
              |-----W=1,FCN=6,Seq=8----->|
              |-----W=1,FCN=5,Seq=9----->|                    __
@@ -1565,9 +1621,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 28]
+Zuniga, et al.            Expires 14 June 2023                 [Page 29]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
       Figure 36: Uplink ACK-on-Error All-0 and other Fragments Lost on
@@ -1581,16 +1637,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
           Sender                    Receiver
             |-----W=0,FCN=6,Seq=1----->|
-            |-----W=0,FCN=5,Seq=2--X-->|
+            |-----W=0,FCN=5,Seq=2--X   |
             |-----W=0,FCN=4,Seq=3----->|
-            |-----W=0,FCN=3,Seq=4--X-->|                    __
+            |-----W=0,FCN=3,Seq=4--X   |                    __
             |-----W=0,FCN=2,Seq=5----->|                   |W=0
             |-----W=0,FCN=1,Seq=6----->|                   |FCN=5,Seq=2
-  DL enable |-----W=0,FCN=0,Seq=7--X-->|                   |FCN=3,Seq=4
+  DL enable |-----W=0,FCN=0,Seq=7--X   |                   |FCN=3,Seq=4
        (no ACK)                                            |FCN=0,Seq=7
-            |-----W=1,FCN=6,Seq=8--X-->|                   |W=1
+            |-----W=1,FCN=6,Seq=8--X   |                   |W=1
             |-----W=1,FCN=5,Seq=9----->|                   |FCN=6,Seq=8
-            |-----W=1,FCN=4,Seq=10-X-->|                   |FCN=4,Seq=10
+            |-----W=1,FCN=4,Seq=10-X   |                   |FCN=4,Seq=10
   DL enable |-----W=1,FCN=7,Seq=11---->| Missing Fragment<-|__
             |<-Compoud ACK,W=0,1, C=0--| Bitmap W=0:1010110
             |-----W=0,FCN=5,Seq=13---->|        W=1:0100001
@@ -1621,21 +1677,21 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 29]
+Zuniga, et al.            Expires 14 June 2023                 [Page 30]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
           Sender                    Receiver
             |-----W=0,FCN=6,Seq=1----->|
-            |-----W=0,FCN=5,Seq=2--X-->|
+            |-----W=0,FCN=5,Seq=2--X   |
             |-----W=0,FCN=4,Seq=3----->|
-            |-----W=0,FCN=3,Seq=4--X-->|
+            |-----W=0,FCN=3,Seq=4--X   |
             |-----W=0,FCN=2,Seq=5----->|                     __
             |-----W=0,FCN=1,Seq=6----->|                    |W=0
-  DL enable |-----W=0,FCN=0,Seq=7--X-->|                    |FCN=5,Seq=2
+  DL enable |-----W=0,FCN=0,Seq=7--X   |                    |FCN=5,Seq=2
          (no ACK)                                           |FCN=3,Seq=4
-            |-----W=1,FCN=6,Seq=8--X-->|                    |FCN=0,Seq=7
+            |-----W=1,FCN=6,Seq=8--X   |                    |FCN=0,Seq=7
   DL enable |-----W=1,FCN=7,Seq=9----->| Missing Fragment--> W=1
             |<-Compound ACK,W=0,1, C=0-| Bitmap W=0:1010110,|FCN=6,Seq=8
             |-----W=0,FCN=5,Seq=11---->|        W=1:0000001 |__
@@ -1677,9 +1733,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 30]
+Zuniga, et al.            Expires 14 June 2023                 [Page 31]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
           Sender                     Receiver
@@ -1695,7 +1751,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
              |-----W=1,FCN=5,Seq=9----->|
              |-----W=1,FCN=4,Seq=10---->|
    DL Enable |-----W=1,FCN=7,Seq=11---->| All fragments received
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |-----W=1,FCN=7,Seq=13---->| RESEND ACK
              |<-Compound ACK,W=1,C=1 ---| C=1
            (End)
@@ -1712,14 +1768,14 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
           Sender                            Receiver
             |-----W=0,FCN=6,Seq=1----->|
-            |-----W=0,FCN=5,Seq=2--X-->|
+            |-----W=0,FCN=5,Seq=2--X   |
             |-----W=0,FCN=4,Seq=3----->|
-            |-----W=0,FCN=3,Seq=4--X-->|
+            |-----W=0,FCN=3,Seq=4--X   |
             |-----W=0,FCN=2,Seq=5----->|
             |-----W=0,FCN=1,Seq=6----->|                     __
   DL enable |-----W=0,FCN=0,Seq=7----->| Waits for          |W=0
          (no ACK)                       next DL opportunity |FCN=5,Seq=2
-            |-----W=1,FCN=6,Seq=8--X-->|                    |FCN=3,Seq=4
+            |-----W=1,FCN=6,Seq=8--X   |                    |FCN=3,Seq=4
   DL enable |-----W=1,FCN=7,Seq=9----->| Missing Fragment<-- W=1
             |<-Compound ACK,W=0,1, C=0-| Bitmap W=0:1010110 |FCN=6,Seq=8
             |-----W=0,FCN=5,Seq=11---->|        W=1:0000001  --
@@ -1733,9 +1789,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 31]
+Zuniga, et al.            Expires 14 June 2023                 [Page 32]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
     Figure 40: Uplink ACK-on-Error Fragments Lost on First and Second
@@ -1765,17 +1821,17 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
              |-----W=1,FCN=5,Seq=9----->|
              |-----W=1,FCN=4,Seq=10---->|
    DL Enable |-----W=1,FCN=7,Seq=11---->| All fragments received
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |-----W=1,FCN=7,Seq=13---->| RESEND ACK  (1)
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |-----W=1,FCN=7,Seq=15---->| RESEND ACK  (2)
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |-----W=1,FCN=7,Seq=17---->| RESEND ACK  (3)
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |-----W=1,FCN=7,Seq=18---->| RESEND ACK  (4)
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |-----W=1,FCN=7,Seq=19---->| RESEND ACK  (5)
-             |<-Compound ACK,W=1,C=1 -X-| C=1
+             | X--Compound ACK,W=1,C=1 -| C=1
    DL Enable |----Sender-Abort,Seq=20-->| exit with error condition
            (End)
 
@@ -1789,9 +1845,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 32]
+Zuniga, et al.            Expires 14 June 2023                 [Page 33]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
    The receiver may need to send a Receiver-Abort to stop the current
@@ -1819,7 +1875,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
    based message authentication code, ensuring that the message has been
    generated and sent by the device with the ID claimed in the message.
 
-   Application data can be encrypted at the application level or not,
+   Application data can be encrypted at the application layer or not,
    depending on the criticality of the use case.  This flexibility
    allows providing a balance between cost and effort vs. risk.  AES-128
    in counter mode is used for encryption.  Cryptographic keys are
@@ -1845,9 +1901,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 33]
+Zuniga, et al.            Expires 14 June 2023                 [Page 34]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
 7.  Acknowledgements
@@ -1880,8 +1936,8 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
               Zuniga, JC., Gomez, C., Aguilar, S., Toutain, L.,
               Cespedes, S., and D. Wistuba, "SCHC Compound ACK", Work in
               Progress, Internet-Draft, draft-ietf-lpwan-schc-compound-
-              ack-06, August 2021, <http://www.ietf.org/internet-drafts/
-              draft-ietf-lpwan-schc-compound-ack-06.txt>.
+              ack-07, August 2021, <http://www.ietf.org/internet-drafts/
+              draft-ietf-lpwan-schc-compound-ack-07.txt>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -1901,9 +1957,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 34]
+Zuniga, et al.            Expires 14 June 2023                 [Page 35]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
 8.2.  Informative References
@@ -1957,9 +2013,9 @@ Authors' Addresses
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 35]
+Zuniga, et al.            Expires 14 June 2023                 [Page 36]
 
-Internet-Draft           SCHC over Sigfox LPWAN             October 2022
+Internet-Draft           SCHC over Sigfox LPWAN            December 2022
 
 
    Sandra Cespedes
@@ -2013,4 +2069,4 @@ Internet-Draft           SCHC over Sigfox LPWAN             October 2022
 
 
 
-Zuniga, et al.            Expires 14 April 2023                [Page 36]
+Zuniga, et al.            Expires 14 June 2023                 [Page 37]
