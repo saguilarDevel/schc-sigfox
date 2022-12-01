@@ -408,7 +408,7 @@ mode can be defined so that every Sigfox message always carries one SCHC Tile.</
 
 <section anchor="schc_sender_abort" title="SCHC-Sender Abort">
 
-<t>As defined in <xref target="RFC8724"/>, a SCHC Sender-Abort can be triggered when the number of SCHC ACK REQ attempts is greater than or equal to MAX_ACK_REQUESTS.
+<t>As defined in <xref target="RFC8724"/>, A SCHC-Sender Abort MUST be sent if the number of repeated All-1s sent in sequence without a Compound ACK reception inbetween is greater than or equal to MAX_ACK_REQUESTS.
 In the case of SCHC/Sigfox, a SCHC-Sender Abort MUST be sent if the number of repeated All-1s (i.e., with the same bitmap) sent in sequence is greater than or equal to MAX_ACK_REQUESTS. </t>
 
 <!--<t>The Attempts counter MUST be reset when a SCHC ACK is successfully received.</t>-->
@@ -1704,9 +1704,10 @@ ensuring that the message has been generated and sent by the device with the ID 
 <t>Application data can be encrypted at the application layer or not, depending on the criticality of the use case.
 This flexibility allows providing a balance between cost and effort vs. risk.  
 AES-128 in counter mode is used for encryption.  Cryptographic keys are independent for each device. These keys are associated with the device ID and separate integrity and 
-confidentiality keys are pre-provisioned. A confidentiality key is only provisioned if confidentiality is to be used.</t>
+confidentiality keys are pre-provisioned.
+    A authentication key is only provisioned if confidentiality is to be used.</t>
 
-<t>The radio protocol has protections against reply attacks, and the cloud-based core network provides firewalling protection against undesired incoming communications.</t>
+<t>The radio protocol has protections against replay attacks, and the cloud-based core network provides firewalling protection against undesired incoming communications.</t>
 
 
 <!--
