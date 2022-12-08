@@ -417,7 +417,7 @@ mode can be defined so that every Sigfox message always carries one SCHC Tile.</
 <section anchor="schc_sender_abort" title="SCHC-Sender Abort">
 
 <t>As defined in <xref target="RFC8724"/>, a SCHC-Sender Abort can be triggered when the number of SCHC ACK REQ attempts is greater than or equal to MAX_ACK_REQUESTS.
-In the case of SCHC over Sigfox, a SCHC-Sender Abort MUST be sent if the number of repeated All-1s sent in sequence without a Compound ACK reception inbetween is greater than or equal to MAX_ACK_REQUESTS,
+In the case of SCHC over Sigfox, a SCHC-Sender Abort MUST be sent if the number of repeated All-1s sent in sequence without a Compound ACK reception inbetween is greater than or equal to MAX_ACK_REQUESTS.
 <!--    be sent if the number of repeated All-1s (i.e., with the same bitmap) sent in sequence is greater than or equal to MAX_ACK_REQUESTS. -->
 </t>
 <!--<t>The Attempts counter MUST be reset when a SCHC ACK is successfully received.</t>-->

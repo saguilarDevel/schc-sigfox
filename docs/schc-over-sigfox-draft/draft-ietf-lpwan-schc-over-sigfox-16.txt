@@ -468,7 +468,7 @@ Internet-Draft           SCHC over Sigfox LPWAN            December 2022
    MAX_ACK_REQUESTS.  In the case of SCHC over Sigfox, a SCHC-Sender
    Abort MUST be sent if the number of repeated All-1s sent in sequence
    without a Compound ACK reception inbetween is greater than or equal
-   to MAX_ACK_REQUESTS,
+   to MAX_ACK_REQUESTS.
 
 3.6.1.2.  SCHC Receiver-Abort
 
