@@ -102,7 +102,7 @@
       </address>
     </author>
 
-    <date year="2022" month="December" day="13"/>
+    <date year="2022" month="December" day="15"/>
 
     
     <workgroup>lpwan Working Group</workgroup>
@@ -159,7 +159,8 @@ that can be used when SCHC is used on top of a specific LPWAN technology.
     <t>
     Sigfox is an LPWAN technology that offers energy-efficient connectivity for devices at a very low cost.
     Sigfox brings a worldwide network composed of Base Stations that receive short (12 bytes) uplink messages sent by devices over the long-range Sigfox radio protocol.
-    Base Stations then forward messages to the Sigfox Cloud infrastructure for further processing and final delivery to the customer.
+    Base Stations then forward messages to the Sigfox Cloud infrastructure for further processing (e.g. to offer geolocation services) and final delivery to the customer.
+        Base Stations also relay downlink messages (8 bytes) sent by the Sigfox Cloud to the devices, downlink messages being generated when devices explicitly request for it with a flag in an uplink message.
     With SCHC functionalities, the Sigfox network offers more reliable communications (recovery of lost messages) and is able to convey extended-size payloads (fragmentation/reassembly).
 </t>
 <t>This document describes the recommended parameters, settings, and modes of operation to be used when SCHC is implemented over a Sigfox LPWAN. This set of parameters 
