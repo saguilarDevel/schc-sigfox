@@ -315,21 +315,21 @@ A detailed description of the Sigfox Radio Protocol can be found in <xref target
 
 
 
-<section anchor="dl_ack" title="SCHC-ACK on Downlink">
+<section anchor="dl_ack" title="SCHC ACK on Downlink">
 
 <t>
 As explained previously, Downlink transmissions are Device-driven and can only take place following a specific Uplink transmission that indicates and allows a following Downlink opportunity.
 For this reason, when SCHC bidirectional services are used (e.g., Ack-on-Error fragmentation mode) the SCHC protocol implementation needs to consider the times when a Downlink message
-(e.g., SCHC-ACK) can be sent and/or received.
+(e.g., SCHC ACK) can be sent and/or received.
 </t>
 
 <t>
 For the Uplink ACK-on-Error fragmentation mode, a Downlink opportunity MUST be indicated by the last fragment of every window, which is signal by a specific the Fragment Compressed Number (FCN) value, i.e., FCN = All-0, or FCN = All-1. The FCN is the tile index in a specific window. FCN and window number combination allows to uniquely identified a SCHC Fragment as explained in <xref target="RFC8724"/>.
     The Device sends the fragments in sequence and, after
-transmitting the FCN = All-0 or FCN = All-1, it opens up a reception opportunity. The Network SCHC can then decide to respond at that opportunity (or wait for a further one) with a SCHC-ACK indicating 
-in case there are missing fragments from the current or previous windows. If there is no SCHC-ACK to be sent, or if the network decides to wait for a further Downlink transmission opportunity, then no
+transmitting the FCN = All-0 or FCN = All-1, it opens up a reception opportunity. The Network SCHC can then decide to respond at that opportunity (or wait for a further one) with a SCHC ACK indicating
+in case there are missing fragments from the current or previous windows. If there is no SCHC ACK to be sent, or if the network decides to wait for a further Downlink transmission opportunity, then no
 Downlink transmission takes place at that opportunity and after a timeout the Uplink transmissions continue. Intermediate SCHC fragments with FCN different from All-0 or All-1 MUST NOT use the Downlink request flag
-to request a SCHC-ACK. 
+to request a SCHC ACK.
 </t>
 
 </section>
