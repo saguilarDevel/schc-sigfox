@@ -161,7 +161,7 @@ that can be used when SCHC is used on top of a specific LPWAN technology.
     Sigfox brings a worldwide network composed of Base Stations that receive short (12 bytes) uplink messages sent by devices over the long-range Sigfox radio protocol.
     Base Stations then forward messages to the Sigfox Cloud infrastructure for further processing (e.g. to offer geolocation services) and final delivery to the customer.
         Base Stations also relay downlink messages (8 bytes) sent by the Sigfox Cloud to the devices, downlink messages being generated when devices explicitly request for it with a flag in an uplink message.
-    With SCHC functionalities, the Sigfox network offers more reliable communications (recovery of lost messages) and is able to convey extended-size payloads (fragmentation/reassembly).
+    With SCHC functionalities, the Sigfox network offers more reliable communications (recovery of lost messages) and is able to convey extended-size payloads (fragmentation/reassembly) <xref target="sigfox-spec"/>.
 </t>
 <t>This document describes the recommended parameters, settings, and modes of operation to be used when SCHC is implemented over a Sigfox LPWAN. This set of parameters 
 are also known as a "SCHC over Sigfox profile" or simply "SCHC/Sigfox."
@@ -186,7 +186,8 @@ in <xref target="RFC8724"/>.
 
 <t>The Generic SCHC Framework described in <xref target="RFC8724"/> takes advantage of previous knowledge of traffic flows existing in LPWAN applications to avoid context synchronization.</t>
 
-<t>Contexts need to be stored and pre-configured on both ends. This can be done either by using a provisioning protocol, by out-of-band means, or by
+<t>Contexts need to be stored and pre-configured on both ends.
+    This can be done either by using a provisioning protocol, by out-of-band means, or by
 pre-provisioning them (e.g., at manufacturing time). The way contexts are configured and stored on both ends is out of the scope of this document.</t>
 
 
@@ -214,8 +215,9 @@ Sigfox cloud-based Network. </t>
         $   |         |     |   Network    |     | Network |    .
         +~~ |Sigfox BS|     |   Gateway    |     |  SCHC   |    .
             |  (RGW)  | === |    (NGW)     | === |C/D & F/R|.....
-            +---------+     +--------------+     +---------+  IP-based
-                                                                Network
+            |         |     | Sigfox Cloud |     |         |   IP-based
+            +---------+     +--------------+     +---------+   Network
+
 
 Legend:
 $, ~ : Radio link
@@ -228,7 +230,7 @@ $, ~ : Radio link
 The NGW (or cloud-based Sigfox Core Network) is a single entity that connects to all RGWs (Sigfox Base Stations) in the world, providing hence a global single star network topology.</t>
 
 <t>The Sigfox Device sends application packets that are compressed and/or fragmented by a SCHC C/D + F/R to reduce headers size and/or fragment the packet.
-The resulting SCHC Message is sent over a layer two (L2) Sigfox frame to the Sigfox Base Stations, which then forward the SCHC Message to the Network Gateway (NGW).
+The resulting SCHC Message is sent over a layer two (L2) Sigfox frame to the Sigfox Base Stations, which then forwards the SCHC Message to the Network Gateway (NGW).
 The NGW then delivers the SCHC Message and associated gathered metadata to the Network SCHC C/D + F/R.</t>
 
 
@@ -244,7 +246,7 @@ the NGW and the SCHC C/D + F/R functions. After decompression and/or reassembly,
 <section anchor="uplink" title="Uplink">
 
 <t>Uplink Sigfox transmissions occur in repetitions over different times and frequencies. 
-Besides time and frequency diversities, the Sigfox network also provides space diversity, as potentially an Uplink message will be received by several base stations. </t>
+Besides time and frequency diversities, the Sigfox network also provides space diversity, as potentially an Uplink message will be received by several base stations. The uplink message size is 12 bytes in size.</t>
 
 <t>Since all messages are self-contained and base stations forward all these messages back to the same Sigfox Network, multiple input copies can be 
 combined at the NGW providing for extra reliability based on the triple diversity (i.e., time, space and frequency). 
@@ -262,7 +264,7 @@ callback/API with the following information:</t>
 <t>Message Payload</t> 
 <t>Message Timestamp</t> 
 <t>Device Geolocation (optional)</t>
-<t>RSSI (optional)</t>
+<t>Received Signal Strength Indicator (RSSI) (optional)</t>
 <t>Device Temperature (optional)</t>
 <t>Device Battery Voltage (optional)</t>
 </list></t>
@@ -278,6 +280,10 @@ Device has sent in the Uplink transmission.</t>
 <t>Only messages that have passed the L2 Cyclic Redundancy Check (CRC) at network reception are delivered by the Sigfox Network to the Network SCHC C/D + F/R.</t>
 
 <t>The L2 Word Size used by Sigfox is 1 byte (8 bits). </t>
+
+<t><xref target="SCHC-Message"/> shows a SCHC Message sent over Sigfox, where the SCHC Message could be a full SCHC Packet (e.g., compressed)
+or a SCHC Fragment (e.g., a piece of a bigger SCHC Packet).</t>
+
 <figure title="SCHC Message in Sigfox" anchor="SCHC-Message"><artwork><![CDATA[
 
 
@@ -287,16 +293,13 @@ Device has sent in the Uplink transmission.</t>
 
 ]]></artwork></figure>
 
-<t><xref target="SCHC-Message"/> shows a SCHC Message sent over Sigfox, where the SCHC Message could be a full SCHC Packet (e.g., compressed)
-or a SCHC Fragment (e.g., a piece of a bigger SCHC Packet).</t>
-
 </section>
 
 
 <section anchor="downlink" title="Downlink">
 
 <t>
-Downlink transmissions are Device-driven and can only take place following an Uplink communication that so indicates. Hence, a Sigfox Device explicitly indicates its intention to receive a Downlink message
+Downlink transmissions are Device-driven and can only take place following an Uplink communication that so indicates. Hence, a Sigfox Device explicitly indicates its intention to receive a Downlink message (with a size of 8 bytes)
 using a Downlink request flag when sending the preceding Uplink message to the network. The Downlink request flag is part of the Sigfox protocol headers. After completing the Uplink transmission, the Device opens a fixed window for Downlink reception.
 The delay and duration of the reception opportunity window have fixed values. If there is a Downlink message to be sent for this given Device (e.g., either
 a response to the Uplink message or queued information waiting to be transmitted), the network transmits this message to the Device during the reception window. If no message is received by the Device after
@@ -309,7 +312,7 @@ the reception opportunity window has elapsed, the Device closes the reception wi
 A detailed description of the Sigfox Radio Protocol can be found in <xref target="sigfox-spec"/> and a detailed description of the Sigfox callbacks/APIs can be found in <xref target="sigfox-callbacks"/>. Downlink request flag can be included in the information exchange between the Sigfox Network and Network SCHC.
 </t>
 
-</section>
+
 
 
 <section anchor="dl_ack" title="SCHC-ACK on Downlink">
@@ -331,7 +334,7 @@ to request a SCHC-ACK.
 
 </section>
 
-
+</section>
 
 <section anchor="schc-rules" title="SCHC Rules">
 
@@ -416,10 +419,10 @@ mode can be defined so that every Sigfox message always carries one SCHC Tile.</
 <t>When the ACK-on-Error mode is used for Uplink fragmentation, the SCHC Compound ACK defined in <xref target="I-D.ietf-lpwan-schc-compound-ack"/>) MUST be used in the Downlink responses.</t>
 
 
-<section anchor="schc_sender_abort" title="SCHC-Sender Abort">
+<section anchor="schc_sender_abort" title="SCHC Sender-Abort">
 
-<t>As defined in <xref target="RFC8724"/>, a SCHC-Sender Abort can be triggered when the number of SCHC ACK REQ attempts is greater than or equal to MAX_ACK_REQUESTS.
-In the case of SCHC over Sigfox, a SCHC-Sender Abort MUST be sent if the number of repeated All-1s sent in sequence, without a Compound ACK reception inbetween, is greater than or equal to MAX_ACK_REQUESTS.
+<t>As defined in <xref target="RFC8724"/>, a SCHC Sender-Abort can be triggered when the number of SCHC ACK REQ attempts is greater than or equal to MAX_ACK_REQUESTS.
+In the case of SCHC over Sigfox, a SCHC Sender-Abort MUST be sent if the number of repeated All-1s sent in sequence, without a Compound ACK reception inbetween, is greater than or equal to MAX_ACK_REQUESTS.
 <!--    be sent if the number of repeated All-1s (i.e., with the same bitmap) sent in sequence is greater than or equal to MAX_ACK_REQUESTS. -->
 </t>
 <!--<t>The Attempts counter MUST be reset when a SCHC ACK is successfully received.</t>-->
@@ -436,7 +439,7 @@ at a certain time and a new one is requested, or if the RuleID of the fragment i
 
 <t>A SCHC Receiver-Abort MUST be triggered when the Inactivity Timer expires. </t>
 
-<t>MAX_ACK_REQUESTS can be increase when facing high error rates. </t>
+<t>MAX_ACK_REQUESTS can be increased when facing high error rates. </t>
 
 <!--<t>A SCHC-Receiver Abort can be triggered when the number of ACK attempts is not strictly less than MAX_ACK_REQUESTS. In the case of SCHC/Sigfox, -->
 <!--a SCHC-Receiver Abort MUST be sent if the number of repeated SCHC ACKs sent in a row (i.e., synchronized with the ACK REQ case, and with identical bitmaps) -->
@@ -466,7 +469,7 @@ In case the FCN field is not used to indicate the size of the data packet, the N
 </t>
 
 <t>When using the Single-byte SCHC Header for Uplink Fragmentation, the
-     Fragmentation Header MUST be of 8 bit size, and the Fragment is composed as
+     Fragmentation Header MUST be of 8 bit size, and the Fragment header is composed as
      follows:</t>
 
 <t><list style="symbols">
@@ -639,11 +642,11 @@ single SCHC Compound ACK.</t>
  </section>
 
 
-<section anchor="all-1-behaviour" title="All-1 and RCS behaviour">
+<section anchor="all-1-behaviour" title="All-1 SCHC Fragment and RCS behaviour">
 
 
 <t>For ACK-on-Error, as defined in <xref target="RFC8724"/>, it is expected that the last SCHC fragment of the last window will always be delivered 
-with an All-1 FCN. Since this last window may not be full (i.e., it may be comprised of less than WINDOW_SIZE fragments), an All-1 fragment
+with an All-1 FCN. Since this last window may not be full (i.e., it may be composed of fewer than WINDOW_SIZE fragments), an All-1 fragment
 may follow a value of FCN higher than 1 (0b01). In this case, the receiver cannot determine from the FCN values alone
 whether there are or not any missing fragments right before the All-1 fragment.
 </t>
@@ -692,7 +695,9 @@ Note that ACK-on-Error does not guarantee Uplink feedback (since no SCHC ACK wil
 <t>Window index (W) size (M) is: 0 bit </t>
 
 <t>Fragment Compressed Number (FCN) size (N): 5 bits</t>
-
+</list></t>
+<t>Other F/R parameters MUST be configured as follows:</t>
+ <t><list style="symbols">
 <t>MAX_ACK_REQUESTS: 5</t>
 
 <t>WINDOW_SIZE: 31 (with a maximum value of FCN=0b11110)</t>
@@ -721,7 +726,7 @@ A size of 000 means that the full remaining frame is used to carry payload, a va
 
 
 
-<section anchor="schc-sigfox-message-formats" title="SCHC-over-Sigfox F/R Message Formats">
+<section anchor="schc-sigfox-message-formats" title="SCHC over Sigfox F/R Message Formats">
 
 <t>This section depicts the different formats of SCHC Fragment, SCHC ACK (including the SCHC Compound ACK 
 defined in <xref target="I-D.ietf-lpwan-schc-compound-ack"/>), and SCHC Abort used in SCHC over Sigfox.</t>
@@ -1013,7 +1018,7 @@ The SCHC Compound ACK can report up to 4 windows with losses. as shown in <xref 
 
 
 </section>
-<section anchor="opt-1-snd-abort-msg-2B" title="SCHC Sender-Abort Messages">
+<section anchor="opt-1-snd-abort-msg-2B" title="SCHC Sender-Abort Message Format">
 
 <t><figure title="SCHC Sender-Abort message format" anchor="opt-1-snd-abort-msg-format-2B"><artwork><![CDATA[
 
@@ -1028,7 +1033,7 @@ The SCHC Compound ACK can report up to 4 windows with losses. as shown in <xref 
 
 </section>
 
-<section anchor="opt-1-rcv-abort-msg-2B" title="SCHC Receiver-Abort Message">
+<section anchor="opt-1-rcv-abort-msg-2B" title="SCHC Receiver-Abort Message Format">
 
 <t><figure title="SCHC Receiver-Abort message format" anchor="opt-1-rcv-abort-msg-format-2B"><artwork><![CDATA[
 
@@ -1133,7 +1138,7 @@ the Sigfox payload.</t>
 
 </section>
 
-<section anchor="snd-abort-msg-2B" title="SCHC Sender-Abort Messages">
+<section anchor="snd-abort-msg-2B" title="SCHC Sender-Abort Message Format">
 
 <t><figure title="SCHC Sender-Abort message format" anchor="snd-abort-msg-format-2B"><artwork><![CDATA[
 
@@ -1148,7 +1153,7 @@ the Sigfox payload.</t>
 
 </section>
 
-<section anchor="rcv-abort-msg-2B" title="SCHC Receiver-Abort Message">
+<section anchor="rcv-abort-msg-2B" title="SCHC Receiver-Abort Message Format">
 
 <t><figure title="SCHC Receiver-Abort message format" anchor="rcv-abort-msg-format-2B"><artwork><![CDATA[
 
@@ -1245,7 +1250,7 @@ The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-comp
         <!--    End Section SCHC ACK Format-->
 </section>
 
-    <section anchor="DL-ACK-Always-1B-snd-abort-msg" title="SCHC Sender-Abort Messages">
+    <section anchor="DL-ACK-Always-1B-snd-abort-msg" title="SCHC Sender-Abort Message Format">
 
 <t><figure title="SCHC Sender-Abort message format" anchor="DL-ACK-Always-1B-snd-abort-msg-format"><artwork><![CDATA[
 
@@ -1258,10 +1263,10 @@ The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-comp
 
 ]]></artwork></figure></t>
 
-<!-- End Section SCHC Sender-Abort Messages-->
+<!-- End Section SCHC Sender-Abort Message Format-->
 </section>
 
-<section anchor="DL-ACK-Always-1B-rcv-abort-msg" title="SCHC Receiver-Abort Message">
+<section anchor="DL-ACK-Always-1B-rcv-abort-msg" title="SCHC Receiver-Abort Message Format">
 
 <t><figure title="SCHC Receiver-Abort message format" anchor="DL-ACK-Always-1B-rcv-abort-msg-format"><artwork><![CDATA[
 
@@ -1274,7 +1279,7 @@ The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-comp
 
 ]]></artwork></figure></t>
 
-<!-- End Section SCHC Receiver-Abort Message-->
+<!-- End Section SCHC Receiver-Abort Message Format-->
 </section>
 
 
@@ -1285,11 +1290,11 @@ The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-comp
 <!--    End of Section SCHC Fragment Message Formats-->
 </section>
 
-<!--<section anchor="schc_sender_abort" title="SCHC-Sender Abort">-->
+<!--<section anchor="schc_sender_abort" title="SCHC Sender-Abort">-->
 
 <!--<t><list style="symbols">-->
 <!--<t>As defined in <xref target="RFC8724"/>, a SCHC Sender-Abort can be triggered when the number of SCHC ACK REQ attempts is greater than or equal to MAX_ACK_REQUESTS. -->
-<!--In the case of SCHC/Sigfox, a SCHC-Sender Abort MUST be sent if the number of repeated All-1s (i.e., with the same bitmap) sent in sequence is greater than or equal to MAX_ACK_REQUESTS. </t>-->
+<!--In the case of SCHC/Sigfox, a SCHC Sender-Abort MUST be sent if the number of repeated All-1s (i.e., with the same bitmap) sent in sequence is greater than or equal to MAX_ACK_REQUESTS. </t>-->
 
 <!--&lt;!&ndash;<t>The Attempts counter MUST be reset when a SCHC ACK is successfully received.</t>&ndash;&gt;-->
 <!--</list></t>-->
@@ -1322,7 +1327,7 @@ The SCHC ACK message format is shown in <xref target="DL-ACK-Always-1B-schc-comp
 
 <t>The Sigfox payload fields have different characteristics in Uplink and Downlink.</t>
 
-<t>Uplink frames can contain a payload size from 0 to 12 bytes. The Sigfox radio protocol allows sending zero bits,  
+<t>Uplink messages can contain a payload size from 0 to 12 bytes. The Sigfox radio protocol allows sending zero bits,
 one single bit of information for binary applications (e.g., status), or an integer number of bytes.
 Therefore, for 2 or more bits of payload it is required to add padding to the next integer number of bytes. The reason for this 
 flexibility is to optimize transmission time and hence save battery consumption at the device.</t>
