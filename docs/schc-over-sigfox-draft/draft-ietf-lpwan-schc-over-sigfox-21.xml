@@ -102,7 +102,7 @@
       </address>
     </author>
 
-    <date year="2023" month="January" day="4"/>
+    <date year="2023" month="January" day="11"/>
 
     
     <workgroup>lpwan Working Group</workgroup>
@@ -158,9 +158,10 @@ that can be used when SCHC is used in conjunction with a specific LPWAN technolo
 </t>
     <t>
     Sigfox is an LPWAN technology that offers energy-efficient connectivity for devices at a very low cost.
-    Sigfox brings a very wide area network composed of Base Stations that receive short (12 bytes) uplink messages sent by devices over the long-range Sigfox radio protocol.
+    Sigfox complete documentation can be found in <xref target="sigfox-docs"/>.
+    Sigfox brings a very wide area network composed of Base Stations that receive short uplink messages (up to 12 bytes in size) sent by devices over the long-range Sigfox radio protocol, as described <xref target="RFC8376"/>.
     Base Stations then forward messages to the Sigfox Cloud infrastructure for further processing (e.g. to offer geolocation services) and final delivery to the customer.
-        Base Stations also relay downlink messages (8 bytes) sent by the Sigfox Cloud to the devices, downlink messages being generated when devices explicitly request for it with a flag in an uplink message.
+        Base Stations also relay downlink messages (with a fixed 8 bytes size) sent by the Sigfox Cloud to the devices, downlink messages being generated when devices explicitly request for it with a flag in an uplink message.
     With SCHC functionalities, the Sigfox network offers more reliable communications (including recovery of lost messages) and is able to convey extended-size payloads (allowing for fragmentation/reassembly of
 messages) <xref target="sigfox-spec"/>.
 </t>
@@ -176,8 +177,8 @@ messages) <xref target="sigfox-spec"/>.
    "OPTIONAL" in this document are to be interpreted as described in
    BCP 14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only when, they appear in all
    capitals, as shown here.</t>
-<t>It is assumed that the reader is familiar with the terms and mechanisms defined in <xref target="RFC8376"/> and 
-in <xref target="RFC8724"/>.
+<t>It is assumed that the reader is familiar with the terms and mechanisms defined in <xref target="RFC8376"/> and
+in <xref target="RFC8724"/>. Also, it is assumed that the reader is familiar with Sigfox terminology <xref target="sigfox-spec"/>.
 </t>
 
 </section>
@@ -248,7 +249,7 @@ the NGW and the SCHC C/D + F/R functions. After decompression and/or reassembly,
 <section anchor="uplink" title="Uplink">
 
 <t>Uplink Sigfox transmissions occur in repetitions over different times and frequencies. 
-Besides time and frequency diversities, the Sigfox network also provides spatial diversity, as potentially an Uplink message will be received by several base stations. The uplink message payload size is 12 bytes.</t>
+Besides time and frequency diversities, the Sigfox network also provides spatial diversity, as potentially an Uplink message will be received by several base stations. The uplink message application payload size can be up to 12 bytes.</t>
 
 <t>Since all messages are self-contained and base stations forward all these messages back to the same Sigfox Network, multiple input copies can be 
 combined at the NGW providing for extra reliability based on the triple diversity (i.e., time, space and frequency). 
@@ -351,6 +352,10 @@ the total size of the fragmentation header. For this reason, it is RECOMMENDED t
 RuleIDs can be used to differentiate data traffic classes (e.g.,  QoS, control vs. data, etc.), and data sessions.
 They can also be used to interleave simultaneous fragmentation sessions between a Device and the Network.
 </t>
+
+
+
+
 
 </section>
 
@@ -2047,14 +2052,23 @@ format, which is intended to reduce the number of Downlink transmissions (i.e., 
   </front>
 </reference>
 
-
+<?rfc include='reference.RFC.8376'?>
     </references>
 	
 	
 	<references title='Informative References'>
-<?rfc include='reference.RFC.8376'?>
 
 
+
+<reference anchor="sigfox-docs" target="https://support.sigfox.com/docs">
+  <front>
+    <title>Sigfox Documentation</title>
+    <author initials="" surname="Sigfox" fullname="Sigfox">
+      <organization></organization>
+    </author>
+    <date />
+  </front>
+</reference>
 
 <reference anchor="sigfox-callbacks" target="https://support.sigfox.com/docs/callbacks-documentation">
   <front>

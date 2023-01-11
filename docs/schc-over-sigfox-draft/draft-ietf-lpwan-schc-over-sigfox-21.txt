@@ -5,7 +5,7 @@
 lpwan Working Group                                           JC. Zuniga
 Internet-Draft                                                          
 Intended status: Standards Track                                C. Gomez
-Expires: 8 July 2023                                          S. Aguilar
+Expires: 15 July 2023                                         S. Aguilar
                                     Universitat Politecnica de Catalunya
                                                               L. Toutain
                                                           IMT-Atlantique
@@ -15,7 +15,7 @@ Expires: 8 July 2023                                          S. Aguilar
                                           NIC Labs, Universidad de Chile
                                                                 J. Boite
                                                          Unabiz (Sigfox)
-                                                          4 January 2023
+                                                         11 January 2023
 
 
                          SCHC over Sigfox LPWAN
@@ -45,7 +45,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 8 July 2023.
+   This Internet-Draft will expire on 15 July 2023.
 
 
 
@@ -53,7 +53,7 @@ Status of This Memo
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 1]
+Zuniga, et al.            Expires 15 July 2023                  [Page 1]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 2]
+Zuniga, et al.            Expires 15 July 2023                  [Page 2]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -131,19 +131,20 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    is used in conjunction with a specific LPWAN technology.
 
    Sigfox is an LPWAN technology that offers energy-efficient
-   connectivity for devices at a very low cost.  Sigfox brings a very
-   wide area network composed of Base Stations that receive short (12
-   bytes) uplink messages sent by devices over the long-range Sigfox
-   radio protocol.  Base Stations then forward messages to the Sigfox
-   Cloud infrastructure for further processing (e.g. to offer
-   geolocation services) and final delivery to the customer.  Base
-   Stations also relay downlink messages (8 bytes) sent by the Sigfox
-   Cloud to the devices, downlink messages being generated when devices
-   explicitly request for it with a flag in an uplink message.  With
-   SCHC functionalities, the Sigfox network offers more reliable
-   communications (including recovery of lost messages) and is able to
-   convey extended-size payloads (allowing for fragmentation/reassembly
-   of messages) [sigfox-spec].
+   connectivity for devices at a very low cost.  Sigfox complete
+   documentation can be found in [sigfox-docs].  Sigfox brings a very
+   wide area network composed of Base Stations that receive short uplink
+   messages (up to 12 bytes in size) sent by devices over the long-range
+   Sigfox radio protocol, as described [RFC8376].  Base Stations then
+   forward messages to the Sigfox Cloud infrastructure for further
+   processing (e.g. to offer geolocation services) and final delivery to
+   the customer.  Base Stations also relay downlink messages (with a
+   fixed 8 bytes size) sent by the Sigfox Cloud to the devices, downlink
+   messages being generated when devices explicitly request for it with
+   a flag in an uplink message.  With SCHC functionalities, the Sigfox
+   network offers more reliable communications (including recovery of
+   lost messages) and is able to convey extended-size payloads (allowing
+   for fragmentation/reassembly of messages) [sigfox-spec].
 
    This document describes the parameters, settings, and modes of
    operation to be used when SCHC is implemented over a Sigfox LPWAN.
@@ -158,14 +159,13 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    capitals, as shown here.
 
    It is assumed that the reader is familiar with the terms and
-   mechanisms defined in [RFC8376] and in [RFC8724].
+   mechanisms defined in [RFC8376] and in [RFC8724].  Also, it is
+   assumed that the reader is familiar with Sigfox terminology
+   [sigfox-spec].
 
 
 
-
-
-
-Zuniga, et al.             Expires 8 July 2023                  [Page 3]
+Zuniga, et al.            Expires 15 July 2023                  [Page 3]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -221,7 +221,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 4]
+Zuniga, et al.            Expires 15 July 2023                  [Page 4]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -261,7 +261,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    and frequencies.  Besides time and frequency diversities, the Sigfox
    network also provides spatial diversity, as potentially an Uplink
    message will be received by several base stations.  The uplink
-   message payload size is 12 bytes.
+   message application payload size can be up to 12 bytes.
 
    Since all messages are self-contained and base stations forward all
    these messages back to the same Sigfox Network, multiple input copies
@@ -277,7 +277,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 5]
+Zuniga, et al.            Expires 15 July 2023                  [Page 5]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -333,7 +333,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 6]
+Zuniga, et al.            Expires 15 July 2023                  [Page 6]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -389,7 +389,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 7]
+Zuniga, et al.            Expires 15 July 2023                  [Page 7]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -445,7 +445,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 8]
+Zuniga, et al.            Expires 15 July 2023                  [Page 8]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -501,7 +501,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                  [Page 9]
+Zuniga, et al.            Expires 15 July 2023                  [Page 9]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -557,7 +557,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 10]
+Zuniga, et al.            Expires 15 July 2023                 [Page 10]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -613,7 +613,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 11]
+Zuniga, et al.            Expires 15 July 2023                 [Page 11]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -669,7 +669,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 12]
+Zuniga, et al.            Expires 15 July 2023                 [Page 12]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -725,7 +725,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 13]
+Zuniga, et al.            Expires 15 July 2023                 [Page 13]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -781,7 +781,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 14]
+Zuniga, et al.            Expires 15 July 2023                 [Page 14]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -837,7 +837,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 15]
+Zuniga, et al.            Expires 15 July 2023                 [Page 15]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -893,7 +893,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 16]
+Zuniga, et al.            Expires 15 July 2023                 [Page 16]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -949,7 +949,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 17]
+Zuniga, et al.            Expires 15 July 2023                 [Page 17]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1005,7 +1005,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 18]
+Zuniga, et al.            Expires 15 July 2023                 [Page 18]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1061,7 +1061,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 19]
+Zuniga, et al.            Expires 15 July 2023                 [Page 19]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1117,7 +1117,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 20]
+Zuniga, et al.            Expires 15 July 2023                 [Page 20]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1173,7 +1173,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 21]
+Zuniga, et al.            Expires 15 July 2023                 [Page 21]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1229,7 +1229,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 22]
+Zuniga, et al.            Expires 15 July 2023                 [Page 22]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1285,7 +1285,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 23]
+Zuniga, et al.            Expires 15 July 2023                 [Page 23]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1341,7 +1341,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 24]
+Zuniga, et al.            Expires 15 July 2023                 [Page 24]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1397,7 +1397,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 25]
+Zuniga, et al.            Expires 15 July 2023                 [Page 25]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1453,7 +1453,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 26]
+Zuniga, et al.            Expires 15 July 2023                 [Page 26]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1509,7 +1509,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 27]
+Zuniga, et al.            Expires 15 July 2023                 [Page 27]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1565,7 +1565,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 28]
+Zuniga, et al.            Expires 15 July 2023                 [Page 28]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1621,7 +1621,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 29]
+Zuniga, et al.            Expires 15 July 2023                 [Page 29]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1677,7 +1677,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 30]
+Zuniga, et al.            Expires 15 July 2023                 [Page 30]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1733,7 +1733,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 31]
+Zuniga, et al.            Expires 15 July 2023                 [Page 31]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1789,7 +1789,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 32]
+Zuniga, et al.            Expires 15 July 2023                 [Page 32]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1845,7 +1845,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 33]
+Zuniga, et al.            Expires 15 July 2023                 [Page 33]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1901,7 +1901,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 34]
+Zuniga, et al.            Expires 15 July 2023                 [Page 34]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1957,7 +1957,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 35]
+Zuniga, et al.            Expires 15 July 2023                 [Page 35]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -2013,7 +2013,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.             Expires 8 July 2023                 [Page 36]
+Zuniga, et al.            Expires 15 July 2023                 [Page 36]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -2022,6 +2022,10 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
               Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174,
               DOI 10.17487/RFC8174, May 2017,
               <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC8376]  Farrell, S., Ed., "Low-Power Wide Area Network (LPWAN)
+              Overview", RFC 8376, DOI 10.17487/RFC8376, May 2018,
+              <https://www.rfc-editor.org/info/rfc8376>.
 
    [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
               Zuniga, "SCHC: Generic Framework for Static Context Header
@@ -2062,14 +2066,10 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
               DOI 10.17487/RFC8259, December 2017,
               <https://www.rfc-editor.org/info/rfc8259>.
 
-   [RFC8376]  Farrell, S., Ed., "Low-Power Wide Area Network (LPWAN)
-              Overview", RFC 8376, DOI 10.17487/RFC8376, May 2018,
-              <https://www.rfc-editor.org/info/rfc8376>.
 
 
 
-
-Zuniga, et al.             Expires 8 July 2023                 [Page 37]
+Zuniga, et al.            Expires 15 July 2023                 [Page 37]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -2082,6 +2082,10 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    [sigfox-callbacks]
               Sigfox, "Sigfox Callbacks",
               <https://support.sigfox.com/docs/callbacks-documentation>.
+
+   [sigfox-docs]
+              Sigfox, "Sigfox Documentation",
+              <https://support.sigfox.com/docs>.
 
 Authors' Addresses
 
@@ -2116,18 +2120,22 @@ Authors' Addresses
    Email: Laurent.Toutain@imt-atlantique.fr
 
 
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 38]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
+
    Sandra Cespedes
    Concordia University
    1455 De Maisonneuve Blvd. W.
    Montreal QC, H3G 1M8
    Canada
    Email: sandra.cespedes@concordia.ca
-
-
-
-Zuniga, et al.             Expires 8 July 2023                 [Page 38]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
    Diego Wistuba
@@ -2173,12 +2181,4 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-
-
-
-
-
-
-
-
-Zuniga, et al.             Expires 8 July 2023                 [Page 39]
+Zuniga, et al.            Expires 15 July 2023                 [Page 39]
