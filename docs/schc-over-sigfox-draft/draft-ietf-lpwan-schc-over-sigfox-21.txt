@@ -78,34 +78,34 @@ Table of Contents
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  SCHC over Sigfox  . . . . . . . . . . . . . . . . . . . . . .   4
      3.1.  Network Architecture  . . . . . . . . . . . . . . . . . .   4
-     3.2.  Uplink  . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     3.2.  Uplink  . . . . . . . . . . . . . . . . . . . . . . . . .   6
      3.3.  Downlink  . . . . . . . . . . . . . . . . . . . . . . . .   7
-       3.3.1.  SCHC ACK on Downlink  . . . . . . . . . . . . . . . .   7
-     3.4.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . . . .   8
-     3.5.  Fragmentation . . . . . . . . . . . . . . . . . . . . . .   8
-       3.5.1.  Uplink Fragmentation  . . . . . . . . . . . . . . . .   9
-       3.5.2.  Downlink Fragmentation  . . . . . . . . . . . . . . .  14
-     3.6.  SCHC over Sigfox F/R Message Formats  . . . . . . . . . .  15
-       3.6.1.  Uplink No-ACK Mode: Single-byte SCHC Header . . . . .  15
-       3.6.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header . .  17
+       3.3.1.  SCHC ACK on Downlink  . . . . . . . . . . . . . . . .   8
+     3.4.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . . . .   9
+     3.5.  Fragmentation . . . . . . . . . . . . . . . . . . . . . .   9
+       3.5.1.  Uplink Fragmentation  . . . . . . . . . . . . . . . .  10
+       3.5.2.  Downlink Fragmentation  . . . . . . . . . . . . . . .  15
+     3.6.  SCHC over Sigfox F/R Message Formats  . . . . . . . . . .  16
+       3.6.1.  Uplink No-ACK Mode: Single-byte SCHC Header . . . . .  16
+       3.6.2.  Uplink ACK-on-Error Mode: Single-byte SCHC Header . .  18
        3.6.3.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
-               1 . . . . . . . . . . . . . . . . . . . . . . . . . .  19
+               1 . . . . . . . . . . . . . . . . . . . . . . . . . .  20
        3.6.4.  Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
-               2 . . . . . . . . . . . . . . . . . . . . . . . . . .  21
-       3.6.5.  Downlink ACK-Always Mode: Single-byte SCHC Header . .  24
-     3.7.  Padding . . . . . . . . . . . . . . . . . . . . . . . . .  26
-   4.  Fragmentation Sequence Examples . . . . . . . . . . . . . . .  26
-     4.1.  Uplink No-ACK Examples  . . . . . . . . . . . . . . . . .  26
-     4.2.  Uplink ACK-on-Error Examples: Single-byte SCHC Header . .  27
-     4.3.  SCHC Abort Examples . . . . . . . . . . . . . . . . . . .  34
-   5.  Security considerations . . . . . . . . . . . . . . . . . . .  35
-   6.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  36
-   7.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  36
-   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  36
-     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  36
-     8.2.  Informative References  . . . . . . . . . . . . . . . . .  37
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  38
-
+               2 . . . . . . . . . . . . . . . . . . . . . . . . . .  22
+       3.6.5.  Downlink ACK-Always Mode: Single-byte SCHC Header . .  25
+     3.7.  Padding . . . . . . . . . . . . . . . . . . . . . . . . .  27
+   4.  Fragmentation Rules Examples  . . . . . . . . . . . . . . . .  27
+     4.1.  Uplink Fragmentation Rules Examples . . . . . . . . . . .  27
+     4.2.  Downlink Fragmentation Rules Example  . . . . . . . . . .  28
+   5.  Fragmentation Sequence Examples . . . . . . . . . . . . . . .  28
+     5.1.  Uplink No-ACK Examples  . . . . . . . . . . . . . . . . .  28
+     5.2.  Uplink ACK-on-Error Examples: Single-byte SCHC Header . .  29
+     5.3.  SCHC Abort Examples . . . . . . . . . . . . . . . . . . .  36
+   6.  Security considerations . . . . . . . . . . . . . . . . . . .  37
+   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  38
+   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  38
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  38
+     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  38
 
 
 
@@ -113,6 +113,9 @@ Zuniga, et al.            Expires 15 July 2023                  [Page 2]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
+
+     9.2.  Informative References  . . . . . . . . . . . . . . . . .  39
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  40
 
 1.  Introduction
 
@@ -148,7 +151,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
    This document describes the parameters, settings, and modes of
    operation to be used when SCHC is implemented over a Sigfox LPWAN.
-   The set of parameters forms a "SCHC over Sigfox profile".
+   The set of parameters forms a "SCHC over Sigfox profile".  The SCHC
+   over Sigfox Profile is supported on previous version of
+   [sigfox-spec].
 
 2.  Terminology
 
@@ -158,17 +163,17 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-   It is assumed that the reader is familiar with the terms and
-   mechanisms defined in [RFC8376] and in [RFC8724].  Also, it is
-   assumed that the reader is familiar with Sigfox terminology
-   [sigfox-spec].
-
 
 
 Zuniga, et al.            Expires 15 July 2023                  [Page 3]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
+
+   It is assumed that the reader is familiar with the terms and
+   mechanisms defined in [RFC8376] and in [RFC8724].  Also, it is
+   assumed that the reader is familiar with Sigfox terminology
+   [sigfox-spec].
 
 3.  SCHC over Sigfox
 
@@ -195,6 +200,32 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    Station and the Network Gateway (NGW) is the Sigfox cloud-based
    Network.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                  [Page 4]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
+
    Sigfox Device                                           Application
  +----------------+                                     +--------------+
  | APP1 APP2 APP3 |                                     |APP1 APP2 APP3|
@@ -219,13 +250,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
  = : Internal Sigfox Network
  . : External IP-based Network
 
-
-
-Zuniga, et al.            Expires 15 July 2023                  [Page 4]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
                      Figure 1: Network Architecture
 
    In the case of the global Sigfox Network, RGWs (or Base Stations) are
@@ -241,6 +265,22 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    forwards the SCHC Message to the Network Gateway (NGW).  The NGW then
    delivers the SCHC Message and associated gathered metadata to the
    Network SCHC C/D + F/R.
+
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                  [Page 5]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
 
    The Sigfox Network (NGW) communicates with the Network SCHC C/D + F/R
    for compression/decompression and/or for fragmentation/reassembly.
@@ -275,13 +315,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    Sigfox network (NGW) to the Network SCHC C/D + F/R through a
    callback/API with the following information:
 
-
-
-Zuniga, et al.            Expires 15 July 2023                  [Page 5]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
    *  Device ID
 
    *  Message Sequence Number
@@ -297,6 +330,13 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    *  Device Temperature (optional)
 
    *  Device Battery Voltage (optional)
+
+
+
+Zuniga, et al.            Expires 15 July 2023                  [Page 6]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
 
    The Device ID is a globally unique identifier assigned to the Device,
    which is included in the Sigfox header of every message.  The Message
@@ -330,14 +370,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
                   +---------------+---------------- +
                                   |   SCHC message  |
 
-
-
-
-Zuniga, et al.            Expires 15 July 2023                  [Page 6]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
                       Figure 2: SCHC Message in Sigfox
 
 3.3.  Downlink
@@ -354,6 +386,14 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    to be sent for this given Device (e.g., either a response to the
    Uplink message or queued information waiting to be transmitted), the
    network transmits this message to the Device during the reception
+
+
+
+Zuniga, et al.            Expires 15 July 2023                  [Page 7]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
+
    window.  If no message is received by the Device after the reception
    opportunity window has elapsed, the Device closes the reception
    window opportunity and gets back to the normal mode (e.g., continue
@@ -386,14 +426,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    Number (FCN) value, i.e., FCN = All-0, or FCN = All-1.  The FCN is
    the tile index in a specific window.  FCN and window number
    combination allows to uniquely identified a SCHC Fragment as
-
-
-
-Zuniga, et al.            Expires 15 July 2023                  [Page 7]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
    explained in [RFC8724].  The Device sends the fragments in sequence
    and, after transmitting the FCN = All-0 or FCN = All-1, it opens up a
    reception opportunity.  The Network SCHC can then decide to respond
@@ -405,6 +437,18 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    opportunity and after a timeout the Uplink transmissions continue.
    Intermediate SCHC fragments with FCN different from All-0 or All-1
    MUST NOT use the Downlink request flag to request a SCHC ACK.
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                  [Page 8]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
 
 3.4.  SCHC Rules
 
@@ -442,18 +486,25 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    the receiver end.  Since only Uplink/Downlink messages/fragments that
    have passed the Sigfox CRC-check are delivered to the Network/Sigfox
    Device SCHC C/D + F/R, integrity can be guaranteed when no
-
-
-
-Zuniga, et al.            Expires 15 July 2023                  [Page 8]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
    consecutive messages are missing from the sequence and all FCN
    bitmaps are complete.  With this functionality in mind, and in order
    to save protocol and processing overhead, the use of a Reassembly
    Check Sequence (RCS) as described in Section 3.5.1.5 MUST be used.
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                  [Page 9]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
 
 3.5.1.  Uplink Fragmentation
 
@@ -499,16 +550,17 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
    MAX_ACK_REQUESTS can be increased when facing high error rates.
 
-
-
-Zuniga, et al.            Expires 15 July 2023                  [Page 9]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
    Although a SCHC Receiver-Abort can be triggered at any point in time,
    a SCHC Receiver-Abort Downlink message MUST only be sent when there
    is a Downlink transmission opportunity.
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 10]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
 
 3.5.1.3.  Single-byte SCHC Header for Uplink Fragmentation
 
@@ -555,14 +607,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
    *  Regular tile size: 11 bytes
 
+   *  All-1 tile size: 0 to 10 bytes
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 10]
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 11]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
-
-   *  All-1 tile size: 0 to 10 bytes
 
    *  Inactivity Timer: Application-dependent.  The default value is 12
       hours.
@@ -571,7 +625,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
    The maximum SCHC Packet size is 340 bytes.
 
-   Section 3.6.1 presents SCHC Fragment format examples and Section 4.1
+   Section 3.6.1 presents SCHC Fragment format examples and Section 5.1
    provides fragmentation examples, using Single-byte SCHC Header No-ACK
    mode.
 
@@ -610,20 +664,19 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    *  Retransmission Timer: Application-dependent.  The default value is
       12 hours.
 
+   *  Inactivity Timer: Application-dependent.  The default value is 12
+      hours.
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 11]
+Zuniga, et al.            Expires 15 July 2023                 [Page 12]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
-   *  Inactivity Timer: Application-dependent.  The default value is 12
-      hours.
-
    *  RCS size: 3 bits
 
-   Section 3.6.2 presents SCHC Fragment format examples and Section 4.2
+   Section 3.6.2 presents SCHC Fragment format examples and Section 5.2
    provides fragmentation examples, using ACK-on-Error with single-byte
    header.
 
@@ -666,16 +719,16 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    *  Retransmission Timer: Application-dependent.  The default value is
       12 hours.
 
+   *  Inactivity Timer: Application-dependent.  The default value is 12
+      hours.
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 12]
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 13]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
-
-   *  Inactivity Timer: Application-dependent.  The default value is 12
-      hours.
 
    Note that WINDOW_SIZE is limited to 12.  This because, 4 windows (M =
    2) with bitmaps of size 12 can be fitted in a single SCHC Compound
@@ -725,7 +778,10 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 13]
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 14]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -781,7 +837,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 14]
+Zuniga, et al.            Expires 15 July 2023                 [Page 15]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -837,7 +893,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 15]
+Zuniga, et al.            Expires 15 July 2023                 [Page 16]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -893,7 +949,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 16]
+Zuniga, et al.            Expires 15 July 2023                 [Page 17]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -949,7 +1005,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 17]
+Zuniga, et al.            Expires 15 July 2023                 [Page 18]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1005,7 +1061,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 18]
+Zuniga, et al.            Expires 15 July 2023                 [Page 19]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1061,7 +1117,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 19]
+Zuniga, et al.            Expires 15 July 2023                 [Page 20]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1117,7 +1173,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 20]
+Zuniga, et al.            Expires 15 July 2023                 [Page 21]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1173,7 +1229,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 21]
+Zuniga, et al.            Expires 15 July 2023                 [Page 22]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1229,7 +1285,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 22]
+Zuniga, et al.            Expires 15 July 2023                 [Page 23]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1285,7 +1341,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 23]
+Zuniga, et al.            Expires 15 July 2023                 [Page 24]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1341,7 +1397,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 24]
+Zuniga, et al.            Expires 15 July 2023                 [Page 25]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1397,7 +1453,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 25]
+Zuniga, et al.            Expires 15 July 2023                 [Page 26]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1421,14 +1477,75 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    0.  The receiver MUST remove the added padding bits before the SCHC
    reassembly process.
 
-4.  Fragmentation Sequence Examples
+4.  Fragmentation Rules Examples
+
+   This section provides an example of RuleIDs configuration for
+   interoperability between the F/R modes presented in this document.
+   Note that the RuleID space for Uplink F/R is different than the one
+   for Downlink F/R, therefore this section is divided in two
+   subsections: Rules for Uplink fragmentation and Rules for Downlink
+   fragmentation.
+
+4.1.  Uplink Fragmentation Rules Examples
+
+   The RuleIDs for Uplink F/R modes are divided in Single-byte and Two-
+   byte SCHC Header size.  Then, the available RuleID space is divided
+   in two, one for each uplink F/R mode.
+
+   *  For the Single-byte SCHC Header F/R modes, the leftmost bit of the
+      RuleID is 1, e.g., 0b'1XXXXXXX, with values in ranges from
+      0b'10000000 to 0b'11111111.
+
+   *  For the Uplink No-ACK Mode: Single-byte SCHC Header, the two
+      leftmost bits of the RuleID are 1, e.g., 0b'11XXXXXX, with values
+      in ranges from 0b'11000000 to 0b'11111111.
+
+   *  For the Uplink ACK-on-Error Mode: Single-byte SCHC Header, the
+      leftmost bit of the RuleID is 1 and the second leftmost bit is 0,
+      e.g., 0b'10XXXXXX, with values in ranges from 0b'10000000 to
+      0b'10111111.
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 27]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
+
+   *  For the Two-byte SCHC Header F/R modes, the leftmost bit of the
+      RuleID is 0, e.g., 0b'0XXXXXXX XXXXXXXX, with values in ranges
+      from 0b'00000000 00000000 to 0b'11111111 11111111.
+
+   *  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1,
+      the two leftmost bits of the RuleID are 0, e.g., 0b'00XXXXXX
+      XXXXXXXX, with values in ranges from 0b'00000000 00000000 to
+      0b'10111111 11111111.
+
+   *  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2,
+      the leftmost bit of the RuleID is 0 and the second leftmost bit is
+      1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from
+      0b'01000000 00000000 to 0b'11111111 11111111.
+
+   *  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2,
+      the leftmost bit of the RuleID is 0 and the second leftmost bit is
+      1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from
+      0b'01000000 00000000 to 0b'11111111 11111111.
+
+4.2.  Downlink Fragmentation Rules Example
+
+   *  For the Downlink ACK-Always Mode: Single-byte SCHC Header, RuleIDs
+      can get values in ranges from 0b'00000000 to 0b'11111111.
+
+5.  Fragmentation Sequence Examples
 
    In this section, some sequence diagrams depicting messages exchanges
    for different fragmentation modes and use cases are shown.  In the
    examples, 'Seq' indicates the Sigfox Sequence Number of the frame
    carrying a fragment.
 
-4.1.  Uplink No-ACK Examples
+5.1.  Uplink No-ACK Examples
 
    The FCN field indicates the size of the data packet.  The first
    fragment is marked with FCN = X-1, where X is the number of fragments
@@ -1437,6 +1554,21 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    (1111).
 
    Case No losses - All fragments are sent and received successfully.
+
+
+
+
+
+
+
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 28]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
+
 
            Sender                     Receiver
              |-------FCN=6,Seq=1-------->|
@@ -1450,13 +1582,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
                      Figure 31: Uplink No-ACK No-Losses
-
-
-
-Zuniga, et al.            Expires 15 July 2023                 [Page 26]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
 
    When the first SCHC fragment is received, the Receiver can calculate
    the total number of SCHC fragments that the SCHC Packet is composed
@@ -1480,7 +1605,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
                 Figure 32: Uplink No-ACK Losses (scenario 1)
 
-4.2.  Uplink ACK-on-Error Examples: Single-byte SCHC Header
+5.2.  Uplink ACK-on-Error Examples: Single-byte SCHC Header
 
    The single-byte SCHC header ACK-on-Error mode allows sending up to 28
    fragments and packet sizes up to 300 bytes.  The SCHC fragments may
@@ -1496,20 +1621,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Zuniga, et al.            Expires 15 July 2023                 [Page 27]
+Zuniga, et al.            Expires 15 July 2023                 [Page 29]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1565,7 +1677,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 28]
+Zuniga, et al.            Expires 15 July 2023                 [Page 30]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1621,7 +1733,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 29]
+Zuniga, et al.            Expires 15 July 2023                 [Page 31]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1677,7 +1789,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 30]
+Zuniga, et al.            Expires 15 July 2023                 [Page 32]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1733,7 +1845,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 31]
+Zuniga, et al.            Expires 15 July 2023                 [Page 33]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1789,7 +1901,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 32]
+Zuniga, et al.            Expires 15 July 2023                 [Page 34]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1845,7 +1957,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 33]
+Zuniga, et al.            Expires 15 July 2023                 [Page 35]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1856,7 +1968,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    The number of times the same SCHC ACK message will be retransmitted
    is determined by the MAX_ACK_REQUESTS.
 
-4.3.  SCHC Abort Examples
+5.3.  SCHC Abort Examples
 
    Case SCHC Sender-Abort
 
@@ -1901,7 +2013,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 34]
+Zuniga, et al.            Expires 15 July 2023                 [Page 36]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1924,7 +2036,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
                Figure 42: Uplink ACK-on-Error Receiver-Abort
 
-5.  Security considerations
+6.  Security considerations
 
    The radio protocol authenticates and ensures the integrity of each
    message.  This is achieved by using a unique device ID and an AES-128
@@ -1957,7 +2069,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 35]
+Zuniga, et al.            Expires 15 July 2023                 [Page 37]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -1967,11 +2079,11 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    Network is optional, therefore it can be omitted to protect this
    aspect of the device privacy.
 
-6.  IANA Considerations
+7.  IANA Considerations
 
    This document has no IANA actions.
 
-7.  Acknowledgements
+8.  Acknowledgements
 
    Carles Gomez has been funded in part by the Spanish Government
    through the Jose Castillejo CAS15/00336 grant, the TEC2016-79988-P
@@ -1993,9 +2105,9 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    Rafael Vidal, Julien Boite, Renaud Marty, and Antonis Platis for
    their useful comments and implementation design considerations.
 
-8.  References
+9.  References
 
-8.1.  Normative References
+9.1.  Normative References
 
    [I-D.ietf-lpwan-schc-compound-ack]
               Zuniga, JC., Gomez, C., Aguilar, S., Toutain, L.,
@@ -2013,7 +2125,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 36]
+Zuniga, et al.            Expires 15 July 2023                 [Page 38]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -2034,11 +2146,11 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
               <https://www.rfc-editor.org/info/rfc8724>.
 
    [sigfox-spec]
-              Sigfox, "Sigfox Radio Specifications Rev 1.6",
+              Sigfox, "Sigfox Radio Specifications",
               <https://build.sigfox.com/sigfox-device-radio-
               specifications>.
 
-8.2.  Informative References
+9.2.  Informative References
 
    [I-D.ietf-core-comi]
               Veillette, M., Stok, P. V. D., Pelov, A., Bierman, A., and
@@ -2069,7 +2181,7 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 37]
+Zuniga, et al.            Expires 15 July 2023                 [Page 39]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -2125,7 +2237,7 @@ Authors' Addresses
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 38]
+Zuniga, et al.            Expires 15 July 2023                 [Page 40]
 
 Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
@@ -2181,4 +2293,4 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
 
-Zuniga, et al.            Expires 15 July 2023                 [Page 39]
+Zuniga, et al.            Expires 15 July 2023                 [Page 41]

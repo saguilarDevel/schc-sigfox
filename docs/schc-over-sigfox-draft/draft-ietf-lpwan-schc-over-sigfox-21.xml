@@ -166,6 +166,7 @@ that can be used when SCHC is used in conjunction with a specific LPWAN technolo
 messages) <xref target="sigfox-spec"/>.
 </t>
 <t>This document describes the parameters, settings, and modes of operation to be used when SCHC is implemented over a Sigfox LPWAN. The set of parameters forms a "SCHC over Sigfox profile".
+    The SCHC over Sigfox Profile is supported on previous version of <xref target="sigfox-spec"/>.
 </t>
 
 </section>
@@ -1350,6 +1351,39 @@ information bits are to be transmitted, padding MUST be used with bits equal to 
 
 </section>
 
+<section anchor="fragmentation-rules-examples" title="Fragmentation Rules Examples">
+
+<t>This section provides an example of RuleIDs configuration for interoperability between the F/R modes presented in this document.
+    Note that the RuleID space for Uplink F/R is different than the one for Downlink F/R, therefore this section is divided in two subsections: Rules for Uplink fragmentation and Rules for Downlink fragmentation.</t>
+
+<section anchor="uplink-fragmentation-rules-examples" title="Uplink Fragmentation Rules Examples">
+  <t>
+     The RuleIDs for Uplink F/R modes are divided in Single-byte and Two-byte SCHC Header size. The available RuleID space is divided in two, one for each uplink F/R mode.
+  </t>
+ <t><list style="symbols">
+<t>For the Single-byte SCHC Header F/R modes, the leftmost bit of the RuleID is 1, e.g., 0b'1XXXXXXX, with values in ranges from 0b'10000000 to 0b'11111111.</t>
+
+<t>For the Uplink No-ACK Mode: Single-byte SCHC Header, the two leftmost bits of the RuleID are 1, e.g., 0b'11XXXXXX, with values in ranges from 0b'11000000 to 0b'11111111.</t>
+<t>For the Uplink ACK-on-Error Mode: Single-byte SCHC Header, the leftmost bit of the RuleID is 1 and the second leftmost bit is 0, e.g., 0b'10XXXXXX, with values in ranges from 0b'10000000 to 0b'10111111.</t>
+
+<t>For the Two-byte SCHC Header F/R modes, the leftmost bit of the RuleID is 0, e.g., 0b'0XXXXXXX XXXXXXXX, with values in ranges from 0b'00000000 00000000 to 0b'11111111 11111111.</t>
+
+ <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1, the two leftmost bits of the RuleID are 0, e.g., 0b'00XXXXXX XXXXXXXX, with values in ranges from 0b'00000000 00000000 to 0b'10111111 11111111.</t>
+ <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2, the leftmost bit of the RuleID is 0 and the second leftmost bit is 1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from 0b'01000000 00000000 to 0b'11111111 11111111.</t>
+
+    <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2, the leftmost bit of the RuleID is 0 and the second leftmost bit is 1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from 0b'01000000 00000000 to 0b'11111111 11111111.</t>
+
+</list></t>
+</section>
+
+    <section anchor="downlink-fragmentation-rules-examples" title="Downlink Fragmentation Rules Example">
+ <t><list style="symbols">
+<t>For the Downlink ACK-Always Mode: Single-byte SCHC Header, RuleIDs can get values in ranges from 0b'00000000 to 0b'11111111.</t>
+
+</list></t>
+</section>
+
+</section>
 
 <section anchor="sequence-examples" title="Fragmentation Sequence Examples">
 
@@ -2044,7 +2078,7 @@ format, which is intended to reduce the number of Downlink transmissions (i.e., 
 
    <reference anchor="sigfox-spec" target="https://build.sigfox.com/sigfox-device-radio-specifications">
   <front>
-    <title>Sigfox Radio Specifications Rev 1.6</title>
+    <title>Sigfox Radio Specifications</title>
     <author initials="" surname="Sigfox" fullname="Sigfox">
       <organization></organization>
     </author>
