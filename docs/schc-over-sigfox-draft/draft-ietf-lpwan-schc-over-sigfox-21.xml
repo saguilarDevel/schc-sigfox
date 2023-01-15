@@ -1354,31 +1354,34 @@ information bits are to be transmitted, padding MUST be used with bits equal to 
 <section anchor="fragmentation-rules-examples" title="Fragmentation Rules Examples">
 
 <t>This section provides an example of RuleIDs configuration for interoperability between the F/R modes presented in this document.
-    Note that the RuleID space for Uplink F/R is different than the one for Downlink F/R, therefore this section is divided in two subsections: Rules for Uplink fragmentation and Rules for Downlink fragmentation.</t>
+    Note that the RuleID space for Uplink F/R is different than the one for Downlink F/R, therefore this section is divided in two subsections: Rules for Uplink fragmentation and Rules for Downlink fragmentation.
+
+</t>
 
 <section anchor="uplink-fragmentation-rules-examples" title="Uplink Fragmentation Rules Examples">
   <t>
-     The RuleIDs for Uplink F/R modes are divided in Single-byte and Two-byte SCHC Header size. The available RuleID space is divided in two, one for each uplink F/R mode.
+     The RuleIDs for Uplink F/R modes are divided in Single-byte and Two-byte SCHC Header size.
+      The resulting available RuleID space is divided in two, one for each uplink F/R mode of the corresponding header size.
   </t>
+    <t>The RuleIDs are divided as follows:</t>
  <t><list style="symbols">
-<t>For the Single-byte SCHC Header F/R modes, the leftmost bit of the RuleID is 1, e.g., 0b'1XXXXXXX, with values in ranges from 0b'10000000 to 0b'11111111.</t>
-
-<t>For the Uplink No-ACK Mode: Single-byte SCHC Header, the two leftmost bits of the RuleID are 1, e.g., 0b'11XXXXXX, with values in ranges from 0b'11000000 to 0b'11111111.</t>
-<t>For the Uplink ACK-on-Error Mode: Single-byte SCHC Header, the leftmost bit of the RuleID is 1 and the second leftmost bit is 0, e.g., 0b'10XXXXXX, with values in ranges from 0b'10000000 to 0b'10111111.</t>
-
-<t>For the Two-byte SCHC Header F/R modes, the leftmost bit of the RuleID is 0, e.g., 0b'0XXXXXXX XXXXXXXX, with values in ranges from 0b'00000000 00000000 to 0b'11111111 11111111.</t>
-
- <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1, the two leftmost bits of the RuleID are 0, e.g., 0b'00XXXXXX XXXXXXXX, with values in ranges from 0b'00000000 00000000 to 0b'10111111 11111111.</t>
- <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2, the leftmost bit of the RuleID is 0 and the second leftmost bit is 1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from 0b'01000000 00000000 to 0b'11111111 11111111.</t>
-
-    <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2, the leftmost bit of the RuleID is 0 and the second leftmost bit is 1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from 0b'01000000 00000000 to 0b'11111111 11111111.</t>
-
+<t>For the Single-byte SCHC Header F/R modes, the leftmost bit of the RuleID is 1, e.g., 0b'1XX, with values in ranges from 0b'100 to 0b'111.</t>
+ <t><list style="symbols">
+<t>For the Uplink No-ACK Mode: Single-byte SCHC Header, the two leftmost bits of the RuleID are 1, e.g., 0b'11X, with values in ranges from 0b'110 to 0b'111.</t>
+<t>For the Uplink ACK-on-Error Mode: Single-byte SCHC Header, the leftmost bit of the RuleID is 1 and the second leftmost bit is 0, e.g., 0b'10X, with values in ranges from 0b'100 to 0b'101.</t>
 </list></t>
+<t>For the Two-byte SCHC Header F/R modes, the leftmost bit of the RuleID is 0.</t>
+ <t><list style="symbols">
+ <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1, the two leftmost bits of the RuleID are 0, e.g., 0b'00XXXX, with values in ranges from 0b'000000 to 0b'101111.</t>
+ <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2, the leftmost bit of the RuleID is 0 and the second leftmost bit is 1, e.g., 0b'01XXXXXX, with values in ranges from 0b'01000000 to 0b'01111111.</t>
+</list></t>
+</list></t>
+    <t>This RuleID configuration limits the number of Rules for Single-byte SCHC Header sizes, but allows a device to be interoperable with the F/R modes presented in this document.</t>
 </section>
 
     <section anchor="downlink-fragmentation-rules-examples" title="Downlink Fragmentation Rules Example">
  <t><list style="symbols">
-<t>For the Downlink ACK-Always Mode: Single-byte SCHC Header, RuleIDs can get values in ranges from 0b'00000000 to 0b'11111111.</t>
+<t>For the Downlink ACK-Always Mode: Single-byte SCHC Header, RuleIDs can get values in ranges from 0b'000 to 0b'111.</t>
 
 </list></t>
 </section>

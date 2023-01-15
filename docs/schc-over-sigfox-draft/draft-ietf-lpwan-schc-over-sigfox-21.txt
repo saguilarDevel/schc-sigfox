@@ -1489,23 +1489,23 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 4.1.  Uplink Fragmentation Rules Examples
 
    The RuleIDs for Uplink F/R modes are divided in Single-byte and Two-
-   byte SCHC Header size.  Then, the available RuleID space is divided
-   in two, one for each uplink F/R mode.
+   byte SCHC Header size.  The resulting available RuleID space is
+   divided in two, one for each uplink F/R mode of the corresponding
+   header size.
+
+   The RuleIDs are divided as follows:
 
    *  For the Single-byte SCHC Header F/R modes, the leftmost bit of the
-      RuleID is 1, e.g., 0b'1XXXXXXX, with values in ranges from
-      0b'10000000 to 0b'11111111.
+      RuleID is 1, e.g., 0b'1XX, with values in ranges from 0b'100 to
+      0b'111.
 
-   *  For the Uplink No-ACK Mode: Single-byte SCHC Header, the two
-      leftmost bits of the RuleID are 1, e.g., 0b'11XXXXXX, with values
-      in ranges from 0b'11000000 to 0b'11111111.
+      -  For the Uplink No-ACK Mode: Single-byte SCHC Header, the two
+         leftmost bits of the RuleID are 1, e.g., 0b'11X, with values in
+         ranges from 0b'110 to 0b'111.
 
-   *  For the Uplink ACK-on-Error Mode: Single-byte SCHC Header, the
-      leftmost bit of the RuleID is 1 and the second leftmost bit is 0,
-      e.g., 0b'10XXXXXX, with values in ranges from 0b'10000000 to
-      0b'10111111.
-
-
+      -  For the Uplink ACK-on-Error Mode: Single-byte SCHC Header, the
+         leftmost bit of the RuleID is 1 and the second leftmost bit is
+         0, e.g., 0b'10X, with values in ranges from 0b'100 to 0b'101.
 
 
 
@@ -1515,28 +1515,25 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
    *  For the Two-byte SCHC Header F/R modes, the leftmost bit of the
-      RuleID is 0, e.g., 0b'0XXXXXXX XXXXXXXX, with values in ranges
-      from 0b'00000000 00000000 to 0b'11111111 11111111.
+      RuleID is 0.
 
-   *  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1,
-      the two leftmost bits of the RuleID are 0, e.g., 0b'00XXXXXX
-      XXXXXXXX, with values in ranges from 0b'00000000 00000000 to
-      0b'10111111 11111111.
+      -  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
+         1, the two leftmost bits of the RuleID are 0, e.g., 0b'00XXXX,
+         with values in ranges from 0b'000000 to 0b'101111.
 
-   *  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2,
-      the leftmost bit of the RuleID is 0 and the second leftmost bit is
-      1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from
-      0b'01000000 00000000 to 0b'11111111 11111111.
+      -  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option
+         2, the leftmost bit of the RuleID is 0 and the second leftmost
+         bit is 1, e.g., 0b'01XXXXXX, with values in ranges from
+         0b'01000000 to 0b'01111111.
 
-   *  For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2,
-      the leftmost bit of the RuleID is 0 and the second leftmost bit is
-      1, e.g., 0b'01XXXXXX XXXXXXXX, with values in ranges from
-      0b'01000000 00000000 to 0b'11111111 11111111.
+   This RuleID configuration limits the number of Rules for Single-byte
+   SCHC Header sizes, but allows a device to be interoperable with the
+   F/R modes presented in this document.
 
 4.2.  Downlink Fragmentation Rules Example
 
    *  For the Downlink ACK-Always Mode: Single-byte SCHC Header, RuleIDs
-      can get values in ranges from 0b'00000000 to 0b'11111111.
+      can get values in ranges from 0b'000 to 0b'111.
 
 5.  Fragmentation Sequence Examples
 
@@ -1555,21 +1552,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
    Case No losses - All fragments are sent and received successfully.
 
-
-
-
-
-
-
-
-
-
-
-Zuniga, et al.            Expires 15 July 2023                 [Page 28]
-
-Internet-Draft           SCHC over Sigfox LPWAN             January 2023
-
-
            Sender                     Receiver
              |-------FCN=6,Seq=1-------->|
              |-------FCN=5,Seq=2-------->|
@@ -1579,6 +1561,13 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
              |-------FCN=1,Seq=6-------->|
              |-------FCN=15,Seq=7------->| All fragments received
            (End)
+
+
+
+
+Zuniga, et al.            Expires 15 July 2023                 [Page 28]
+
+Internet-Draft           SCHC over Sigfox LPWAN             January 2023
 
 
                      Figure 31: Uplink No-ACK No-Losses
@@ -1618,6 +1607,17 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    allow a Downlink message from the receiver.  The Downlink Enable in
    the figures shows where the sender MUST enable the Downlink, and wait
    for an ACK.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
