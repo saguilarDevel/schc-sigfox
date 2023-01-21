@@ -2113,8 +2113,8 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
               Zuniga, JC., Gomez, C., Aguilar, S., Toutain, L.,
               Cespedes, S., and D. Wistuba, "SCHC Compound ACK", Work in
               Progress, Internet-Draft, draft-ietf-lpwan-schc-compound-
-              ack-09, August 2021, <httpsout-://www.ietf.org/internet-
-              drafts/draft-ietf-lpwan-schc-compound-ack-09.txt>.
+              ack-10, January 2023, <httpsout-://www.ietf.org/internet-
+              drafts/draft-ietf-lpwan-schc-compound-ack-10.txt>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -2133,10 +2133,6 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
-
-   [RFC8376]  Farrell, S., Ed., "Low-Power Wide Area Network (LPWAN)
-              Overview", RFC 8376, DOI 10.17487/RFC8376, May 2018,
-              <https://www.rfc-editor.org/info/rfc8376>.
 
    [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
               Zuniga, "SCHC: Generic Framework for Static Context Header
@@ -2176,6 +2172,10 @@ Internet-Draft           SCHC over Sigfox LPWAN             January 2023
               Interchange Format", STD 90, RFC 8259,
               DOI 10.17487/RFC8259, December 2017,
               <https://www.rfc-editor.org/info/rfc8259>.
+
+   [RFC8376]  Farrell, S., Ed., "Low-Power Wide Area Network (LPWAN)
+              Overview", RFC 8376, DOI 10.17487/RFC8376, May 2018,
+              <https://www.rfc-editor.org/info/rfc8376>.
 
 
 

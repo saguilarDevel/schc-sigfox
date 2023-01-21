@@ -1894,7 +1894,7 @@ by such event.</t>
    d'Universitats i Recerca del Departament d'Empresa i Coneixement de
    la Generalitat de Catalunya 2017 through grant SGR 376.</t>
 <t>Sergio Aguilar has been funded by the ERDF and the Spanish Government through project TEC2016-79988-P and project PID2019-106808RA-I00, AEI/FEDER, EU.</t>
-<t>Sandra Céspedes has been funded in part by the ANID Chile Project FONDECYT Regular 1201893 and Basal Project FB0008.</t>
+<t>Sandra Cespedes has been funded in part by the ANID Chile Project FONDECYT Regular 1201893 and Basal Project FB0008.</t>
 <t>Diego Wistuba has been funded by the ANID Chile Project FONDECYT Regular 1201893.</t>
 <t>The authors would like to thank Ana Minaburo, Clement Mannequin, Rafael Vidal, Julien Boite, Renaud Marty, and Antonis Platis for their useful comments and implementation design considerations.</t>
 
@@ -2094,7 +2094,7 @@ by such event.</t>
     <organization />
 </author>
 
-<date month='August' year='2021' />
+<date month='January' year='2023' />
 
 <abstract><t>The present document describes an extension to the SCHC (Static Header Compression and Fragmentation) protocol. It defines a SCHC Compound ACK message 
 format, which is intended to reduce the number of Downlink transmissions (i.e., SCHC ACKs) by accumulating bitmaps of several windows in a single SCHC message
@@ -2103,9 +2103,9 @@ format, which is intended to reduce the number of Downlink transmissions (i.e., 
 
 </front>
 
-<seriesInfo name='Internet-Draft' value='draft-ietf-lpwan-schc-compound-ack-09' />
+<seriesInfo name='Internet-Draft' value='draft-ietf-lpwan-schc-compound-ack-10' />
 <format type='TXT'
-        target='httpsout-://www.ietf.org/internet-drafts/draft-ietf-lpwan-schc-compound-ack-09.txt' />
+        target='httpsout-://www.ietf.org/internet-drafts/draft-ietf-lpwan-schc-compound-ack-10.txt' />
 </reference>
 
    <reference anchor="sigfox-spec" target="https://build.sigfox.com/sigfox-device-radio-specifications">
@@ -2118,13 +2118,13 @@ format, which is intended to reduce the number of Downlink transmissions (i.e., 
   </front>
 </reference>
 
-<?rfc include='reference.RFC.8376'?>
+
     </references>
 	
 	
 	<references title='Informative References'>
 
-
+<?rfc include='reference.RFC.8376'?>
 
 <reference anchor="sigfox-docs" target="https://support.sigfox.com/docs">
   <front>
