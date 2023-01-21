@@ -1356,8 +1356,8 @@ information bits are to be transmitted, padding MUST be used with bits equal to 
 <t>This section provides an example of RuleIDs configuration for interoperability between the F/R modes presented in this document.
     Note that the RuleID space for Uplink F/R is different than the one for Downlink F/R, therefore this section is divided in two subsections: Rules for Uplink fragmentation and Rules for Downlink fragmentation.
 </t>
-<t>For Uplink F/R, multiple header length were described in section <xref target="Frag"/>.
-    All of them are part of the SCHC over Sigfox Profile, and offer not only low protocol overhead for small payloads (single byte header) but also are extensibility to transport larger payloads with more overhead (2 bytes header, option 1 and 2).
+<t>For Uplink F/R, multiple header length were described in <xref target="Frag"/>.
+    All of them are part of the SCHC over Sigfox Profile, and offer not only low protocol overhead for small payloads (single byte header) but also extensibility to transport larger payloads with more overhead (2 bytes header, option 1 and 2).
     The usage of the RuleID space for each header length is an implementation choice, but we provide an example of it in the following section.
     This illustrates implementation choices made in order to 1) identify the different header length, and 2) finally parse the RuleID field to identify the RuleID value and execute the associated treatment.
 </t>
@@ -1386,18 +1386,17 @@ In order to identify the header length and then the value of the RuleID, the Rul
          <t><list style="symbols">
          <t>there are 7 RuleIDs available (with values from 0b'000-0b'110), the RuleID with value 0b'111 is reserved to indicate a Two-byte SCHC Header.</t>
              <t>This set of rules is called “standard rules”, and it is used to implement Single-byte SCHC header modes.</t>
-             <t>Each RuleID is associated with a set of properties defining if Uplink F/R is used and which Uplink F/R mode is used.</t>
-         <t>The RuleID 0b'000 is mapped onto Uplink No-ACK Mode: Single-byte SCHC Header, and the RuleIDs 0b'001 and 0b'002 are mapped onto Uplink ACK-on-Error Mode: Single-byte SCHC Header (2 RuleIDs to allow for SCHC Packet interleaving).</t>
+             <t>Each RuleID is associated with a set of properties defining if Uplink F/R is used and which Uplink F/R mode is used. As an example, the RuleID 0b'000 is mapped onto Uplink No-ACK Mode: Single-byte SCHC Header, and the RuleIDs 0b'001 and 0b'002 are mapped onto Uplink ACK-on-Error Mode: Single-byte SCHC Header (2 RuleIDs to allow for SCHC Packet interleaving).</t>
         </list></t>
         <t>For Two-byte SCHC Header F/R modes at least 6 bits for the RuleID field are expected:</t>
                  <t><list style="symbols">
                      <t>the 3 first leftmost bits are always 0b'111,</t>
                      <t><list style="symbols">
-                     <t>if the following 3 bits have a different value than 0b'111, then it signals the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1, </t>
-                     <t>if the following 3 bits are 0b'111, then it signals Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2.</t>
+                     <t>if the following 3 bits have a different value than 0b'111, then it signals the Two-byte SCHC Header Option 1, </t>
+                     <t>if the following 3 bits are 0b'111, then it signals the Two-byte SCHC Header Option 2.</t>
                          </list></t>
-     <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1, there are 7 RuleIDs available (0b'111000-0b'111110), 0b'111111 being reserved to indicate the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2. This set of rules is called “extended rules”, and it is used to implement Two-byte SCHC Header F/R modes.</t>
-     <t>For the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2, there are 4 RuleIDs available (0b'00111111-0b'11111111). This set of rules is used to cover specific cases that previous RuleIDs do not cover. As an example, RuleID 0b’00111111 is used to transport IPv6 packets using the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2.</t>
+     <t>For the Two-byte SCHC Header Option 1, there are 7 RuleIDs available (0b'111000-0b'111110), 0b'111111 being reserved to indicate the Two-byte SCHC Header Option 2. This set of rules is called “extended rules”, and it is used to implement the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1.</t>
+     <t>For the Two-byte SCHC Header Option 2, there are 2 additional bits to parse as the RuleID, so 4 RuleIDs available (0b'11111100-0b'11111111). This set of rules is used to cover specific cases that previous RuleIDs do not cover. As an example, RuleID 0b’00111111 is used to transport uncompressed IPv6 packets using the Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 2.</t>
         </list></t>
  </list></t>
 

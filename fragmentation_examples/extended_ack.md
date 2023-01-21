@@ -255,7 +255,7 @@ DL Enable |-----W=1, FCN=7, Seq=18---->|
           |-----W=1, FCN=2---->|
           |-----W=1, FCN=1-X-->|
 DL Enable |-----W=1, FCN=7---->| Bitmap: 1111101
-          |<--- Compund ACK ---| W=0,1111011 - W=1,1111101
+          |<--- Compound ACK --| W=0,1111011 - W=1,1111101
           |-----W=0, FCN=2---->| W=0 completed
           |-----W=1, FCN=1---->| W=1 completed
 DL Enable |-----W=1, FCN=7---->|
