@@ -156,6 +156,12 @@ topologies, network architecture, connected devices with built-in applications, 
 them, some differences exist with respect to the transmission characteristics, payload sizes, etc. Hence, there are optimal parameters and modes of operation 
 that can be used when SCHC is used on top of a specific LPWAN technology.
 </t>
+    <t>
+    Sigfox is an LPWAN technology that offers energy-efficient connectivity for devices at a very low cost.
+    Sigfox brings a worldwide network composed of Base Stations that receive short (12 bytes) uplink messages sent by devices over the long-range Sigfox radio protocol.
+    Base Stations then forward messages to the Sigfox Cloud infrastructure for further processing and final delivery to the customer.
+    With SCHC functionalities, the Sigfox network offers more reliable communications (recovery of lost messages) and is able to convey extended-size payloads (fragmentation/reassembly).
+</t>
 <t>This document describes the recommended parameters, settings, and modes of operation to be used when SCHC is implemented over a Sigfox LPWAN. This set of parameters 
 are also known as a "SCHC over Sigfox profile" or simply "SCHC/Sigfox."
 </t>
@@ -181,12 +187,7 @@ in <xref target="RFC8724"/>.
 
 <t>Contexts need to be stored and pre-configured on both ends. This can be done either by using a provisioning protocol, by out of band means, or by
 pre-provisioning them (e.g., at manufacturing time). The way contexts are configured and stored on both ends is out of the scope of this document.</t>
-<t>
-    Sigfox is an LPWAN technology that offers energy-efficient connectivity for devices at a very low cost.
-    Sigfox brings a worldwide network composed of Base Stations that receive short (12 bytes) uplink messages sent by devices over the long-range Sigfox radio protocol.
-    Base Stations then forward messages to the Sigfox Cloud infrastructure for further processing and final delivery to the customer.
-    With SCHC functionalities, the Sigfox network offers more reliable communications (recovery of lost messages) and is able to convey extended-size payloads (fragmentation/reassembly).
-</t>
+
 
 
 <section anchor="network-arch" title="Network Architecture">
@@ -213,12 +214,12 @@ Sigfox cloud-based Network. </t>
         +~~ |Sigfox BS|     |Sigfox Network|     |  SCHC   |    .
             |  (RGW)  | === |    (NGW)     | === |C/D & F/R|.....
             +---------+     +--------------+     +---------+  IP-based
-                                                                network
+                                                                Network
 
 Legend:
 $, ~ : Radio link
 = : Internal Sigfox Network
-. : External Network
+. : External IP-based Network
 
 ]]></artwork></figure>
 
@@ -360,10 +361,12 @@ on the specifics of the underlying LPWAN technology and application Use Case. Th
 should optimally be implemented when used over a Sigfox LPWAN for the most typical Use Case applications.</t>
 
 <t>As described in section 8.2.3 of <xref target="RFC8724"/>, the integrity of the fragmentation-reassembly process of a SCHC Packet MUST be 
-checked at the receive end. Since only Uplink/Downlink messages/fragments that have passed the Sigfox CRC-check are delivered to the Network/Sigfox Device SCHC C/D + F/R,
+checked at the receiver end. Since only Uplink/Downlink messages/fragments that have passed the Sigfox CRC-check are delivered to the Network/Sigfox Device SCHC C/D + F/R,
 integrity can be guaranteed when no consecutive messages are missing from the sequence and all FCN bitmaps are complete.  With this functionality
 in mind, and in order to save protocol and processing overhead, the use of a Reassembly Check Sequence (RCS) as described in 
-<xref target="all-1-behaviour"/> SHOULD be used.</t>
+<xref target="all-1-behaviour"/> MUST be used.
+
+</t>
 
 <!--<t>The L2 Word Size used by Sigfox is 1 byte (8 bits). </t>-->
 
@@ -447,15 +450,18 @@ at a certain time and a new one is requested, or if the RuleID of the fragment i
 <section anchor="no-ack-mode" title="Uplink No-ACK Mode: Single-byte SCHC Header">
 <t>Single-byte SCHC Header No-ACK mode SHOULD be used for transmitting short, non-critical packets that require fragmentation and do not require full reliability.
 This mode can be used by Uplink-only devices that do not support Downlink communications, or by bidirectional devices when they send non-critical
-data.</t>
+data.
+Note that sending non-critical data by using a reliable fragmentation mode (which is only possible for bidirectional devices) may incur unnecessary overhead. </t>
 
 <t>Since there are no multiple windows in the No-ACK mode, the W bit is not present. However, it SHOULD use the FCN field to indicate the
-size of the data packet. In this sense, the data packet would need to be splitted into X fragments and, similarly to the other fragmentation modes, 
+size of the data packet. In this sense, the data packet would need to be splitted into X fragments and, similarly to the other fragmentation modes,
 the first transmitted fragment would need to be marked with FCN = X-1. Consecutive fragments MUST be marked with decreasing FCN values, having the 
 last fragment marked with FCN = (All-1). Hence, even though the No-ACK mode does not allow recovering missing fragments, it allows indicating implicitly 
-the size of the expected packet to the Network and hence detect at the receiver side whether all fragments have been received or not.</t>
+the size of the expected packet to the Network and hence detect at the receiver side whether all fragments have been received or not.
+In case the FCN field is not used to indicate the size of the data packet, the Network can detect whether all fragments have been received or not by using the integrity check.
+</t>
 
-<t>The Fragmentation Header SHOULD be of 8 bit size, and it is composed as follows:</t>
+<t>When using the Single-byte SCHC Header for Uplink Fragmentation, the Fragmentation Header MUST be of 8 bit size, and it is composed as follows:</t>
 
 <t><list style="symbols">
 
@@ -471,7 +477,7 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <t>All-1 tile size: 0 to 10 bytes</t>
 
-<t>Inactivity Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Inactivity Timer: Application-dependent. The default value is 12 hours.</t>
 
 <t>RCS size: 5 bits </t>
 
@@ -485,8 +491,9 @@ the size of the expected packet to the Network and hence detect at the receiver 
 <section anchor="ack-on-error-mode-1" title="Uplink ACK-on-Error Mode: Single-byte SCHC Header">
 
 <t>ACK-on-Error with single-byte header SHOULD be used for short to medium size packets that need to be sent
-   reliably. ACK-on-Error is optimal for Sigfox transmissions, since it leads to a reduced number of ACKs 
+   reliably. ACK-on-Error is optimal for reliable SCHC Packet transmission over Sigfox transmissions, since it leads to a reduced number of ACKs
    in the lower capacity Downlink channel. Also, Downlink messages can be sent asynchronously and opportunistically.
+    In contrast, ACK-Always would not minimize the number of ACKs, and No-ACK would not allow reliable transmission.
 </t>
 
 <t>Allowing transmission of packets/files up to 300 bytes long, the SCHC Uplink Fragmentation Header size is of 8 bits in size and is composed as follows:
@@ -517,9 +524,9 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <t>All-1 tile size: 0 to 10 bytes</t>
 
-<t>Retransmission Timer: Application-dependent. The default value SHOULD be  12 hours.</t>
+<t>Retransmission Timer: Application-dependent. The default value is 12 hours.</t>
 
-<t>Inactivity Timer: Application-dependent. The default value SHOULD be  12 hours.</t>
+<t>Inactivity Timer: Application-dependent. The default value is 12 hours.</t>
 
 <t>RCS size: 3 bits</t>
 
@@ -534,10 +541,10 @@ the size of the expected packet to the Network and hence detect at the receiver 
 <section anchor="two-byte-schc-header" title="Two-byte SCHC Header for Uplink Fragmentation">
 
 <t>ACK-on-Error with two-byte header SHOULD be used for medium-large size packets that need to be sent
-   reliably.  ACK-on-Error is optimal for Sigfox transmissions, since it
+   reliably.  ACK-on-Error is optimal for reliable SCHC Packet transmission over Sigfox, since it
    leads to a reduced number of ACKs in the lower capacity Downlink
    channel. Also, Downlink messages can be sent asynchronously and
-   opportunistically.
+   opportunistically. In contrast, ACK-Always would not minimize the number of ACKs, and No-ACK would not allow reliable transmission.
 </t>
 <section anchor="ack-on-error-mode-2" title="Uplink ACK-on-Error Mode: Two-byte SCHC Header Option 1">
 
@@ -564,9 +571,9 @@ the size of the expected packet to the Network and hence detect at the receiver 
 
 <t>All-1 tile size: 1 to 10 bytes</t>
 
-<t>Retransmission Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Retransmission Timer: Application-dependent. The default value is 12 hours.</t>
 
-<t>Inactivity Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Inactivity Timer: Application-dependent. The default value is 12 hours.</t>
 
 <t>RCS size: 4 bits</t>
 
@@ -599,9 +606,9 @@ single SCHC Compound ACK.</t>
 
 <t>All-1 tile size: 0 to 9 bytes</t>
 
-<t>Retransmission Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Retransmission Timer: Application-dependent. The default value is 12 hours.</t>
 
-<t>Inactivity Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Inactivity Timer: Application-dependent. The default value is 12 hours.</t>
 
 <t>RCS size: 5 bits</t>
 
@@ -644,7 +651,7 @@ In order to avoid potentially high delay for fragmented datagram transmission in
 Uplink transmission as soon as possible after reception of a Downlink fragment that is not the last one. Such Uplink transmission
 MAY be triggered by sending a SCHC message, such as a SCHC ACK. However, other data messages can equally be used to trigger Downlink
 communications.
-The fragment receiver SHOULD send an Uplink transmission (e.g., empty message) and request a Downlink every 24 hours when no SCHC session is started. The use or not of this Uplink transmission will depend on application specific requirements.
+The fragment receiver SHOULD send an Uplink transmission (e.g., empty message) and request a Downlink every 24 hours when no SCHC session is started. The use or not of this Uplink transmission (and the transmission rate, if used) will depend on application specific requirements.
 </t>
 
 
@@ -652,7 +659,8 @@ The fragment receiver SHOULD send an Uplink transmission (e.g., empty message) a
 single SCHC Tile size per mode can be defined so that every Sigfox message always carries one SCHC Tile. 
 </t>
 
-<t>For reliable Downlink fragment transmission, the ACK-Always mode SHOULD be used.</t>
+<t>For reliable Downlink fragment transmission, the ACK-Always mode SHOULD be used.
+Note that ACK-on-Error does not guarantee Uplink feedback (since no SCHC ACK will be sent when no errors occur in a window), and No-ACK would not allow reliable transmission.</t>
 
 <t>The SCHC Downlink Fragmentation Header size is of 8 bits in size and is composed as follows:</t>
 
@@ -673,9 +681,9 @@ single SCHC Tile size per mode can be defined so that every Sigfox message alway
 
 <t>All-1 tile size: 0 to 6 bytes</t>
 
-<t>Retransmission Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Retransmission Timer: Application-dependent. The default value is 12 hours.</t>
 
-<t>Inactivity Timer: Application-dependent. The default value SHOULD be 12 hours.</t>
+<t>Inactivity Timer: Application-dependent. The default value is 12 hours.</t>
 
 <t>RCS size: 5 bits </t>
 </list></t>
@@ -783,7 +791,7 @@ As tiles are of 11 bytes, padding MUST NOT be added.</t>
 
 ]]></artwork></figure></t>
 
-<t>The SCHC ACK REQ SHOULD NOT be used, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
+<t>The SCHC ACK REQ MUST NOT be used, instead the All-1 SCHC Fragment MUST be used to request a SCHC ACK from the receiver (Network SCHC).
 As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message). 
 The penultimate tile of a SCHC Packet is of regular size.</t>
 
@@ -903,7 +911,7 @@ The penultimate tile of a SCHC Packet is of the regular size.</t>
         | 6 bits | 2 bits | 4 bits | 4 bits | 80 bits |
 ]]></artwork></figure></t>
 
-<t>The SCHC ACK REQ SHOULD NOT be used, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
+<t>The SCHC ACK REQ MUST NOT be used, instead the All-1 SCHC Fragment MUST be used to request a SCHC ACK from the receiver (Network SCHC).
 As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).</t>
 
 </section>
@@ -1038,7 +1046,7 @@ The penultimate tile of a SCHC Packet is of the regular size.</t>
 		
 ]]></artwork></figure></t>
 
-<t>The SCHC ACK REQ SHOLULD NOT be used, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver (Network SCHC).
+<t>The SCHC ACK REQ MUST NOT be used, instead the All-1 SCHC Fragment MUST be used to request a SCHC ACK from the receiver (Network SCHC).
 As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).</t>
 
 </section>
@@ -1157,7 +1165,7 @@ The penultimate tile of a SCHC Packet is of the regular size.</t>
 
 ]]></artwork></figure></t>
 
-<t>The SCHC ACK SHOULD NOT be used, instead the All-1 SCHC Fragment SHOULD be used to request a SCHC ACK from the receiver.
+<t>The SCHC ACK MUST NOT be used, instead the All-1 SCHC Fragment MUST be used to request a SCHC ACK from the receiver.
 As per <xref target="RFC8724"/>, the All-0 message is distinguishable from the SCHC ACK REQ (All-1 message).</t>
 
     </section>
@@ -1300,7 +1308,8 @@ Therefore, for 2 or more bits of payload it is required to add padding to the ne
 flexibility is to optimize transmission time and hence save battery consumption at the device.</t>
 
 <t>Downlink frames on the other hand have a fixed length. The payload length MUST be 64 bits (i.e., 8 bytes). Hence, if less
-information bits are to be transmitted, padding MUST be used with bits equal to 0. The receiver MUST removed the added padding bits.</t>
+information bits are to be transmitted, padding MUST be used with bits equal to 0.
+    The receiver MUST removed the added padding bits before the SCHC reassembly process.</t>
 
 
 </section>
@@ -1375,7 +1384,7 @@ Sender                     Receiver
 <t>Case No losses</t>
 
 <t>The Downlink flag must be enabled in the sender Uplink message to allow a Downlink message from the receiver.
-The Downlink Enable in the figures shows where the sender should enable the Downlink, and
+The Downlink Enable in the figures shows where the sender MUST enable the Downlink, and
 wait for an ACK.</t>
 
 <figure title="Uplink ACK-on-Error No-Losses" anchor="UL-ACKoE-NL"><artwork><![CDATA[
@@ -1501,7 +1510,7 @@ DL Enable |-----W=1,FCN=7,Seq=16---->|
 ]]></artwork></figure>
 
 <t>In the next examples, there are fragment losses in both the first (W=0) and second (W=1) windows.
-The retransmission cycles after the All-1 is sent (i.e., not in intermediate windows) should 
+The retransmission cycles after the All-1 is sent (i.e., not in intermediate windows) MUST
 always finish with an All-1, as it serves as an ACK Request message to confirm the correct reception
 of the retransmitted fragments. </t>
 
@@ -1706,8 +1715,8 @@ ensuring that the message has been generated and sent by the device or network w
 <t>Application data can be encrypted at the application layer or not, depending on the criticality of the use case.
 This flexibility allows providing a balance between cost and effort vs. risk.  
 AES-128 in counter mode is used for encryption.  Cryptographic keys are independent for each device. These keys are associated with the device ID and separate integrity and 
-authentication keys are pre-provisioned.
-    A authentication key is only provisioned if confidentiality is to be used.</t>
+encryption keys are pre-provisioned.
+    An encryption key is only provisioned if confidentiality is to be used.</t>
 
 <t>The radio protocol has protections against replay attacks, and the cloud-based core network provides firewalling protection against undesired incoming communications.</t>
 

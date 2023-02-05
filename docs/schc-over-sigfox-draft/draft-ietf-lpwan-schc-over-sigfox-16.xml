@@ -102,7 +102,7 @@
       </address>
     </author>
 
-    <date year="2022" month="December" day="08"/>
+    <date year="2022" month="December" day="09"/>
 
     
     <workgroup>lpwan Working Group</workgroup>
@@ -1998,9 +1998,9 @@ format, which is intended to reduce the number of Downlink transmissions (i.e., 
 
 </front>
 
-<seriesInfo name='Internet-Draft' value='draft-ietf-lpwan-schc-compound-ack-08' />
+<seriesInfo name='Internet-Draft' value='draft-ietf-lpwan-schc-compound-ack-09' />
 <format type='TXT'
-        target='http://www.ietf.org/internet-drafts/draft-ietf-lpwan-schc-compound-ack-08.txt' />
+        target='http://www.ietf.org/internet-drafts/draft-ietf-lpwan-schc-compound-ack-09.txt' />
 </reference>
 
     </references>
