@@ -166,7 +166,8 @@ that can be used when SCHC is used in conjunction with a specific LPWAN technolo
 messages) <xref target="sigfox-spec"/>.
 </t>
 <t>This document describes the parameters, settings, and modes of operation to be used when SCHC is implemented over a Sigfox LPWAN. The set of parameters forms a "SCHC over Sigfox profile".
-    The SCHC over Sigfox Profile is applicable to previous versions of v1.6/March 2022 <xref target="sigfox-spec"/>  (support for future versions would have to be assessed by the Working Group).
+    The SCHC over Sigfox Profile is applicable to the Sigfox Radio specification versions up to v1.6/March
+2022 <xref target="sigfox-spec"/>  (support for future versions would have to be assessed).
 
 </t>
 
